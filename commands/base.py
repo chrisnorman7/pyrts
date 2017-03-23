@@ -16,6 +16,8 @@ class Command:
     doc = attrib(default=Factory(lambda: None))
 
     def __attrs_post_init__(self):
+        if self.pattern is None:
+            self.pattern = '^%s$' % self.name
         self.regexp = re.compile(self.pattern)
         if self.doc is None:
             self.doc = self.func.__doc__
@@ -24,13 +26,13 @@ class Command:
 commands = [
     Command(
         'quit',
-        '^quit$',
+        None,
         lambda player, match: player.disconnect(),
         doc='Disconnects you from the game.'
     ),
     Command(
         'help',
-        '^help$',
+        None,
         game_help
     ),
     Command(
@@ -40,7 +42,34 @@ commands = [
     ),
     Command(
         'buildings',
-        '^buildings$',
+        None,
         buildings
+    ),
+    Command(
+        'gold',
+        None,
+        lambda player, match: player.notify(
+            'You have {} gold.',
+            player.gold
+        ),
+        doc='Shows you how much gold you have.'
+    ),
+    Command(
+        'wood',
+        None,
+        lambda player, match: player.notify(
+            'You have {} wood.',
+            player.wood
+        ),
+        doc='Shows you how much wood you have.'
+    ),
+    Command(
+        'water',
+        None,
+        lambda player, match: player.notify(
+            'You have {} water.',
+            player.water
+        ),
+        doc='Shows you how much water you have.'
     )
 ]
