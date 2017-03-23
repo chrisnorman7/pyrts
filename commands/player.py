@@ -43,7 +43,7 @@ def who(player, match):
     player.notify('Who listing:')
     now = datetime.now()
     for obj in session.query(Player):
-        host = obj.connection.transport.getHost()
+        host = obj.connection.transport.getPeer()
         player.notify(
             '{} [{}:{}] connected to {} since {} ({}).',
             obj.name,
