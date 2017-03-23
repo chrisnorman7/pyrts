@@ -4,6 +4,7 @@ import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
 from .building import buildings
+from .player import name
 
 
 @attrs
@@ -71,5 +72,10 @@ commands = [
             player.water
         ),
         doc='Shows you how much water you have.'
+    ),
+    Command(
+        'name',
+        '^name([^$]*)$',
+        name
     )
 ]
