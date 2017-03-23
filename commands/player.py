@@ -1,5 +1,6 @@
 """Player-related commands."""
 
+from datetime import datetime
 from db import session, Player
 
 
@@ -35,3 +36,21 @@ def emote(player, match):
     text = match.groups()[1].strip()
     for obj in player.game.players:
         obj.notify('{} {}', player.name, text)
+
+
+def who(player, match):
+    """Shows everyone who's currently logged in."""
+    player.notify('Who listing:')
+    now = datetime.now()
+    for obj in session.query(Player):
+        host = obj.connection.transport.getHost()
+        player.notify(
+            '{} [{}:{}] connected to {} since {} ({}).',
+            obj.name,
+            host.host,
+            host.port,
+            obj.game,
+            obj.connection.connected,
+            now - obj.connection.connected
+        )
+    player.end_output()

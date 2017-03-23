@@ -1,6 +1,7 @@
 """The server code."""
 
 import re
+from datetime import datetime
 from random import random
 from math import floor
 from twisted.python import log
@@ -15,6 +16,7 @@ from commands.base import commands
 class Protocol(LineReceiver):
     """The protocol for dealing with clients."""
     def connectionMade(self):
+        self.connected = datetime.now()
         game = session.query(Game).first()
         if game is None:
             game = Game()

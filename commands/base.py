@@ -4,7 +4,7 @@ import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
 from .building import buildings, menu
-from .player import name, say, shout, emote
+from .player import name, say, shout, emote, who
 
 
 @attrs
@@ -97,5 +97,10 @@ commands = [
         'emote <action>',
         '^(emote |[:])([^$]+)$',
         emote
+    ),
+    Command(
+        'who',
+        None,
+        who
     )
 ]

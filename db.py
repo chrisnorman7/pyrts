@@ -41,6 +41,9 @@ class Game(Base):
     size_y = Column(Integer, nullable=False, default=30)
     move_amount = Column(Float, nullable=False, default=1.0)
 
+    def __str__(self):
+        return 'Game %d' % self.id
+
 
 @attrs_sqlalchemy
 class Player(Base):
