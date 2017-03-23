@@ -17,7 +17,7 @@ def name(player, match):
 
 def say(player, match):
     """Say something to the rest of the game."""
-    text = match.groups()[0].strip()
+    text = match.groups()[1].strip()
     for obj in player.game.players:
         obj.notify('{} says: {}', player.name, text)
 
@@ -25,7 +25,7 @@ def say(player, match):
 def shout(player, match):
     """Shout something to everyone else connected to the server, not just the
     other players in your game."""
-    text = match.groups()[0].strip()
+    text = match.groups()[1].strip()
     for obj in session.query(Player):
         obj.notify('{} shouts: {}', player.name, text)
 

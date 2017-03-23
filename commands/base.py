@@ -85,12 +85,12 @@ commands = [
     ),
     Command(
         'say <text>',
-        '^say ([^$]+)$',
+        '^(say |[\'])([^$]+)$',
         say
     ),
     Command(
         'shout <text>',
-        '^shout ([^$]+)$',
+        '^(shout |[!])([^$]+)$',
         shout
     ),
     Command(
