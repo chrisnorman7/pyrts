@@ -1,0 +1,4 @@
+sqlalchemy
+twisted
+attrs
+attrs-sqlalchemy
