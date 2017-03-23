@@ -3,7 +3,7 @@
 import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
-from .building import buildings
+from .building import buildings, menu
 from .player import name
 
 
@@ -77,5 +77,10 @@ commands = [
         'name',
         '^name([^$]*)$',
         name
+    ),
+    Command(
+        'menu',
+        '^menu ([^$]+)$',
+        menu
     )
 ]
