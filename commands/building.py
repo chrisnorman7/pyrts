@@ -4,7 +4,7 @@ from db import session, GameObject
 from objects import TYPE_BUILDING
 
 
-def match_building(player, name):
+def match_object(player, type_flag, name):
     """Match a building by name."""
     for building in session.query(
         GameObject
@@ -39,7 +39,7 @@ def buildings(player, match):
 def menu(player, match):
     """Show the menu for a particular building."""
     name = match.groups()[0].strip().lower()
-    buildings = list(match_building(player, name))
+    buildings = list(match_object(player, TYPE_BUILDING, name))
     if not buildings:
         player.notify('No building named {}.', name)
     elif len(buildings) > 1:
