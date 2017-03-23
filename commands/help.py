@@ -9,7 +9,7 @@ def game_help(player, match, commands=None):
         player.notify('*** Help ***')
     if commands is None:
         commands = base.commands
-    for command in commands:
+    for command in sorted(commands, key=lambda x: x.name):
         player.notify(command.name)
         player.notify(command.doc or 'No help available.')
         player.notify('')
