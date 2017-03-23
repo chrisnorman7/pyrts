@@ -19,7 +19,7 @@ class GameBuilding(ObjectWithHP):
 
 town_hall = GameBuilding(
     'Town Hall',
-    pop_time=5*60,
+    pop_time=2*60,
     provides=[mobile_types['Labourer']],
     max_hp=100
 )
