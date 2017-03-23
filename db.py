@@ -76,6 +76,10 @@ class Player(Base):
         if self.connected:
             self.connection.sendLine(string.format(*args, **kwargs).encode())
 
+    def end_output(self):
+        """Notify the client not to expect any further output."""
+        self.notify('---')
+
 
 @attrs_sqlalchemy
 class GameObject(Base):
