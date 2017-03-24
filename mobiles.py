@@ -49,7 +49,8 @@ _mobiles = [
         'Labourer',
         skills=build_flags(skills, 'build', 'gold', 'wood', 'food'),
         speed=10,
-        pop_time=10
+        pop_time=10,
+        wood=1
     ),
     GameMobile(
         'Water Collecter',

@@ -16,6 +16,7 @@ from commands.base import commands
 class Protocol(LineReceiver):
     """The protocol for dealing with clients."""
     def connectionMade(self):
+        self.last_command = None
         self.connected = datetime.now()
         game = session.query(Game).first()
         if game is None:
@@ -90,6 +91,13 @@ class Protocol(LineReceiver):
 
     def lineReceived(self, string):
         string = string.decode()
+        if string == '!':
+            if self.last_command is not None:
+                string = self.last_command
+            else:
+                return self.player.notify('This is your first command.')
+        else:
+            self.last_command = string
         for command in commands:
             m = re.match(command.regexp, string)
             if m is not None:
