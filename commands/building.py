@@ -83,9 +83,9 @@ def tell(player, match):
         obj = objects.first()
         obj.commands.get(
             command,
-            lambda argument, command=command: player.notify(
+            lambda player, obj, argument, command=command: player.notify(
                 'There is no command {} for {}.',
                 command,
                 obj.name
             )
-        )(command_argument)
+        )(player, obj, command_argument)

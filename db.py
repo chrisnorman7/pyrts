@@ -5,11 +5,13 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from attrs_sqlalchemy import attrs_sqlalchemy
+from twisted.internet import reactor
 from config import db_url, db_echo
 from objects import TYPE_FEATURE, TYPE_MOBILE, TYPE_BUILDING
 from features import feature_types
 from mobiles import mobile_types
 from buildings import building_types
+from commands.objects import recruit
 
 engine = create_engine(db_url, echo=db_echo)
 
@@ -102,10 +104,51 @@ class GameObject(Base):
     type_flag = Column(Integer, nullable=False)
     type_parent = Column(String(20), nullable=False)
 
+    def delete(self):
+        """Delete this object."""
+        if self.type_flag == TYPE_MOBILE:
+            action = 'dies'
+        elif self.type_flag == TYPE_BUILDING:
+            action = 'is destroyed'
+        else:
+            action = None
+        if action is not None:
+            msg = '%s %s at (%.2f, %.2f).' % (
+                self.name,
+                action,
+                self.x,
+                self.y
+            )
+            for obj in self.game.players:
+                obj.notify(msg)
+        if hasattr(self, 'actions'):
+            for action in self.actions:
+                action.cancel()
+        session.delete(self)
+        session.commit()
+
+    def add_action(self, _seconds, _f, *args, **kwargs):
+        """Add an action to the actions list. All arguments are passed to
+        reactor.callLater."""
+        if not hasattr(self, 'actions'):
+            self.actions = []
+        dc = reactor.callLater(_seconds, self.run_action)
+        dc.args = [dc, _f, *args]
+        dc.kwargs = kwargs
+        self.actions.append(dc)
+
+    def run_action(self, caller, _f, *args, **kwargs):
+        """Run an action."""
+        self.actions.remove(caller)
+        _f(*args, **kwargs)
+
     @property
     def commands(self):
         """The commands supported by tell for this object."""
-        return {}
+        if self.type_flag == TYPE_BUILDING:
+            return {'recruit': recruit}
+        else:
+            return {}
 
     @property
     def type(self):

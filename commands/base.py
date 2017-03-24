@@ -47,33 +47,6 @@ commands = [
         buildings
     ),
     Command(
-        'gold',
-        None,
-        lambda player, match: player.notify(
-            'You have {} gold.',
-            player.gold
-        ),
-        doc='Shows you how much gold you have.'
-    ),
-    Command(
-        'wood',
-        None,
-        lambda player, match: player.notify(
-            'You have {} wood.',
-            player.wood
-        ),
-        doc='Shows you how much wood you have.'
-    ),
-    Command(
-        'water',
-        None,
-        lambda player, match: player.notify(
-            'You have {} water.',
-            player.water
-        ),
-        doc='Shows you how much water you have.'
-    ),
-    Command(
         'name',
         '^name([^$]*)$',
         name
@@ -107,5 +80,19 @@ commands = [
         'tell <object> to <action>[ <argument>]',
         '^tell (?P<object>.+) to (?P<command>[^ $]+)[ ]?(?P<argument>[^$]*)$',
         tell
-    )
+    ),
 ]
+
+for attr in ['food', 'water', 'gold', 'wood']:
+    commands.append(
+        Command(
+            attr,
+            None,
+            lambda player, match, attr=attr: player.notify(
+                'You have {} {}.',
+                getattr(player, attr),
+                attr
+            ),
+            doc='Shows how much %s you have.' % attr
+        )
+    )
