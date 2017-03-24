@@ -104,6 +104,20 @@ class GameObject(Base):
     type_flag = Column(Integer, nullable=False)
     type_parent = Column(String(20), nullable=False)
 
+    @property
+    def location(self):
+        """Get the feature this object is standing on."""
+        return session.query(
+            GameObject
+        ).filter_by(
+            game=self.game,
+            x=self.x,
+            y=self.y
+        ).filter(
+            GameObject.type_flag == TYPE_FEATURE,
+            GameObject.id != self.id
+        ).first()
+
     def delete(self):
         """Delete this object."""
         if self.type_flag == TYPE_MOBILE:
@@ -178,6 +192,21 @@ class GameObject(Base):
             self.target_x = x
         if y is not None:
             self.target_y = y
+
+    def __str__(self):
+        text = '{} at ({}, {}): {}/{} HP'.format(
+            self.name,
+            self.x,
+            self.y,
+            self.type.max_hp if self.hp is None else self.hp,
+            self.type.max_hp
+        )
+        if hasattr(self.type, 'max_mana'):
+            text += ', {}/{} Mana'.format(
+                self.type.max_mana if self.mana is None else self.mana,
+                self.type.max_mana
+            )
+        return text
 
 
 Base.metadata.create_all()

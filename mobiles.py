@@ -24,10 +24,10 @@ weapon_types = {
 # Skills:
 skills = {
     'build': 1,  # Includes repair.
-    'mine': 2,
-    'log': 4,
-    'harvest': 8,
-    'collect water': 16
+    'gold': 2,
+    'wood': 4,
+    'food': 8,
+    'water': 16
 }
 
 
@@ -47,13 +47,13 @@ class GameMobile(ObjectWithHP):
 _mobiles = [
     GameMobile(
         'Labourer',
-        skills=build_flags(skills, 'build', 'mine', 'log', 'harvest'),
+        skills=build_flags(skills, 'build', 'gold', 'wood', 'food'),
         speed=10,
         pop_time=25
     ),
     GameMobile(
         'Water Collecter',
-        skills=build_flags(skills, 'collect water'),
+        skills=build_flags(skills, 'water'),
         speed=15,
         pop_time=10
     ),
@@ -61,7 +61,7 @@ _mobiles = [
         'Brawler',
         attack_type=build_flags(attack_types, 'ground'),
         weapon_type=build_flags(weapon_types, 'fist'),
-        skills=build_flags(skills, 'mine', 'log', 'harvest'),
+        skills=build_flags(skills, 'gold', 'wood', 'food'),
         speed=4,
     ),
     GameMobile(

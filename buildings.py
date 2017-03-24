@@ -20,12 +20,30 @@ class GameBuilding(ObjectWithHP):
 town_hall = GameBuilding(
     'Town Hall',
     pop_time=2*60,
-    provides=[mobile_types['Labourer']],
+    provides=[
+        mobile_types['Labourer'],
+        mobile_types['Water Collecter']
+    ],
+    depends=[],
     max_hp=100
 )
 
 _buildings = [
-    town_hall
+    town_hall,
+    GameBuilding(
+        'Tavern',
+        depends=[town_hall],
+        pop_time=50,
+        provides=[mobile_types['Brawler']],
+        max_hp=50
+    ),
+    GameBuilding(
+        'Barracks',
+        depends=[town_hall],
+        pop_time=3 * 60,
+        provides=[mobile_types['Foot Soldier']],
+        max_hp=150
+    )
 ]
 
 building_types = {x.name: x for x in _buildings}

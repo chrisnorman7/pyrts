@@ -2,6 +2,8 @@
 
 from attr import attrs, attrib, Factory
 
+commodities = ['food', 'water', 'gold', 'wood']
+
 # Type flags:
 TYPE_FEATURE = 0
 TYPE_MOBILE = 1
@@ -36,9 +38,9 @@ class BaseObject:
     # before this object can be created.
     # For Feature objects, it is the resources they contain.
     food = attrib(default=Factory(lambda: 2))
+    water = attrib(default=Factory(lambda: 2))
     wood = attrib(default=Factory(lambda: 2))
     gold = attrib(default=Factory(lambda: 4))
-    water = attrib(default=Factory(lambda: 2))
 
     def __str__(self):
         return self.name

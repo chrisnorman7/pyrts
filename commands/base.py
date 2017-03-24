@@ -3,8 +3,8 @@
 import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
-from .building import buildings, menu, tell
-from .player import name, say, shout, emote, who
+from .player import buildings, mobiles, name, say, shout, emote, who, menu, \
+     tell
 
 
 @attrs
@@ -45,6 +45,11 @@ commands = [
         'buildings',
         None,
         buildings
+    ),
+    Command(
+        'mobiles',
+        None,
+        mobiles
     ),
     Command(
         'name',

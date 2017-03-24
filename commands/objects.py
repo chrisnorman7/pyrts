@@ -30,8 +30,7 @@ def recruit(player, obj, argument):
             # We found the right mobile.
             for attr in ['wood', 'gold', 'food', 'water']:
                 if getattr(player, attr) < getattr(type, attr):
-                    player.notify('Not enough {}.', attr)
-                    break
+                    return player.notify('Not enough {}.', attr)
                 else:
                     setattr(
                         player,
@@ -44,18 +43,17 @@ def recruit(player, obj, argument):
                             attr
                         )
                     )
-            else:
-                player.notify(
-                    '{} recruiting {} ({}).',
-                    obj.name,
-                    type.name,
-                    type.pop_time
-                )
-                obj.add_action(type.pop_time, spawn_mobile, obj, type)
-                break
-        else:
             player.notify(
-                '{} does not know how to recruit {}.',
+                '{} recruiting {} ({}).',
                 obj.name,
-                name
+                type.name,
+                type.pop_time
             )
+            obj.add_action(type.pop_time, spawn_mobile, obj, type)
+            break
+    else:
+        player.notify(
+            '{} does not know how to recruit {}.',
+            obj.name,
+            name
+        )

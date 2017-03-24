@@ -1,9 +1,25 @@
 """Utility functions."""
 
+from sqlalchemy import func
 from twisted.internet import reactor, defer
 from attr import attrs, attrib
 from objects import TYPE_FEATURE
 from buildings import GameBuilding
+from db import session, GameObject
+
+
+def match_object(name, *args, player=None, type_flag=None):
+    """Match an object by name. Extra *args are passed to .filter."""
+    if player is None:
+        objects = session.query(GameObject)
+    else:
+        objects = session.query(GameObject).filter_by(owner=player)
+    if type_flag is not None:
+        objects = objects.filter_by(type_flag=type_flag)
+    return objects.filter(
+        *args,
+        func.lower(GameObject.name).startswith(name.strip().lower())
+    )
 
 
 @attrs
