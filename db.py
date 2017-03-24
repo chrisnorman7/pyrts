@@ -88,6 +88,7 @@ class Player(Base):
 class GameObject(Base):
     """An object in the game."""
     __tablename__ = 'objects'
+    name = Column(String(50), nullable=True)
     game_id = Column(Integer, ForeignKey('games.id'), nullable=False)
     game = relationship('Game', backref='objects')
     x = Column(Float, nullable=False, default=0.0)
@@ -115,12 +116,10 @@ class GameObject(Base):
     def type(self, value):
         self.type_parent = value.name
         self.type_flag = value.type_flag
+        if self.id is None:
+            self.save()
+        self.name = '%s %d' % (self.type.name, self.id)
         self.save()
-
-    @property
-    def name(self):
-        """Return a friendly name for this object."""
-        return '{} {}'.format(self.type.name, self.id)
 
     def move(self, x=None, y=None):
         """Move this object towards x and y if provided, otherwise the pre-

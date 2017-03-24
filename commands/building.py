@@ -1,18 +1,19 @@
 """Building commands."""
 
+from sqlalchemy import func
 from db import session, GameObject
 from objects import TYPE_BUILDING
 
 
 def match_object(player, type_flag, name):
     """Match a building by name."""
-    for building in session.query(
+    return session.query(
         GameObject
     ).filter_by(
         owner=player
-    ):
-        if building.name.lower().startswith(name.strip().lower()):
-            yield building
+    ).filter(
+        func.lower(GameObject.name).startswith(name.strip().lower())
+    )
 
 
 def buildings(player, match):
@@ -54,3 +55,12 @@ def menu(player, match):
         for mobile in building.type.provides:
             player.notify('recruit {}', mobile.name)
         player.end_output()
+
+
+def tell(player, match):
+    """Give an object an instruction. For example:
+    tell town hall recruit labourer
+    tell labourer build town hall
+    You can get the instructions with the menu command.
+    """
+    
