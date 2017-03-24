@@ -201,7 +201,7 @@ class GameObject(Base):
             self.type.max_hp if self.hp is None else self.hp,
             self.type.max_hp
         )
-        if hasattr(self.type, 'max_mana'):
+        if hasattr(self.type, 'max_mana') and self.type.max_mana > 0:
             text += ', {}/{} Mana'.format(
                 self.type.max_mana if self.mana is None else self.mana,
                 self.type.max_mana

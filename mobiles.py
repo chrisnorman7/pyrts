@@ -49,13 +49,17 @@ _mobiles = [
         'Labourer',
         skills=build_flags(skills, 'build', 'gold', 'wood', 'food'),
         speed=10,
-        pop_time=25
+        pop_time=10
     ),
     GameMobile(
         'Water Collecter',
         skills=build_flags(skills, 'water'),
         speed=15,
-        pop_time=10
+        pop_time=10,
+        gold=1,
+        wood=0,
+        food=1,
+        water=0
     ),
     GameMobile(
         'Brawler',
@@ -63,19 +67,31 @@ _mobiles = [
         weapon_type=build_flags(weapon_types, 'fist'),
         skills=build_flags(skills, 'gold', 'wood', 'food'),
         speed=4,
+        wood=0,
+        gold=10,
+        food=8,
+        water=3
     ),
     GameMobile(
         'Foot Soldier',
         attack_type=build_flags(attack_types, 'ground'),
         weapon_type=build_flags(weapon_types, 'fist', 'sword'),
         speed=3,
-        pop_time=20
+        pop_time=20,
+        gold=15,
+        wood=0,
+        food=10,
+        water=15
     ),
     GameMobile(
         'Horseman',
         attack_type=build_flags(attack_types, 'ground'),
         weapon_type=build_flags(weapon_types, 'fist', 'sword'),
-        pop_time=40
+        pop_time=40,
+        wood=5,
+        gold=20,
+        food=15,
+        water=15
     )
 ]
 
