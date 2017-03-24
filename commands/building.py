@@ -5,13 +5,15 @@ from db import session, GameObject
 from objects import TYPE_BUILDING
 
 
-def match_object(player, type_flag, name):
+def match_object(name, player=None, type_flag=None):
     """Match a building by name."""
-    return session.query(
-        GameObject
-    ).filter_by(
-        owner=player
-    ).filter(
+    if player is None:
+        objects = session.query(GameObject)
+    else:
+        objects = session.query(GameObject).filter_by(owner=player)
+    if type_flag is not None:
+        objects = objects.filter_by(type_flag=type_flag)
+    return objects.filter(
         func.lower(GameObject.name).startswith(name.strip().lower())
     )
 
@@ -40,17 +42,18 @@ def buildings(player, match):
 def menu(player, match):
     """Show the menu for a particular building."""
     name = match.groups()[0].strip().lower()
-    buildings = list(match_object(player, TYPE_BUILDING, name))
-    if not buildings:
+    buildings = match_object(name, type_flag=TYPE_BUILDING, player=player)
+    c = buildings.count()
+    if not c:
         player.notify('No building named {}.', name)
-    elif len(buildings) > 1:
+    elif c > 1:
         player.notify(
             'Please be more specific. {} buildings were found matching {}.',
-            len(buildings),
+            c,
             name
         )
     else:
-        building = buildings[0]
+        building = buildings.first()
         player.notify('Menu for {}.', building.name)
         for mobile in building.type.provides:
             player.notify('recruit {}', mobile.name)
@@ -59,8 +62,30 @@ def menu(player, match):
 
 def tell(player, match):
     """Give an object an instruction. For example:
-    tell town hall recruit labourer
-    tell labourer build town hall
-    You can get the instructions with the menu command.
-    """
-    
+    tell town hall to recruit labourer
+    tell labourer to build town hall
+    You can get the instructions with the menu command."""
+    args = match.groupdict()
+    name = args['object']
+    command = args['command']
+    command_argument = args['argument']
+    objects = match_object(name, player=player)
+    c = objects.count()
+    if not c:
+        player.notify('No objects found matching {}.', name)
+    elif c > 1:
+        player.notify(
+            'Please be more specific. {} objects were found matching {}.',
+            c,
+            name
+        )
+    else:
+        obj = objects.first()
+        obj.commands.get(
+            command,
+            lambda argument, command=command: player.notify(
+                'There is no command {} for {}.',
+                command,
+                obj.name
+            )
+        )(command_argument)

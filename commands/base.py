@@ -3,7 +3,7 @@
 import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
-from .building import buildings, menu
+from .building import buildings, menu, tell
 from .player import name, say, shout, emote, who
 
 
@@ -102,5 +102,10 @@ commands = [
         'who',
         None,
         who
+    ),
+    Command(
+        'tell <object> to <action>[ <argument>]',
+        '^tell (?P<object>.+) to (?P<command>[^ $]+)[ ]?(?P<argument>[^$]*)$',
+        tell
     )
 ]

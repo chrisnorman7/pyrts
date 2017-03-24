@@ -103,6 +103,11 @@ class GameObject(Base):
     type_parent = Column(String(20), nullable=False)
 
     @property
+    def commands(self):
+        """The commands supported by tell for this object."""
+        return {}
+
+    @property
     def type(self):
         """Get the game type of this object."""
         dict = {
