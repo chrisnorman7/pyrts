@@ -2,3 +2,5 @@ sqlalchemy
 twisted
 attrs
 attrs-sqlalchemy
+passlib
+git+https://github.com/chrisnorman7/random_password.git

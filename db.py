@@ -1,7 +1,7 @@
 """Database engine and tables."""
 
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, \
-     Float
+     Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from attrs_sqlalchemy import attrs_sqlalchemy
@@ -12,6 +12,7 @@ from features import feature_types
 from mobiles import mobile_types
 from buildings import building_types
 from commands.objects import recruit
+import util
 
 engine = create_engine(db_url, echo=db_echo)
 
@@ -36,21 +37,12 @@ session = Session()
 
 
 @attrs_sqlalchemy
-class Game(Base):
-    """A game board."""
-    __tablename__ = 'games'
-    size_x = Column(Integer, nullable=False, default=30)
-    size_y = Column(Integer, nullable=False, default=30)
-    move_amount = Column(Float, nullable=False, default=1.0)
-
-    def __str__(self):
-        return 'Game %d' % self.id
-
-
-@attrs_sqlalchemy
 class Player(Base):
     """A Player."""
     __tablename__ = 'players'
+    username = Column(String(50), unique=True, nullable=False)
+    password = Column(String(80), nullable=True)
+    admin = Column(Boolean, nullable=False, default=False)
     name = Column(String(50), unique=True, nullable=False)
     game_id = Column(Integer, ForeignKey('games.id'), nullable=True)
     game = relationship('Game', backref='players')
@@ -74,16 +66,25 @@ class Player(Base):
         else:
             return False
 
-    def notify(self, string, *args, **kwargs):
+    def notify(self, *args, **kwargs):
         """Notify this player of something."""
-        # Should probably use try-except here, but then we run the risk of me
-        # changing the protocol and forgetting which method to use.
-        if self.connected:
-            self.connection.sendLine(string.format(*args, **kwargs).encode())
+        util.notify_player(self, *args, **kwargs)
 
     def end_output(self):
         """Notify the client not to expect any further output."""
         self.notify('---')
+
+
+@attrs_sqlalchemy
+class Game(Base):
+    """A game board."""
+    __tablename__ = 'games'
+    size_x = Column(Integer, nullable=False, default=30)
+    size_y = Column(Integer, nullable=False, default=30)
+    move_amount = Column(Float, nullable=False, default=0.1)
+
+    def __str__(self):
+        return 'Game %d' % self.id
 
 
 @attrs_sqlalchemy

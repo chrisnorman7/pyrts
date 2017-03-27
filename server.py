@@ -2,15 +2,30 @@
 
 import re
 from datetime import datetime
-from random import random
-from math import floor
+from attr import attrs, attrib
 from twisted.python import log
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, protocol
-from db import Player, Game, GameObject, session
-from buildings import town_hall
-from util import object_created
-from commands.base import commands
+from util import notify_player
+from db import Player
+from commands.base import commands, anonymous_commands
+from config import welcome_msg
+
+
+@attrs
+class FakePlayer:
+    """A pretend player class."""
+    connection = attrib()
+
+    def __attrs_post_init__(self):
+        self.connected = True
+
+    def notify(self, *args, **kwargs):
+        return notify_player(self, *args, **kwargs)
+
+    def disconnect(self):
+        """Disconnect this player."""
+        self.connection.transport.loseConnection()
 
 
 class Protocol(LineReceiver):
@@ -18,51 +33,9 @@ class Protocol(LineReceiver):
     def connectionMade(self):
         self.last_command = None
         self.connected = datetime.now()
-        game = session.query(Game).first()
-        if game is None:
-            game = Game()
-            game.save()
-            log.msg('Created new game %r.' % game)
-        self.player = Player(
-            game=game,
-            name='Player',
-            start_x=float(floor(random() * game.size_x)),
-            start_y=float(floor(random() * game.size_y)),
-        )
-        self.player.connection = self
-        self.player.save()
-        self.player.name = 'Player %d' % self.player.id
-        for obj in session.query(
-            Player
-        ).filter(
-            Player.game == game,
-            Player.id != self.player.id
-        ):
-            obj.notify('{} connected.', self.player.name)
-        self.player.save()
-        log.msg('Created player %r.' % self.player)
-        # Give the player their first building:
-        building = GameObject(
-            game=game,
-            owner=self.player,
-            x=self.player.start_x,
-            y=self.player.start_y
-        )
-        log.msg('Created building %r.' % building)
-        building.target_x = building.x
-        building.target_y = building.y
-        building.type = town_hall
-        self.player.notify(
-            'The board is {} by {}.',
-            game.size_x,
-            game.size_y
-        )
-        self.player.notify(
-            'Your location: ({}, {}).',
-            self.player.start_x,
-            self.player.start_y
-        )
-        object_created(building)
+        self.game = None
+        self.player = FakePlayer(self)
+        self.player.notify(welcome_msg)
 
     def connectionLost(self, reason):
         """Destroy all the players stuff."""
@@ -72,22 +45,16 @@ class Protocol(LineReceiver):
                 reason.getErrorMessage()
             )
         )
-        game = self.player.game
-        for obj in session.query(
-            Player
-        ).filter(
-            Player.game == self.player.game,
-            Player.id != self.player.id
-        ):
-            obj.notify('{} disconnected.', self.player.name)
-        for obj in [self.player, *self.player.owned_objects]:
-            log.msg('Deleting object %r.' % obj)
-            session.delete(obj)
-        session.commit()
-        if not game.objects and not game.players:
-            log.msg('Deleting game %r.' % game)
-            session.delete(game)
-            session.commit()
+        self.player.connection = None
+
+    def get_commands(self):
+        """Returns the possible commands for this connection."""
+        if isinstance(self.player, FakePlayer):
+            return anonymous_commands
+        elif isinstance(self.player, Player):
+            return commands
+        else:
+            return []  # No idea what's going on.
 
     def lineReceived(self, string):
         string = string.decode()
@@ -98,7 +65,7 @@ class Protocol(LineReceiver):
                 return self.player.notify('This is your first command.')
         else:
             self.last_command = string
-        for command in commands:
+        for command in self.get_commands():
             m = re.match(command.regexp, string)
             if m is not None:
                 log.msg('Running %r with match %r.' % (command, m))

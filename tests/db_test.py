@@ -6,15 +6,16 @@ from features import feature_types
 from mobiles import mobile_types
 from buildings import building_types
 
+player_name = 'test the db player'
 game = Game()
 game.save()
-player_name = 'test player'
-player = Player(name=player_name, game=game)
+player = Player(name=player_name, username=player_name, game=game)
 player.save()
 
 
 def test_game():
     assert game.objects == []
+    assert game.players == [player]
 
 
 def test_Player():

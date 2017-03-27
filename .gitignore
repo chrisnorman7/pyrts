@@ -90,3 +90,4 @@ ENV/
 *.log
 *.wav
 *.ogg
+*.sqlite3
