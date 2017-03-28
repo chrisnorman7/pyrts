@@ -4,8 +4,9 @@ import re
 from attr import attrs, attrib, Factory
 from .help import game_help, command_help
 from .player import buildings, mobiles, name, say, shout, emote, who, menu, \
-     tell
+     tell, leave
 from .authentication import create, connect
+from .games_menu import create_game, join_game, games
 
 
 @attrs
@@ -98,6 +99,11 @@ commands = [
         '^tell (?P<object>.+) to (?P<command>[^ $]+)[ ]?(?P<argument>[^$]*)$',
         tell
     ),
+    Command(
+        'leave',
+        None,
+        leave
+    )
 ]
 
 for attr in ['food', 'water', 'gold', 'wood']:
@@ -127,5 +133,26 @@ anonymous_commands = [
         'connect <username> <password>',
         '^connect (?P<username>[^ ]+) (?P<password>[^$]+)$',
         connect
+    )
+]
+
+
+# Commands to connect players to games.
+games_menu = [
+    *general_commands,
+    Command(
+        'create <name>',
+        '^create ([^$]+)$',
+        create_game
+    ),
+    Command(
+        'join <game>',
+        '^join ([^$]+)$',
+        join_game
+    ),
+    Command(
+        'games',
+        None,
+        games
     )
 ]

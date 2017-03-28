@@ -4,13 +4,23 @@ from random_password import random_password
 from twisted.python import log
 from credentials import create_player, authenticate
 from config import password_length
+from .games_menu import games
+from util import player_joined
 
 
 def _connect(player, connection, created=False):
     """Connect connection to player."""
     connection.player = player
     player.connection = connection
-    player.notify('Welcome {}, {}.', '' if created else 'back ', player.name)
+    player.notify(
+        'Welcome {}, {}.',
+        'to the game' if created else 'back',
+        player.name
+    )
+    if player.game:
+        player_joined(player)
+    else:
+        games(player, None)
 
 
 def create(player, match):
@@ -31,7 +41,8 @@ def create(player, match):
     except Exception as e:
         log.err(e)
         player.notify(
-            'Could not create a player with that username and password.'
+            'Could not create a player with that username and password '
+            'combination.'
         )
 
 

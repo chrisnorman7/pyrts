@@ -2,10 +2,11 @@
 
 from datetime import datetime
 from db import session, Player, GameObject
-from util import match_object
+from util import match as _match, match_object, player_left
 from buildings import building_types
 from objects import commodities, TYPE_BUILDING, TYPE_MOBILE
 from mobiles import skills
+from .games_menu import games
 
 
 def buildings(player, match):
@@ -72,7 +73,7 @@ def who(player, match):
     """Shows everyone who's currently logged in."""
     player.notify('Who listing:')
     now = datetime.now()
-    for obj in session.query(Player):
+    for obj in _match(Player):
         host = obj.connection.transport.getPeer()
         player.notify(
             '{} [{}:{}] connected to {} since {} ({}).',
@@ -95,7 +96,7 @@ def tell(player, match):
     name = args['object']
     command = args['command']
     command_argument = args['argument']
-    objects = match_object(name, player=player)
+    objects = match_object(GameObject, name, owner=player)
     c = objects.count()
     if not c:
         player.notify('No objects found matching {}.', name)
@@ -120,7 +121,7 @@ def tell(player, match):
 def menu(player, match):
     """Show the menu for a particular object."""
     name = match.groups()[0].strip().lower()
-    objects = match_object(name, player=player)
+    objects = match_object(GameObject, name, owner=player)
     c = objects.count()
     if not c:
         player.notify('No object named {}.', name)
@@ -168,3 +169,11 @@ def menu(player, match):
                     if getattr(loc, attr) and obj.type.skils & skills[attr]:
                         player.notify('collect {}', attr)
         player.end_output()
+
+
+def leave(player, match):
+    """Leave your current game."""
+    player_left(player)
+    player.game = None
+    player.save()
+    games(player, None)

@@ -4,6 +4,7 @@ from passlib import hash
 from sqlalchemy.orm.exc import NoResultFound
 import db
 from config import password_crypt, password_rounds
+from util import match
 
 
 crypt = getattr(hash, password_crypt)
@@ -31,7 +32,7 @@ def verify(player, password):
 def authenticate(username, password):
     """Either return the player matching the specified credentials or None."""
     try:
-        p = db.session.query(db.Player).filter_by(username=username).one()
+        p = match(db.Player, username=username).one()
         if verify(p, password):
             return p
     except NoResultFound:

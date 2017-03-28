@@ -8,7 +8,7 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, protocol
 from util import notify_player
 from db import Player
-from commands.base import commands, anonymous_commands
+from commands.base import commands, anonymous_commands, games_menu
 from config import welcome_msg
 
 
@@ -52,7 +52,10 @@ class Protocol(LineReceiver):
         if isinstance(self.player, FakePlayer):
             return anonymous_commands
         elif isinstance(self.player, Player):
-            return commands
+            if self.player.game is None:
+                return games_menu
+            else:
+                return commands
         else:
             return []  # No idea what's going on.
 

@@ -46,8 +46,8 @@ class Player(Base):
     name = Column(String(50), unique=True, nullable=False)
     game_id = Column(Integer, ForeignKey('games.id'), nullable=True)
     game = relationship('Game', backref='players')
-    start_x = Column(Float, nullable=False, default=0.0)
-    start_y = Column(Float, nullable=False, default=0.0)
+    x = Column(Float, nullable=False, default=0.0)
+    y = Column(Float, nullable=False, default=0.0)
     gold = Column(Integer, nullable=False, default=50)
     food = Column(Integer, nullable=False, default=50)
     wood = Column(Integer, nullable=False, default=50)
@@ -79,12 +79,14 @@ class Player(Base):
 class Game(Base):
     """A game board."""
     __tablename__ = 'games'
+    name = Column(String(50), unique=True, nullable=True)
     size_x = Column(Integer, nullable=False, default=30)
     size_y = Column(Integer, nullable=False, default=30)
+    max_players = Column(Integer, nullable=False, default=4)
     move_amount = Column(Float, nullable=False, default=0.1)
 
     def __str__(self):
-        return 'Game %d' % self.id
+        return '{0.name} (#{0.id})'.format(self)
 
 
 @attrs_sqlalchemy
