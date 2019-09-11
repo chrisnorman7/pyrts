@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>RTS</title>
+    </head>
+    <body>
+        <h1>Realtime Strategy</h1>
+        <form id="loginForm">
+            <h2>Login</h2>
+            <label>Username: <input type="text" id="username"></label>
+            <label>Password: <input type="password" id="password"></label>
+            <input type="submit" value="Login">
+        </form>
+        <div id="mainDiv">
+            <h2>Messages</h2>
+            <p><input type="button" id="clearMessages" value="Clear"></p>
+            <div id="messages" aria-live="polite" aria-atomic="false"></div>
+            <hr>
+            <p id="keyboard" tabindex="0">Type keystrokes here.</p>
+        </div>
+        <div id="menu"></div>
+        <form id="textForm">
+            <h2>Enter Text</h2>
+            <label><span id="textLabel">Text</span>: <input type="text" id="textText" autocomplete="off"></label>
+        </form>
+        <table>
+            <tr>
+                <td><input type="button" class="button" id="main_menu" value="Main Menu"></td>
+                <td><input type="button" class="button" id="up" value="Up"></td>
+                <td><input type="button" class="button" id="coordinates" value="Coordinates"></td>
+            </tr>
+            <tr>
+                <td><input type="button" class="button" id="left" value="Left"></td>
+                <td><input type="button" class="button" id="activate" value="Activate"></td>
+                <td><input type="button" class="button" id="right" value="Right"></td>
+            </tr>
+            <tr>
+                <td><input type="button" class="button" id="speak" value="Speak"></td>
+                <td><input type="button" class="button" id="down" value="Down"></td>
+                <td><input type="button" class="button" id="build" value="Building Menu"></td>
+            </tr>
+            <tr>
+                <td><input type="button" class="button" id="previous_object" value="Select Previous Object"></td>
+                <td><input type="button" class="button" id="set_resource" value="Set Object Resources"></td>
+                <td><input type="button" class="button" id="next_object" value="Select Next Object"></td>
+            </tr>
+        </table>
+        <script src="/constants.js?1568245321"></script>
+        <script src="/static/js/sound.js"></script>
+        <script src="/static/js/main.js?1568245321"></script>
+    </body>
+</html>

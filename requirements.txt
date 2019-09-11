@@ -1,6 +1,8 @@
-sqlalchemy
-twisted
 attrs
-attrs-sqlalchemy
+twisted
+autobahn
+sqlalchemy
 passlib
-git+https://github.com/chrisnorman7/random_password.git
+db-dumper
+klein
+emote-utils
