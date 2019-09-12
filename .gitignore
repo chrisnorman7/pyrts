@@ -88,7 +88,4 @@ ENV/
 # Rope project settings
 .ropeproject
 *.log
-*.wav
-*.ogg
-*.sqlite3
 *.yaml
