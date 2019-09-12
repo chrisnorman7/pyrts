@@ -39,14 +39,15 @@ def main_menu(con, player, location):
         for map in Map.query(finalised=None, template=False):
             name = f'{map.name} (with {english_list(map.players)})'
             m.add_item(name, 'join_map', args={'id': map.id})
-        m.add_label('Map Creation')
-        m.add_item('New Map', 'create_map')
-        q = Map.query(owner=player, template=True)
-        c = q.count()
-        if c:
-            m.add_label(f'Edit Map ({c})')
-            for map in q:
-                m.add_item(map.name, 'join_map', args=dict(id=map.id))
+        if player.admin:
+            m.add_label('Map Creation')
+            m.add_item('New Map', 'create_map')
+            q = Map.query(owner=player, template=True)
+            c = q.count()
+            if c:
+                m.add_label(f'Edit Map ({c})')
+                for map in q:
+                    m.add_item(map.name, 'join_map', args=dict(id=map.id))
     else:
         if location.template:
             m.add_item('Rename Map', 'rename_map')

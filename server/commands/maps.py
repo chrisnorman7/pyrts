@@ -12,7 +12,7 @@ from ..menus import Menu, YesNoMenu
 from ..util import pluralise, is_are, english_list
 
 
-@command(location_type=LocationTypes.not_map)
+@command(location_type=LocationTypes.not_map, admin=True)
 def create_map(con, player):
     """Create a new map."""
     m = Map(name='New Map', owner=player)
@@ -317,6 +317,12 @@ def random_map(
             name, players, min_resource, max_resource, _features
         )
         m.save()
+        for b in Building.query(location=m).join(Building.type).filter(
+            BuildingType.homely.is_(True)
+        ):
+            for name in Building.resource_names():
+                setattr(b, name, 10)
+            b.save()
         player.join_map(m)
 
 
