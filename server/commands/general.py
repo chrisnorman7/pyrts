@@ -2,7 +2,7 @@
 
 from .commands import command, commands, LocationTypes
 
-from ..db import Map, Player
+from ..db import Map, Player, Building
 from ..exc import InvalidUsername, InvalidPassword
 from ..menus import Menu
 from ..options import volume_adjust

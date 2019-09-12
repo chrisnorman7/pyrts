@@ -9,7 +9,7 @@ from ..db import (
     Map, Mobile, MobileType, Player
 )
 from ..menus import Menu, YesNoMenu
-from ..util import pluralise, is_are
+from ..util import pluralise, is_are, english_list
 
 
 @command(location_type=LocationTypes.not_map)
@@ -389,8 +389,10 @@ def activate(player, con):
                 f'Recruit {t} ({bm.resources_string()}', 'recruit',
                 args={'building': fo.id, 'building_mobile': bm.id}
             )
-        if fo.homely:
+        if fo.type.homely:
             m.add_item('Set Home', 'set_home', args={'id': fo.id})
+    if isinstance(fo, Feature):
+        m.add_item('Exploit', 'exploit', args={'id': fo.id})
     if isinstance(fo, Player):
         if player.admin:
             if fo.admin:
@@ -479,3 +481,29 @@ def set_home(player, id):
     else:
         c = q.update({Mobile.home_id: id})
         player.message(f'Updated {c} {pluralise(c, "home")}.')
+
+
+@command()
+def exploit(con, command_name, player, id, resource=None):
+    """Exploit a feature."""
+    f = Feature.get(id)
+    if f.coordinates != player.coordinates:
+        player.message('You do not see that here.')
+    if resource is None:
+        resources = f.type.resources
+        if len(resources) == 1:
+            resource = resources[0]
+        else:
+            m = Menu('Resources')
+            for r in resources:
+                m.add_item(
+                    r.title(), command_name, args=dict(id=f.id, resource=r)
+                )
+            return m.send(con)
+    q = player.selected_mobiles.join(
+        Mobile.type
+    ).filter(getattr(MobileType, resource) == 1)
+    el = english_list(q, key=lambda o: o.get_name())
+    player.message(f'Employing {el}.')
+    for m in q:
+        m.exploit(f, resource)
