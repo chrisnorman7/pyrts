@@ -6,8 +6,9 @@ from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, load, dump
+from server.db import Base, load, dump, Mobile
 from server.options import interface, http_port, websocket_port
+from server.util import pluralise
 from server.web import app, WebSocketProtocol
 
 
@@ -18,6 +19,14 @@ def main():
     try:
         load()
         logging.info('Number of objects loaded: %d.', Base.number_of_objects())
+        q = Mobile.query(Mobile.action.isnot(None),)
+        c = q.count()
+        if c:
+            logging.info('Resuming %d %s.', c, pluralise(c, 'task'))
+            for m in q:
+                m.progress()
+        else:
+            logging.info('No tasks to resume.')
     except FileNotFoundError:
         logging.info('Starting with a blank database.')
     site = Site(app.resource())
