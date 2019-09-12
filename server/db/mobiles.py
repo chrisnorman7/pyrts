@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
-    OwnerMixin, TypeMixin, SoundMixin, GetNameMixin
+    OwnerMixin, TypeMixin, SoundMixin, GetNameMixin, ResourcesMixin
 )
 
 
@@ -22,7 +22,7 @@ class BuildingBuilder(Base):
     )
 
 
-class MobileType(Base, NameMixin, ResistanceMixin, SoundMixin):
+class MobileType(Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin):
     """A type of mobile."""
 
     __tablename__ = 'mobile_types'
