@@ -35,7 +35,10 @@ class Map(Base, NameMixin, OwnerMixin):
 
     def add_building(self, type, x, y):
         """Add a building to this map."""
-        return Building(location=self, type=type, x=x, y=y)
+        return Building(
+            location=self, type=type, x=x, y=y,
+            **{name: 0 for name in Building.resource_names()}
+        )
 
     def add_feature(self, type, x, y):
         """Add a feature to this map."""

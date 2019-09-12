@@ -6,6 +6,7 @@ from server.db import (
     Building, BuildingType, EntryPoint, Feature, FeatureType, Map, Mobile,
     Player
 )
+from server.db.mobiles import MobileActions
 from server.db.util import dump_object
 from server.exc import InvalidUsername, InvalidPassword, NoSuchSound
 
@@ -285,7 +286,7 @@ def test_player_delete(player, map, farm):
     assert f.owner_id is None
 
 
-def test_exploit(map, mine, peasant, farm):
+def test_exploiting(map, mine, peasant, farm):
     p = map.add_mobile(peasant, 0, 0)
     f = map.add_building(farm, 0, 0)
     p.exploiting = f
@@ -306,6 +307,57 @@ def test_coordinates(player):
 def test_target(map, peasant):
     p = map.add_mobile(peasant, 0, 0)
     p.save()
-    assert p.target == (None, None)
-    p.target = (0, 0)
     assert p.target == (0, 0)
+    p.target = (4, 4)
+    assert p.target == (4, 4)
+
+
+def test_exploit(player, map, peasant, mine, farm):
+    f = map.add_building(farm, 0, 0)
+    p = map.add_mobile(peasant, 0, 0)
+    p.owner = player
+    p.home = f
+    m = map.add_feature(mine, 2, 1)
+    m.gold = 5
+    for thing in (f, m, p):
+        thing.save()
+
+    def check_peasant():
+        assert p.home is f
+        assert p.exploiting is m
+        assert p.target == m.coordinates
+
+    p.exploit(m, 'gold')
+    check_peasant()
+    assert p.coordinates == (0, 0)
+    assert p.action is MobileActions.exploit
+    p.progress()
+    check_peasant()
+    assert p.coordinates == (1, 1)
+    assert p.action == MobileActions.exploit
+    p.progress()
+    check_peasant()
+    assert p.coordinates == m.coordinates
+    assert p.action == MobileActions.exploit
+    p.progress()
+    check_peasant()
+    assert m.gold == 4
+    assert p.action is MobileActions.drop
+    assert p.coordinates == m.coordinates
+    p.progress()
+    check_peasant()
+    assert p.coordinates == (1, 0)
+    assert p.action is MobileActions.drop
+    p.progress()
+    check_peasant()
+    assert f.gold == 0
+    assert p.coordinates == (0, 0)
+    p.progress()
+    check_peasant()
+    assert p.action is MobileActions.exploit
+    assert f.gold == 1
+    assert p.coordinates == f.coordinates
+    p.progress()  # Do it all over again.
+    assert p.action is MobileActions.exploit
+    check_peasant()
+    assert p.coordinates == (1, 1)

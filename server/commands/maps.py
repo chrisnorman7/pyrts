@@ -388,6 +388,7 @@ def activate(player, con):
                 f'Recruit {t} ({bm.resources_string()}', 'recruit',
                 args={'building': fo.id, 'building_mobile': bm.id}
             )
+        m.add_item('Set Home', 'set_home', args={'id': fo.id})
     if isinstance(fo, Player):
         if player.admin:
             if fo.admin:
