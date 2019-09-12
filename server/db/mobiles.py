@@ -1,15 +1,19 @@
 """Provides the MobileType and Mobile classes."""
 
 from enum import Enum as _Enum
+from random import uniform
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
 from twisted.internet import reactor
+from twisted.internet.error import AlreadyCancelled
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
     OwnerMixin, TypeMixin, SoundMixin, GetNameMixin, ResourcesMixin
 )
+
+tasks = {}
 
 
 class MobileActions(_Enum):
@@ -18,6 +22,7 @@ class MobileActions(_Enum):
     drop = 1
     patrol_out = 2
     patrol_back = 3
+    travel = 4
 
 
 class BuildingBuilder(Base):
@@ -72,8 +77,14 @@ class Mobile(
 
     @exploiting.setter
     def exploiting(self, value):
-        self.exploiting_class = type(value).__name__
-        self.exploiting_id = value.id
+        if value is None:
+            class_name = None
+            id = None
+        else:
+            class_name = type(value).__name__
+            id = value.id
+        self.exploiting_class = class_name
+        self.exploiting_id = id
 
     @property
     def target(self):
@@ -89,6 +100,19 @@ class Mobile(
         else:
             owner = f'employed by {self.owner.name}'
         return f'{self.get_name()} [{owner}]'
+
+    def kill_task(self):
+        """Get any task for this mobile and kill it, to prevent duplicate
+        tasks."""
+        t = tasks.pop(self.id, None)
+        try:
+            t.cancel()
+        except (AlreadyCancelled, AttributeError):
+            pass  # Already cancelled or non existant.
+
+    def random_speed(self):
+        """Return a random speed between 0.0 and self.type.speed."""
+        return uniform(0.0, self.type.speed)
 
     def sound(self, path):
         """Make this object emit a sound."""
@@ -125,18 +149,30 @@ class Mobile(
         self.target = feature.coordinates
         self.action = MobileActions.exploit
         self.exploiting_material = material
-        reactor.callLater(self.type.speed, self.progress)
+        reactor.callLater(self.random_speed(), self.progress)
+
+    def travel(self, x, y):
+        """Start this mobile travelling."""
+        self.kill_task()
+        self.target = x, y
+        self.exploiting = None
+        self.action = MobileActions.travel
+        reactor.callLater(self.random_speed(), self.progress)
 
     def progress(self):
         """Progress this object through whatever task it is performing."""
+        self.kill_task()
+        Building = Base._decl_class_registry['Building']
+        BuildingType = Base._decl_class_registry['BuildingType']
         a = self.action
         if self.owner is None:
             return  # Stop what we are doing while unemployed.
         elif a is MobileActions.drop:
             if self.home is None:
                 # Homeless now. Try and reroute.
-                Building = Base._decl_class_registry['Building']
-                self.home = Building.first(owner_id=self.owner_id)
+                self.home = Building.query(owner_id=self.owner_id).join(
+                    Building.type
+                ).filter(BuildingType.homely.is_(True)).first()
                 if self.home is None:
                     # They have no buildings left, we are probably unemployed.
                     return
@@ -152,14 +188,16 @@ class Mobile(
                 # We are in place.
                 if self.exploiting is None:
                     # We have nothing to do. That resource is exhausted.
-                    self.direction = None
                     return
                 else:
                     name = self.exploiting_material
-                    setattr(
-                        self.exploiting, name,
-                        getattr(self.exploiting, name) - 1
-                    )
+                    value = getattr(self.exploiting, name) - 1
+                    if value:
+                        setattr(self.exploiting, name, value)
+                    else:
+                        if not isinstance(self.exploiting, Building):
+                            self.exploiting.delete()
+                        self.exploiting = None
                     self.action = MobileActions.drop
             else:
                 self.move_towards(*self.target)
@@ -176,7 +214,13 @@ class Mobile(
                 self.action = MobileActions.patrol_out
             else:
                 self.move_towards(self.home)
+        elif a is MobileActions.travel:
+            if self.coordinates == self.target:
+                self.action = None
+                return  # Done.
+            else:
+                self.move_towards(*self.target)
         else:
             return  # No action.
         self.save()  # Better save since we might be inside a deferred.
-        reactor.callLater(self.type.speed, self.progress)
+        reactor.callLater(self.random_speed(), self.progress)

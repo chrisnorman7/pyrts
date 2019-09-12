@@ -6,7 +6,7 @@ from .commands import command, LocationTypes
 
 from ..db import (
     Building, BuildingMobile, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Mobile, MobileType, Player
+    Map, Mobile, MobileType, Player, Base
 )
 from ..menus import Menu, YesNoMenu
 from ..util import pluralise, is_are, english_list
@@ -113,6 +113,9 @@ def switch_object(player, direction):
     fo = player.focussed_object
     player.message(fo.get_name())
     if isinstance(fo, Mobile):
+        Mobile.query(
+            selected=True, owner=player
+        ).update({Mobile.selected: False})
         fo.selected = True
         fo.save()
 
@@ -383,16 +386,23 @@ def activate(player, con):
     if isinstance(fo, (Building, Mobile)) and fo.owner is None:
         m.add_item('Acquire', 'acquire', args={'id': fo.id})
     if isinstance(fo, Building) and fo.owner is player:
-        for bm in BuildingMobile.all(building_type_id=fo.type_id):
-            t = MobileType.get(bm.mobile_type_id)
+        for name in BuildingType.resource_names():
+            value = getattr(fo, name)
+            m.add_label(f'{name.title()}: {value}')
+        for t in fo.type.recruits:
+            bm = fo.type.get_recruit(t)
             m.add_item(
                 f'Recruit {t} ({bm.resources_string()}', 'recruit',
-                args={'building': fo.id, 'building_mobile': bm.id}
+                args=dict(building=fo.id, mobile=t.id)
             )
         if fo.type.homely:
             m.add_item('Set Home', 'set_home', args={'id': fo.id})
-    if isinstance(fo, Feature):
-        m.add_item('Exploit', 'exploit', args={'id': fo.id})
+    if isinstance(fo, (Building, Feature)):
+        m.add_item(
+            'Exploit', 'exploit', args=dict(
+                id=fo.id, class_name=type(fo).__name__
+            )
+        )
     if isinstance(fo, Player):
         if player.admin:
             if fo.admin:
@@ -402,6 +412,7 @@ def activate(player, con):
             if fo.connected:
                 m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
             m.add_item('Delete', 'delete_player', args={'id': fo.id})
+    m.add_item('Summon', 'summon')
     m.send(con)
 
 
@@ -438,19 +449,20 @@ def _recruit(player_id, building_id, building_mobile_id):
 
 
 @command(location_type=LocationTypes.finalised)
-def recruit(player, building, building_mobile):
+def recruit(player, location, building, mobile):
     """Recruit a mobile."""
-    b = Building.get(building)
-    if building is None or b.x != player.x or b.y != player.y:
+    b = Building.one(id=building, owner=player, **player.same_coordinates())
+    if b is None:
         player.message(
             'You can only recruit using buildings at your current location.'
         )
     else:
-        bm = BuildingMobile.get(building_mobile)
-        if bm is None:
+        m = MobileType.get(mobile)
+        if m is None:
             player.message('Invalid recruitment.')
         else:
             take = {}
+            bm = b.type.get_recruit(m)
             for name in BuildingMobile.resource_names():
                 requires = getattr(bm, name)
                 value = getattr(b, name)
@@ -476,7 +488,7 @@ def set_home(player, id):
     b = Building.get(id)
     if b is None or b.owner is not player:
         player.message('Invalid building.')
-    elif not b.homely:
+    elif not b.type.homely:
         player.message('That building cannot be used as a home.')
     else:
         c = q.update({Mobile.home_id: id})
@@ -484,21 +496,27 @@ def set_home(player, id):
 
 
 @command()
-def exploit(con, command_name, player, id, resource=None):
+def exploit(
+    con, args, location, command_name, player, class_name, id, resource=None
+):
     """Exploit a feature."""
-    f = Feature.get(id)
-    if f.coordinates != player.coordinates:
-        player.message('You do not see that here.')
-    if resource is None:
-        resources = f.type.resources
+    cls = Base._decl_class_registry[class_name]
+    f = cls.first(location=location, id=id, x=player.x, y=player.y)
+    if f is None:
+        player.message('You cannot see that here.')
+    elif resource is None:
+        if isinstance(f, Feature):
+            resources = f.type.resources
+        else:
+            resources = Building.resource_names()
         if len(resources) == 1:
             resource = resources[0]
         else:
             m = Menu('Resources')
             for r in resources:
-                m.add_item(
-                    r.title(), command_name, args=dict(id=f.id, resource=r)
-                )
+                item_args = args.copy()
+                item_args['resource'] = r
+                m.add_item(r.title(), command_name, args=item_args)
             return m.send(con)
     q = player.selected_mobiles.join(
         Mobile.type
@@ -507,3 +525,17 @@ def exploit(con, command_name, player, id, resource=None):
     player.message(f'Employing {el}.')
     for m in q:
         m.exploit(f, resource)
+
+
+@command()
+def summon(player):
+    """Summon all selected objects."""
+    q = player.selected_mobiles
+    c = q.count()
+    if not c:
+        player.message('You have not selected any mobiles.')
+    else:
+        for m in q:
+            m.travel(player.x, player.y)
+        el = english_list(q, key=lambda o: o.get_name())
+        player.message(f'You summon {el}.')

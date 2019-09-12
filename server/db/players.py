@@ -230,3 +230,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     @property
     def selected_mobiles(self):
         return Mobile.query(owner=self, selected=True)
+
+    def same_coordinates(self):
+        """Return a set of query-ready args representing this player's current
+        location and coordinates."""
+        return dict(location=self.location, x=self.x, y=self.y)

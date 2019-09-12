@@ -296,6 +296,9 @@ def test_exploiting(map, mine, peasant, farm):
     p.exploiting = m
     assert p.exploiting_class == 'Feature'
     assert p.exploiting_id == m.id
+    p.exploiting = None
+    assert p.exploiting_class is None
+    assert p.exploiting_id is None
 
 
 def test_coordinates(player):

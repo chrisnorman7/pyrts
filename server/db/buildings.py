@@ -57,6 +57,20 @@ class BuildingType(
             {BuildingMobile.pop_time: value}
             )
 
+    def add_recruit(self, type, **resources):
+        """Add the given MobileType instance as a recruit of this building
+        type."""
+        return BuildingMobile(
+            mobile_type_id=type.id, building_type_id=self.id, **resources
+        )
+
+    def get_recruit(self, type):
+        """Return the BuildingMobile instance that represents the given
+        MobileType instance."""
+        return BuildingMobile.one(
+            building_type_id=self.id, mobile_type_id=type.id
+        )
+
 
 class Building(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin,
