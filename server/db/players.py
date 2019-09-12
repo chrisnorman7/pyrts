@@ -226,3 +226,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def get_full_name(self):
         connected = "connected" if self. connected else "disconnected"
         return f'{self.name} ({connected})'
+
+    @property
+    def selected_mobiles(self):
+        return Mobile.query(owner=self, selected=True)

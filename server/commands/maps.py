@@ -342,6 +342,7 @@ for x in range(10):
 
 def select_mobile(index, player):
     """Select a group of mobiles."""
+    player.selected_mobiles.update({Mobile.selected: False})
     if not index:
         group = 'All'
         q = Mobile.query(owner=player)
@@ -388,7 +389,8 @@ def activate(player, con):
                 f'Recruit {t} ({bm.resources_string()}', 'recruit',
                 args={'building': fo.id, 'building_mobile': bm.id}
             )
-        m.add_item('Set Home', 'set_home', args={'id': fo.id})
+        if fo.homely:
+            m.add_item('Set Home', 'set_home', args={'id': fo.id})
     if isinstance(fo, Player):
         if player.admin:
             if fo.admin:
@@ -463,3 +465,17 @@ def recruit(player, building, building_mobile):
                 pt = bm.pop_time
                 reactor.callLater(pt, _recruit, player.id, b.id, bm.id)
                 player.message(f'({pt} {pluralise(pt, "second")})')
+
+
+@command()
+def set_home(player, id):
+    """Set the home of all selected mobiles."""
+    q = player.selected_mobiles
+    b = Building.get(id)
+    if b is None or b.owner is not player:
+        player.message('Invalid building.')
+    elif not b.homely:
+        player.message('That building cannot be used as a home.')
+    else:
+        c = q.update({Mobile.home_id: id})
+        player.message(f'Updated {c} {pluralise(c, "home")}.')
