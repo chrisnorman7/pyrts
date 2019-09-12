@@ -1,6 +1,6 @@
 """Provides the MobileType and Mobile classes."""
 
-from sqlalchemy import Column, Boolean, Integer, ForeignKey
+from sqlalchemy import Column, Boolean, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from .base import (
@@ -42,6 +42,20 @@ class Mobile(
     home_id = Column(Integer, ForeignKey('buildings.id'), nullable=True)
     home = relationship('Building', backref='mobiles')
     selected = Column(Boolean, nullable=False, default=False)
+    exploiting_class = Column(String(20), nullable=True)
+    exploiting_id = Column(Integer, nullable=True)
+
+    @property
+    def exploiting(self):
+        if self.exploiting_class is not None:
+            return Base._decl_class_registry[self.exploiting_class].get(
+                self.exploiting_id
+            )
+
+    @exploiting.setter
+    def exploiting(self, value):
+        self.exploiting_class = type(value).__name__
+        self.exploiting_id = value.id
 
     def get_full_name(self):
         if self.owner is None:

@@ -272,3 +272,26 @@ def test_sound(mine):
     f = FeatureType(name='Nothing really')
     with raises(NoSuchSound):
         f.sound
+
+
+def test_player_delete(player, map, farm):
+    f = map.add_building(farm, 0, 0)
+    f.owner = player
+    map.location = map
+    f.location = map
+    for thing in (map, player, f):
+        thing.save()
+    player.delete()
+    assert f.owner_id is None
+
+
+def test_exploit(map, mine, peasant, farm):
+    p = map.add_mobile(peasant, 0, 0)
+    f = map.add_building(farm, 0, 0)
+    p.exploiting = f
+    assert p.exploiting_class == 'Building'
+    assert p.exploiting_id == f.id
+    m = map.add_feature(mine, 0, 0)
+    p.exploiting = m
+    assert p.exploiting_class == 'Feature'
+    assert p.exploiting_id == m.id
