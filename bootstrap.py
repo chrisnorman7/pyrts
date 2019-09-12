@@ -14,7 +14,9 @@ You will be left with the following land features:
 
 You will be left with the following mobiles:
 * Peasant (provided by Town Hall).
+Peasants can build town halls and farms, and can exploit wood, and gold.
 * Farmer (provided by Farm)
+Farmers can build farms and stables, and can exploit food, water, and wood.
 * Scout (provided by Stable)
 """
 
@@ -33,13 +35,13 @@ def main():
     farm.save()
     stable = BuildingType(name='Stable', depends=farm)
     stable.save()
-    peasant = MobileType(name='Peasant')
+    peasant = MobileType(name='Peasant', wood=1, gold=1)
     peasant.save()
     town_hall.recruits.append(peasant)
-    farmer = MobileType(name='Farmer')
+    farmer = MobileType(name='Farmer', food=1, water=1, wood=1)
     farmer.save()
     farm.recruits.append(farmer)
-    scout = MobileType(name='Scout')
+    scout = MobileType(name='Scout', stone=1)
     scout.save()
     stable.recruits.append(scout)
     FeatureType(name='Mine', gold=1).save()
