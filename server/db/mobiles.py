@@ -44,6 +44,8 @@ class Mobile(
     selected = Column(Boolean, nullable=False, default=False)
     exploiting_class = Column(String(20), nullable=True)
     exploiting_id = Column(Integer, nullable=True)
+    target_x = Column(Integer, nullable=True)
+    target_y = Column(Integer, nullable=True)
 
     @property
     def exploiting(self):
@@ -56,6 +58,14 @@ class Mobile(
     def exploiting(self, value):
         self.exploiting_class = type(value).__name__
         self.exploiting_id = value.id
+
+    @property
+    def target(self):
+        return self.target_x, self.target_y
+
+    @target.setter
+    def target(self, value):
+        self.target_x, self.target_y = value
 
     def get_full_name(self):
         if self.owner is None:

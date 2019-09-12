@@ -101,6 +101,14 @@ class CoordinatesMixin:
     x = Column(Integer, nullable=False, default=0)
     y = Column(Integer, nullable=False, default=0)
 
+    @property
+    def coordinates(self):
+        return self.x, self.y
+
+    @coordinates.setter
+    def coordinates(self, value):
+        self.x, self.y = value
+
 
 class NameMixin:
     name = Column(String(30), nullable=False)

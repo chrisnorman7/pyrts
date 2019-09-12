@@ -295,3 +295,17 @@ def test_exploit(map, mine, peasant, farm):
     p.exploiting = m
     assert p.exploiting_class == 'Feature'
     assert p.exploiting_id == m.id
+
+
+def test_coordinates(player):
+    assert player.coordinates == (0, 0)
+    player.coordinates = (1, 2)
+    assert player.coordinates == (1, 2)
+
+
+def test_target(map, peasant):
+    p = map.add_mobile(peasant, 0, 0)
+    p.save()
+    assert p.target == (None, None)
+    p.target = (0, 0)
+    assert p.target == (0, 0)
