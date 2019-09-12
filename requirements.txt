@@ -6,3 +6,4 @@ passlib
 db-dumper
 klein
 emote-utils
+pyyaml
