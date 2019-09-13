@@ -489,7 +489,7 @@ def activate(player, con):
                 if fo.connected:
                     m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
-        m.add_item('Summon', 'summon')
+    m.add_item('Summon', 'summon')
     for t in BuildingType.all():
         m.add_item(f'Build {t.name}', 'build_building', args=dict(id=t.id))
     m.send(con)
@@ -633,18 +633,17 @@ def health(player):
 @command(location_type=LocationTypes.finalised)
 def build_building(location, player, id):
     """Build a building on the current map, using the given id as the type."""
-    location_kwargs = dict(owner=player, location=location)
     t = BuildingType.get(id)
     if t.depends is not None and not Building.count(
-        **location_kwargs, type=t.depends
+        owner=player, location=location, type=t.depends
     ):
         return player.message(f'{t.name} requires {t.depends.name}.')
-    for m in player.selected_mobiles.filter_by(**location_kwargs):
+    for m in player.selected_mobiles.filter_by(**player.same_coordinates()):
         if m.type in t.builders:
             break
     else:
         return player.message(
-            'First select a unit capable of building this building.'
+            'First select and summon a unit capable of building this building.'
         )
     b = location.add_building(t, *player.coordinates)
     b.owner = player
