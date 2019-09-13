@@ -3,8 +3,8 @@ from pytest import raises
 from datetime import datetime
 
 from server.db import (
-    Building, BuildingType, EntryPoint, Feature, FeatureType, Map, Mobile,
-    Player
+    Building, BuildingMobile, BuildingType, EntryPoint, Feature, FeatureType,
+    Map, Mobile, Player
 )
 from server.db.mobiles import MobileActions
 from server.db.util import dump_object
@@ -418,3 +418,16 @@ def test_visible_objects(player, farm, mine, peasant, map):
     assert player.visible_objects == [b, p, m]
     player.coordinates = (1, 1)
     assert player.visible_objects == []
+
+
+def test_builder(peasant):
+    castle = BuildingType(name='Castle')
+    castle.save()
+    bm = castle.add_builder(peasant, gold=2, water=3)
+    assert isinstance(bm, BuildingMobile)
+    assert bm.building_type_id == castle.id
+    assert bm.mobile_type_id == peasant.id
+    assert bm.gold == 2
+    assert bm.water == 3
+    bm.save()
+    assert castle.get_builder(peasant) is bm

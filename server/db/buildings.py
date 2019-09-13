@@ -73,6 +73,19 @@ class BuildingType(
             building_type_id=self.id, mobile_type_id=type.id
         )
 
+    def add_builder(self, type, **kwargs):
+        """Add a MobileType instance that can build this building."""
+        return BuildingMobile(
+            building_type_id=self.id, mobile_type_id=type.id, **kwargs
+        )
+
+    def get_builder(self, type):
+        """Return the BuildingMobile instance associated with this building
+        type, and the provided MobileType instance."""
+        return BuildingMobile.one(
+            building_type_id=self.id, mobile_type_id=type.id
+        )
+
 
 class Building(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin,
