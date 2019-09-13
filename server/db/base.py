@@ -109,6 +109,12 @@ class CoordinatesMixin:
     def coordinates(self, value):
         self.x, self.y = value
 
+    def distance_to(self, other):
+        """Return the distance between this object and other."""
+        dx = max(self.x, other.x) - min(self.x, other.x)
+        dy = max(self.y, other.y) - min(self.y, other.y)
+        return min(dx, dy)
+
 
 class NameMixin:
     name = Column(String(30), nullable=False)

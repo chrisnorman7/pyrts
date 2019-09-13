@@ -452,3 +452,13 @@ def test_resources_dict(map, farm):
     b.save()
     d = b.resources_dict()
     assert d == dict(wood=0, gold=0, food=0, water=0, stone=0)
+
+
+def test_distance_to(map, farm, peasant):
+    b = map.add_building(farm, 0, 0)
+    p = map.add_mobile(peasant, 1, 1)
+    assert b.distance_to(p) == 1
+    p.coordinates = (3, 3)
+    assert b.distance_to(p) == 3
+    p.coordinates = (5, 4)
+    assert b.distance_to(p) == 4
