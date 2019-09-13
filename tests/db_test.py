@@ -3,7 +3,7 @@ from pytest import raises
 from datetime import datetime
 
 from server.db import (
-    Building, BuildingMobile, BuildingType, EntryPoint, Feature, FeatureType,
+    Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
     Map, Mobile, Player
 )
 from server.db.mobiles import MobileActions
@@ -423,11 +423,11 @@ def test_visible_objects(player, farm, mine, peasant, map):
 def test_builder(peasant):
     castle = BuildingType(name='Castle')
     castle.save()
-    bm = castle.add_builder(peasant, gold=2, water=3)
-    assert isinstance(bm, BuildingMobile)
-    assert bm.building_type_id == castle.id
-    assert bm.mobile_type_id == peasant.id
-    assert bm.gold == 2
-    assert bm.water == 3
-    bm.save()
-    assert castle.get_builder(peasant) is bm
+    bb = peasant.add_building(castle, gold=2, water=3)
+    assert isinstance(bb, BuildingBuilder)
+    assert bb.building_type_id == castle.id
+    assert bb.mobile_type_id == peasant.id
+    assert bb.gold == 2
+    assert bb.water == 3
+    bb.save()
+    assert peasant.get_building(castle) is bb

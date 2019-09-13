@@ -42,7 +42,6 @@ class BuildingType(
     recruits = relationship(
         'MobileType', backref='recruiters', secondary=BuildingMobile.__table__
     )
-    build_time = Column(Integer, nullable=False, default=10)
 
     def get_pop_time(self, mobile_type):
         """Get the pop time for the given MobileType instance."""
@@ -69,19 +68,6 @@ class BuildingType(
     def get_recruit(self, type):
         """Return the BuildingMobile instance that represents the given
         MobileType instance."""
-        return BuildingMobile.one(
-            building_type_id=self.id, mobile_type_id=type.id
-        )
-
-    def add_builder(self, type, **kwargs):
-        """Add a MobileType instance that can build this building."""
-        return BuildingMobile(
-            building_type_id=self.id, mobile_type_id=type.id, **kwargs
-        )
-
-    def get_builder(self, type):
-        """Return the BuildingMobile instance associated with this building
-        type, and the provided MobileType instance."""
         return BuildingMobile.one(
             building_type_id=self.id, mobile_type_id=type.id
         )
