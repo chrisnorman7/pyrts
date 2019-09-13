@@ -71,14 +71,17 @@ def jump(con, player, location):
     for cls in (Player, Building, Mobile, Feature):
         objects.extend(cls.query(location=location))
     objects.remove(player)
-    locations = sorted(objects, key=lambda thing: player.distance_to(thing))
-    if not locations:
+    if not objects:
         player.message('This map is empty.')
     else:
+        locations = sorted(
+            objects, key=lambda thing: player.distance_to(thing)
+        )
         m = Menu('Jump')
         for thing in locations:
             m.add_item(
-                f'{thing.get_full_name()} ({thing.x}, {thing.y})', 'move',
+                f'{thing.get_full_name()} ({player.directions_to(thing)})',
+                'move',
                 args=dict(x=thing.x, y=thing.y)
             )
         m.send(con)
