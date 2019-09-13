@@ -180,7 +180,7 @@ class ResourcesMixin:
             x for x in dir(ResourcesMixin) if
             not x.startswith('_') and x not in [
                 'resources', 'resources_string', 'resource_names',
-                'get_difference', 'subtract_resources'
+                'get_difference', 'take_requirements'
             ]
         ]
 
@@ -213,7 +213,7 @@ class ResourcesMixin:
                 d[name] = required - value
         return d
 
-    def subtract_resources(self, thing):
+    def take_requirements(self, thing):
         """Take the resources required by thing from this object."""
         for name in thing.resources:
             required = getattr(thing, name)

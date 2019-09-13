@@ -545,7 +545,7 @@ def recruit(player, location, building, mobile):
         if d:
             player.message(f'You require {difference_string(d)}.')
         else:
-            b.subtract_resources(bm)
+            b.take_requirements(bm)
             player.call_later(bm.pop_time, _recruit, player.id, b.id, bm.id)
 
 
@@ -647,11 +647,19 @@ def build_building(location, player, id):
         return player.message(f'{t.name} requires {t.depends.name}.')
     for m in player.selected_mobiles.filter_by(**player.same_coordinates()):
         if m.type in t.builders:
+            obj = m
             break
     else:
         return player.message(
             'First select and summon a unit capable of building this building.'
         )
+    home = obj.home
+    if home is None:
+        return player.message(f'{obj.get_name()} has no home.')
+    d = t.get_difference(home)
+    if d:
+        return player.message(f'You require {difference_string(d)}.')
+    home.take_requirements(t)
     b = location.add_building(t, *player.coordinates)
     b.owner = player
     b.hp = 1
