@@ -59,11 +59,13 @@ def main_menu(con, player, location):
 def rename_player(con, player, text=None):
     """Rename your player."""
     if text:
-        if not Player.query(name=text).count():
+        if not Player.count(name=text):
             player.name = text
             player.save()
             player.message(f'You will now be known as {player.name}.')
             con.send('authenticated', text)
+            con.logger.info('Renamed to %s.', text)
+            con.set_logger(player=player)
         else:
             player.message('That name is already taken.')
     else:

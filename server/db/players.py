@@ -4,6 +4,7 @@ from random import choice
 
 from passlib.hash import sha512_crypt
 from sqlalchemy import Column, Boolean, Integer, String, Float
+from twisted.internet import reactor
 
 from .base import Base, NameMixin, LocationMixin, CoordinatesMixin
 from .buildings import Building, BuildingType
@@ -14,6 +15,7 @@ from .mobiles import Mobile
 from ..exc import InvalidUsername, InvalidPassword, NoSuchSound
 from ..options import base_url
 from ..socials import factory
+from ..util import pluralise
 
 crypt = sha512_crypt.using(rounds=10000)
 connections = {}
@@ -29,7 +31,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     connected = Column(Boolean, nullable=False, default=False)
     focussed_class = Column(String(20), nullable=True)
     focussed_id = Column(Integer, nullable=True)
-    volume = Column(Float, nullable=False, default=0.2)
+    volume = Column(Float, nullable=False, default=0.05)
 
     @classmethod
     def create(cls, username, password, name):
@@ -76,10 +78,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
                 old.player_id = None
                 old.transport.loseConnection()
             self.connected = True
-            value.player_id = self.id
+            value.authenticated(self)
             connections[self.id] = value
-            value.message('Welcome, %s.' % self.name)
-            value.send('authenticated', self.name)
             self.send_volume()
             if self.location is None:
                 value.call_command('main_menu')
@@ -256,3 +256,9 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def deselect_mobiles(self):
         """Deselect any selected mobiles."""
         self.selected_mobiles.update({Mobile.selected: False})
+
+    def call_later(self, time, *args, **kwargs):
+        """Use reactor.callLater to schedule something, telling the player how
+        long they have to wait."""
+        reactor.callLater(time, *args, **kwargs)
+        self.message(f'({time} {pluralise(time, "second")})')

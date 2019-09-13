@@ -59,8 +59,7 @@ class WebSocketProtocol(WebSocketServerProtocol):
         """Create a logger."""
         super().connectionMade()
         self.player_id = None
-        peer = self.transport.getPeer()
-        self.logger = getLogger('%s:%d' % (peer.host, peer.port))
+        self.set_logger()
         self.logger.info('Connected.')
 
     def connectionLost(self, reason):
@@ -185,6 +184,24 @@ class WebSocketProtocol(WebSocketServerProtocol):
                 'A problem occurred while running command %r.', command
             )
             self.message('There was an error.')
+
+    def set_logger(self, player=None):
+        """Set self.logger to a logger with a sensible name."""
+        if player is None:
+            peer = self.transport.getPeer()
+            name = f'{peer.host}:{peer.port}'
+        else:
+            name = f'{player.name} (#{player.id})'
+        self.logger = getLogger(name)
+
+    def authenticated(self, player):
+        """This connection has successfully logged in as the given Player
+        instance."""
+        self.player_id = player.id
+        self.message('Welcome, %s.' % player.name)
+        self.send('authenticated', player.name)
+        self.set_logger(player=player)
+        self.logger.info('Authenticated.')
 
     @property
     def player(self):
