@@ -108,7 +108,6 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
 
     def move(self, x, y):
         """Move this player to the given coordinates."""
-        self.focussed_object = None
         self.x = x
         self.y = y
         self.save()
