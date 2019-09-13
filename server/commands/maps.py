@@ -476,6 +476,8 @@ def activate(player, con):
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
             elif isinstance(fo, Mobile):
                 m.add_item('Release', 'release')
+            elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
+                m.add_item('Repair', 'repair', args=dict(id=fo.id))
         if isinstance(fo, Building) and fo.owner is player:
             for name in BuildingType.resource_names():
                 value = getattr(fo, name)
@@ -687,7 +689,7 @@ def build_building(location, player, id):
     home.take_requirements(t)
     b = location.add_building(t, *player.coordinates)
     b.owner = player
-    b.hp = 1
+    b.hp = 0
     b.save()
     player.message(f'{b.get_name()} ready.')
 
@@ -717,3 +719,22 @@ def release(player):
         fo.home = None
         fo.save()
         player.message(f'You release {fo.get_name()} from your employ.')
+
+
+@command()
+def repair(player, id):
+    """Repair the building with the given ID."""
+    b = Building.first(id=id, **player.same_coordinates())
+    if b is None:
+        player.message('No such building here.')
+    elif b.hp >= b.max_hp:
+        player.message(f'{b.get_name()} does not need repairing.')
+    elif not player.selected_mobiles.count():
+        player.message(
+            'You must select at least one unit to perform the repairs.'
+        )
+    else:
+        for m in player.selected_mobiles:
+            m.repair(b)
+            m.save()
+            player.message(f'Employing {m.get_name()}.')

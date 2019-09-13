@@ -1,7 +1,7 @@
 """Provides the MobileType and Mobile classes."""
 
 from enum import Enum as _Enum
-from random import uniform
+from random import uniform, randint
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
@@ -24,6 +24,7 @@ class MobileActions(_Enum):
     patrol_out = 2
     patrol_back = 3
     travel = 4
+    repair = 5
 
 
 class BuildingBuilder(Base):
@@ -85,6 +86,7 @@ class Mobile(
     # If self.action is None, this mobile is considered to be standing around
     # doing nothing.
     action = Column(Enum(MobileActions), nullable=True)
+    repair_amount = Column(Integer, nullable=False, default=1)
     target_x = Column(Integer, nullable=False, default=0)
     target_y = Column(Integer, nullable=False, default=0)
 
@@ -171,6 +173,13 @@ class Mobile(
         self.exploiting_material = material
         reactor.callLater(self.random_speed(), self.progress)
 
+    def repair(self, building):
+        """Repair the given building. The reference will be stored on
+        self.exploiting."""
+        self.action = MobileActions.repair
+        self.exploiting = building
+        reactor.callLater(self.random_speed(), self.progress)
+
     def travel(self, x, y):
         """Start this mobile travelling."""
         self.kill_task()
@@ -242,6 +251,16 @@ class Mobile(
                 return  # Done.
             else:
                 self.move_towards(*self.target)
+        elif a is MobileActions.repair:
+            x = self.exploiting
+            if x is None or x.health is None:
+                return
+            if self.coordinates == x.coordinates:
+                # We are here, do the repair.
+                x.heal(randint(0, self.repair_amount))
+                self.sound('static/sounds/repair.wav')
+            else:
+                self.move_towards(*x.coordinates)
         else:
             return  # No action.
         self.save()  # Better save since we might be inside a deferred.
