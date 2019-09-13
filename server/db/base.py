@@ -219,7 +219,7 @@ class GetNameMixin:
         if self.owner is None:
             append = ''
         else:
-            results = getattr(self.owner, f'owned_{self.__tablename__}')
+            results = type(self).all(type=self.type, owner=self.owner)
             index = results.index(self) + 1
             append = f' {index}'
         return self.type.name + append
