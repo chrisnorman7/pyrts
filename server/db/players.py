@@ -129,7 +129,6 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Perform a social in the context of this player. If perspectives is a
         list, add it to a list containing this player, to form a full
         perspectives list."""
-        cls = type(self)
         if perspectives is None:
             perspectives = []
         perspectives.insert(0, self)
@@ -139,7 +138,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             filter_kwargs = self.same_coordinates()
         else:
             filter_kwargs = {}
-        for player in type(self).query(*filter_args):
+        cls = type(self)
+        for player in cls.query(*filter_args, **filter_kwargs):
             try:
                 index = perspectives.index(player)
             except IndexError:

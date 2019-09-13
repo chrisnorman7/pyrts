@@ -34,22 +34,32 @@ def rename_map(con, command_name, location, text=None):
         con.message('Renamed.')
 
 
-@command(location_type=LocationTypes.template, hotkey='b')
+@command(hotkey='b')
 def build(con, location):
     """Add something to a map in edit mode."""
-    m = Menu('Build', dismissable=True)
-    m.add_label('General')
-    m.add_item('Entry Point', 'add_entry_point')
-    m.add_label('Buildings')
-    for t in BuildingType.alphabetized():
+    if not location.template and location.finalised is None:
+        return con.message('You cannot use that command here.')
+        return con.message('You cannot use that command here.')
+    m = Menu('Build')
+    if location.template:
+        m.add_label('General')
+        m.add_item('Entry Point', 'add_entry_point')
+        m.add_label('Land Features')
+        for t in FeatureType.alphabetized():
+            m.add_item(t.name, 'add_feature', args={'id': t.id})
+        m.add_label('Buildings')
+    if location.finalised:
+        command = 'build_building'
+    else:
+        command = 'add_building'
+    for t in BuildingType.query().order_by(
+        BuildingType.homely.desc(), BuildingType.name
+    ):
         if t.homely:
             name = f'{t.name} (*)'
         else:
             name = t.name
-        m.add_item(name, 'add_building', args={'id': t.id})
-    m.add_label('Land Features')
-    for t in FeatureType.alphabetized():
-        m.add_item(t.name, 'add_feature', args={'id': t.id})
+        m.add_item(name, command, args={'id': t.id})
     m.send(con)
 
 
@@ -65,20 +75,15 @@ def add_entry_point(player, location):
 
 
 @command(location_type=LocationTypes.template)
-def add_building(player, location, con, command_name, id=None):
+def add_building(player, location, con, command_name, id):
     """Add a building."""
-    if id is None:
-        m = Menu('Buildings')
-        for t in BuildingType.alphabetized():
-            m.add_item(t.name, command_name, args={'id': t.id})
-        m.send(con)
+    t = BuildingType.get(id)
+    if t is None:
+        player.message('Invalid ID.')
     else:
-        type = BuildingType.get(id)
-        if type is None:
-            return player.message('Invalid ID.')
-        b = location.add_building(type, player.x, player.y)
+        b = location.add_building(t, player.x, player.y)
         b.save()
-        player.message(f'{type.name} created.')
+        player.message(f'{b.get_name()} created.')
 
 
 @command(location_type=LocationTypes.template)
@@ -447,9 +452,12 @@ def activate(player, con):
     """Show the activation menu for the currently focussed object."""
     fo = player.focussed_object
     m = Menu('Object Menu')
-    m.add_label(str(fo))
-    if isinstance(fo, (Building, Mobile)) and fo.owner is None:
-        m.add_item('Acquire', 'acquire', args={'id': fo.id})
+    m.add_label(fo.get_name())
+    if isinstance(fo, (Building, Mobile)):
+        if fo.owner is None:
+            m.add_item('Acquire', 'acquire', args={'id': fo.id})
+        else:
+            m.add_label(f'{fo.hp} / {fo.max_hp} health')
     if isinstance(fo, Building) and fo.owner is player:
         for name in BuildingType.resource_names():
             value = getattr(fo, name)
@@ -478,6 +486,8 @@ def activate(player, con):
                 m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
             m.add_item('Delete', 'delete_player', args={'id': fo.id})
     m.add_item('Summon', 'summon')
+    for t in BuildingType.all():
+        m.add_item(f'Build {t.name}', 'build_building', args=dict(id=t.id))
     m.send(con)
 
 
@@ -604,3 +614,36 @@ def summon(player):
             m.travel(player.x, player.y)
         el = english_list(q, key=lambda o: o.get_name())
         player.message(f'You summon {el}.')
+
+
+@command(hotkey='h')
+def health(player):
+    """Show the health of the currently-selected unit, building, or feature."""
+    fo = player.focussed_object
+    if isinstance(fo, (Building, Mobile)):
+        player.message(f'{fo.hp} / {fo.max_hp} health.')
+    elif isinstance(fo, Feature):
+        player.message(fo.resources_string())
+
+
+@command(location_type=LocationTypes.finalised)
+def build_building(location, player, id):
+    """Build a building on the current map, using the given id as the type."""
+    location_kwargs = dict(owner=player, location=location)
+    t = BuildingType.get(id)
+    if t.depends is not None and not Building.count(
+        **location_kwargs, type=t.depends
+    ):
+        return player.message(f'{t.name} requires {t.depends.name}.')
+    for m in player.selected_mobiles.filter_by(**location_kwargs):
+        if m.type in t.builders:
+            break
+    else:
+        return player.message(
+            'First select a unit capable of building this building.'
+        )
+    b = location.add_building(t, *player.coordinates)
+    b.owner = player
+    b.hp = 1
+    b.save()
+    player.message(f'{b.get_name()} ready.')
