@@ -206,10 +206,9 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
 
     @property
     def visible_objects(self):
-        """Return a query object representing those objects that this player
-        can see."""
+        """Return a list of those objects that this player can see."""
         results = []
-        kwargs = dict(location=self.location, x=self.x, y=self.y)
+        kwargs = self.same_coordinates()
         for cls in (Player, Building, Mobile, Feature):
             if cls is Player:
                 args = [cls.id.isnot(self.id)]

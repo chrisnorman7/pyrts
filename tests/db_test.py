@@ -405,3 +405,16 @@ def test_focussed_object(farm, peasant, mine, player, map):
     assert player.focussed_class is None
     assert player.focussed_id is None
     assert player.focussed_object is None
+
+
+def test_visible_objects(player, farm, mine, peasant, map):
+    player.location = map
+    assert player.visible_objects == []
+    b = map.add_building(farm, *player.coordinates)
+    assert player.visible_objects == [b]
+    m = map.add_feature(mine, *player.coordinates)
+    assert player.visible_objects == [b, m]
+    p = map.add_mobile(peasant, *player.coordinates)
+    assert player.visible_objects == [b, p, m]
+    player.coordinates = (1, 1)
+    assert player.visible_objects == []
