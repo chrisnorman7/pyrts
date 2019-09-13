@@ -179,17 +179,27 @@ class ResourcesMixin:
         return [
             x for x in dir(ResourcesMixin) if
             not x.startswith('_') and x not in [
-                'resources_string', 'resource_names'
+                'resources', 'resources_string', 'resource_names'
             ]
         ]
 
-    def resources_string(self):
-        res = []
+    @property
+    def resources(self):
+        """Return a list of names representing the resources this feature type
+        provides."""
+        names = []
         for name in type(self).resource_names():
+            if getattr(self, name) is not None:
+                names.append(name)
+        return names
+
+    def resources_string(self, empty='free'):
+        res = []
+        for name in self.resources:
             value = getattr(self, name)
-            if value not in (None, 0):
+            if value:
                 res.append(f'{value} {name}')
-        return english_list(res, empty='Free')
+        return english_list(res, empty=empty)
 
 
 class SoundMixin:

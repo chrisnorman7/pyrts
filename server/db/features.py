@@ -13,16 +13,6 @@ class FeatureType(Base, NameMixin, ResourcesMixin, SoundMixin):
 
     __tablename__ = 'feature_types'
 
-    @property
-    def resources(self):
-        """Return a list of names representing the resources this feature type
-        provides."""
-        names = []
-        for name in type(self).resource_names():
-            if getattr(self, name) is not None:
-                names.append(name)
-        return names
-
 
 class Feature(
     Base, CoordinatesMixin, LocationMixin, ResourcesMixin, TypeMixin
