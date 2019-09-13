@@ -446,6 +446,23 @@ def select_mobile(location, player, id):
         player.message(f'{u.get_name()} selected.')
 
 
+@command(hotkey='x')
+def toggle_select_mobile(player):
+    """Select r deselect a mobile."""
+    fo = player.focussed_object
+    if not isinstance(fo, Mobile):
+        return player.message(f'{fo.get_name()} is not a unit.')
+    if fo.selected:
+        value = False
+        verb = 'Deselect'
+    else:
+        value = True
+        verb = 'Select'
+    fo.selected = value
+    fo.save()
+    player.message(f'{verb}ing {fo.get_name()}.')
+
+
 @command(hotkey=' ')
 def activate(player, con):
     """Show the activation menu for the currently focussed object."""
@@ -454,22 +471,25 @@ def activate(player, con):
     if fo is not None:
         m.add_label(fo.get_name())
         if isinstance(fo, (Building, Mobile)):
+            m.add_label(f'{fo.hp} / {fo.max_hp} health')
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
-            else:
-                m.add_label(f'{fo.hp} / {fo.max_hp} health')
         if isinstance(fo, Building) and fo.owner is player:
             for name in BuildingType.resource_names():
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
-            for t in fo.type.recruits:
-                bm = fo.type.get_recruit(t)
-                m.add_item(
-                    f'Recruit {t} (requires {bm.resources_string()}',
-                    'recruit', args=dict(building=fo.id, mobile=t.id)
-                )
             if fo.type.homely:
                 m.add_item('Set Home', 'set_home', args={'id': fo.id})
+                for bm in BuildingMobile.query(
+                    BuildingMobile.building_type_id.in_(
+                        [b.type.id for b in player.owned_buildings]
+                    )
+                ):
+                    t = MobileType.get(bm.building_type_id)
+                    m.add_item(
+                        f'Recruit {t} (requires {bm.resources_string()}',
+                        'recruit', args=dict(building=fo.id, mobile=t.id)
+                    )
         if isinstance(fo, (Building, Feature)):
             m.add_item(
                 'Exploit', 'exploit', args=dict(
@@ -531,16 +551,22 @@ def _recruit(building_id, building_mobile_id):
 @command(location_type=LocationTypes.finalised)
 def recruit(player, location, building, mobile):
     """Recruit a mobile."""
-    b = Building.one(id=building, owner=player, **player.same_coordinates())
+    b = player.focussed_object
     m = MobileType.get(mobile)
-    if b is None:
-        player.message(
-            'You can only recruit using buildings at your current location.'
-        )
+    if not isinstance(b, Building):
+        player.message('You must select a building.')
+    elif not b.type.homely:
+        player.message('Only home buildings can be used for recruitment.')
     elif m is None:
         player.message('Invalid recruitment.')
     else:
-        bm = b.type.get_recruit(m)
+        types = []
+        for bm in BuildingMobile.all(mobile_type_id=m.id):
+            t = BuildingType.get(bm.building_type_id)
+            if Building.count(owner=player, location=location, type=t):
+                break  # They can build.
+        else:
+            return player.message(f'Requires {english_list(types)}.')
         d = bm.get_difference(b)
         if d:
             player.message(f'You require {difference_string(d)}.')
@@ -587,6 +613,8 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
     q = player.selected_mobiles.join(
         Mobile.type
     ).filter(getattr(MobileType, resource) == 1)
+    if not q.count():
+        return player.message('You have no units capable of doing that.')
     for m in q:
         if m.home is None:
             player.message(
@@ -621,7 +649,7 @@ def health(player):
         player.message(fo.resources_string())
 
 
-@command(hotkey='x')
+@command(hotkey='z')
 def get_resources(player):
     """Show the resources for the currently-selected object. For land features,
     this is the same as checking h."""
