@@ -40,16 +40,7 @@ def db_stats(request):
 @app.route('/constants.js', branch=False)
 def js_constants(request):
     socket_url = f'ws://{getfqdn()}:{websocket_port}'
-    s = f'const socketUrl = "{socket_url}"\n\nconst hotkeys = {{'
-    hotkeys = [
-        f'"{cmd.hotkey}": "{name}"' for name, cmd in commands.items()
-        if cmd.hotkey
-    ]
-    if hotkeys:
-        s += '\n    '
-    s += ',\n    '.join(hotkeys)
-    s += '\n}\n'
-    return s
+    return f'const socketUrl = "{socket_url}"\n'
 
 
 class WebSocketProtocol(WebSocketServerProtocol):
@@ -73,6 +64,11 @@ class WebSocketProtocol(WebSocketServerProtocol):
         """Send a welcome message."""
         self.message('Welcome. Please login or create a character.')
         self.send('start_music', start_music)
+        hotkeys = {}
+        for command in commands.values():
+            if command.hotkey is not None:
+                hotkeys[command.hotkey] = command.name
+        self.send('hotkeys', hotkeys)
 
     def send(self, command, *args):
         """Send a command to this websocket."""
