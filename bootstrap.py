@@ -30,16 +30,19 @@ def main():
     if os.path.isfile(fn):
         return print('Refusing to continue with existing database file.')
     town_hall = BuildingType(name='Town Hall', homely=True)
-    town_hall.save()
     farm = BuildingType(name='Farm', depends=town_hall)
-    farm.save()
     stable = BuildingType(name='Stable', depends=farm)
-    stable.save()
+    for thing in (town_hall, farm, stable):
+        thing.save()
     peasant = MobileType(name='Peasant', wood=1, gold=1)
     peasant.save()
+    for t in (town_hall, farm):
+        t.builders.append(peasant)
     town_hall.add_recruit(peasant, food=1, water=1, gold=1).save()
     farmer = MobileType(name='Farmer', food=1, water=1, wood=1)
     farmer.save()
+    for t in (farm, stable):
+        t.builders.append(farmer)
     farm.add_recruit(farmer, food=2, gold=2, water=2)
     scout = MobileType(name='Scout', stone=1)
     scout.save()
