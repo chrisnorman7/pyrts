@@ -167,9 +167,17 @@ const username = document.getElementById("username")
 const password = document.getElementById("password")
 loginForm.onsubmit = e => {
     e.preventDefault()
-    soc.command("authenticate", {username: username.value, password: password.value})
-    if (audio == null) {
-        startAudio()
+    if (!username.value) {
+        alert("Username cannot be blank.")
+        username.focus()
+    } else if (!password.value) {
+        alert("Password canot be blank.")
+        password.focus()
+    } else {
+        soc.command("authenticate", {username: username.value, password: password.value})
+        if (audio == null) {
+            startAudio()
+        }
     }
 }
 
@@ -225,7 +233,12 @@ function writeMessage(text) {
 }
 
 function createSocket() {
-    soc = new WebSocket(socketUrl)
+    try {
+        soc = new WebSocket(socketUrl)
+    } catch(e) {
+        writeMessage("*** Retrying failed connection. ***")
+        return setTimeout(createSocket, 1000)
+    }
     soc.onopen = () => {
         clearElement(messages)
         connected = true
