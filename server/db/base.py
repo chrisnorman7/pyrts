@@ -115,6 +115,34 @@ class CoordinatesMixin:
         dy = max(self.y, other.y) - min(self.y, other.y)
         return min(dx, dy)
 
+    def directions_to(self, other):
+        """Return textual directions to an object other."""
+        if other.x == self.x:
+            direction_x = None
+        elif other.x > self.x:
+            direction_x = 'east'
+        else:
+            direction_x = 'west'
+        if other.y == self.y:
+            direction_y = None
+        elif other.y > self.y:
+            direction_y = 'north'
+        else:
+            direction_y = 'south'
+        if direction_y is not None:
+            dy = max(self.y, other.y) - min(self.y, other.y)
+            string = f'{dy} {direction_y}'
+        else:
+            string = ''
+        if direction_x is not None:
+            dx = max(self.x, other.x) - min(self.x, other.x)
+            if string:
+                string += ', '
+            string += f'{dx} {direction_x}'
+        if string:
+            return string
+        return 'here'
+
 
 class NameMixin:
     name = Column(String(30), nullable=False)

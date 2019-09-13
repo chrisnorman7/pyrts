@@ -462,3 +462,14 @@ def test_distance_to(map, farm, peasant):
     assert b.distance_to(p) == 3
     p.coordinates = (5, 4)
     assert b.distance_to(p) == 4
+
+
+def test_directions_to(map, farm, peasant):
+    b = map.add_building(farm, 0, 0)
+    p = map.add_mobile(peasant, 1, 1)
+    assert b.directions_to(p) == '1 north, 1 east'
+    p.coordinates = (0, 0)
+    assert b.directions_to(p) == 'here'
+    p.coordinates = (2, 3)
+    assert b.directions_to(p) == '3 north, 2 east'
+    assert p.directions_to(b) == '3 south, 2 west'
