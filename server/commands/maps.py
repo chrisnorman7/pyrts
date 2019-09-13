@@ -105,24 +105,25 @@ def add_feature(player, location, con, command_name, id=None):
 
 def switch_object(player, direction):
     """Select the previous / next object."""
-    objects = player.visible_objects
-    c = len(objects)
+    q = player.visible_objects
+    c = len(q)
     if not c:
-        return player.message('There are no objects at these coordinates.')
-    player.focus += direction
-    if player.focus < 0:
-        player.focus = c - 1
-    elif player.focus >= c:
-        player.focus = 0
+        return player.message('There is nothing here.')
+    try:
+        index = q.index(player.focussed_object)
+        obj = q[index + direction]
+    except (ValueError, IndexError):
+        if direction < 0:
+            obj = q[-1]
+        else:
+            obj = q[0]
+    player.focussed_object = obj
     player.save()
-    fo = player.focussed_object
-    player.message(fo.get_name())
-    if isinstance(fo, Mobile):
-        Mobile.query(
-            selected=True, owner=player
-        ).update({Mobile.selected: False})
-        fo.selected = True
-        fo.save()
+    player.message(obj.get_name())
+    if isinstance(obj, Mobile):
+        player.deselect_mobiles()
+        obj.selected = True
+        obj.save()
 
 
 @command(hotkey='[')
@@ -333,20 +334,20 @@ def random_map(
 
 def focus_object(hotkey, player):
     """Focus a specific object."""
-    if hotkey == 0:
-        return switch_object(player, 0)
-    q = player.visible_objects
-    c = len(q)
-    if c < hotkey:
-        if c:
-            player.message(
-                f'There {is_are(c)} only {c} {pluralise(c, "object")}.'
-            )
+    if hotkey:
+        q = player.visible_objects
+        c = len(q)
+        if c < hotkey:
+            if c:
+                player.message(
+                    f'There {is_are(c)} only {c} {pluralise(c, "object")}.'
+                )
+            else:
+                player.message('There is nothing here.')
+            return
         else:
-            player.message('There is nothing here.')
-    else:
-        player.focus = hotkey
-        switch_object(player, -1)
+            player.focussed_object = q[hotkey - 1]
+    switch_object(player, 0)
 
 
 for x in range(10):
@@ -450,42 +451,45 @@ def select_mobile(location, player, id):
 @command(hotkey=' ')
 def activate(player, con):
     """Show the activation menu for the currently focussed object."""
-    fo = player.focussed_object
     m = Menu('Object Menu')
-    m.add_label(fo.get_name())
-    if isinstance(fo, (Building, Mobile)):
-        if fo.owner is None:
-            m.add_item('Acquire', 'acquire', args={'id': fo.id})
-        else:
-            m.add_label(f'{fo.hp} / {fo.max_hp} health')
-    if isinstance(fo, Building) and fo.owner is player:
-        for name in BuildingType.resource_names():
-            value = getattr(fo, name)
-            m.add_label(f'{name.title()}: {value}')
-        for t in fo.type.recruits:
-            bm = fo.type.get_recruit(t)
-            m.add_item(
-                f'Recruit {t} ({bm.resources_string()}', 'recruit',
-                args=dict(building=fo.id, mobile=t.id)
-            )
-        if fo.type.homely:
-            m.add_item('Set Home', 'set_home', args={'id': fo.id})
-    if isinstance(fo, (Building, Feature)):
-        m.add_item(
-            'Exploit', 'exploit', args=dict(
-                id=fo.id, class_name=type(fo).__name__
-            )
-        )
-    if isinstance(fo, Player):
-        if player.admin:
-            if fo.admin:
-                m.add_item('Revoke Admin', 'revoke_admin', args={'id': fo.id})
+    fo = player.focussed_object
+    if fo is not None:
+        m.add_label(fo.get_name())
+        if isinstance(fo, (Building, Mobile)):
+            if fo.owner is None:
+                m.add_item('Acquire', 'acquire', args={'id': fo.id})
             else:
-                m.add_item('Make Admin', 'make_admin', args={'id': fo.id})
-            if fo.connected:
-                m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
-            m.add_item('Delete', 'delete_player', args={'id': fo.id})
-    m.add_item('Summon', 'summon')
+                m.add_label(f'{fo.hp} / {fo.max_hp} health')
+        if isinstance(fo, Building) and fo.owner is player:
+            for name in BuildingType.resource_names():
+                value = getattr(fo, name)
+                m.add_label(f'{name.title()}: {value}')
+            for t in fo.type.recruits:
+                bm = fo.type.get_recruit(t)
+                m.add_item(
+                    f'Recruit {t} ({bm.resources_string()}', 'recruit',
+                    args=dict(building=fo.id, mobile=t.id)
+                )
+            if fo.type.homely:
+                m.add_item('Set Home', 'set_home', args={'id': fo.id})
+        if isinstance(fo, (Building, Feature)):
+            m.add_item(
+                'Exploit', 'exploit', args=dict(
+                    id=fo.id, class_name=type(fo).__name__
+                )
+            )
+        if isinstance(fo, Player):
+            if player.admin:
+                if fo.admin:
+                    m.add_item(
+                        'Revoke Admin', 'revoke_admin', args={'id': fo.id}
+                    )
+                else:
+                    m.add_item('Make Admin', 'make_admin', args={'id': fo.id})
+                if fo.connected:
+                    m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
+                m.add_item('Delete', 'delete_player', args={'id': fo.id})
+        m.add_item('Summon', 'summon')
     for t in BuildingType.all():
         m.add_item(f'Build {t.name}', 'build_building', args=dict(id=t.id))
     m.send(con)
