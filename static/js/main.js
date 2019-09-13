@@ -3,8 +3,8 @@
 
 let debug = false
 let startMusicURL = null
-let reconnecting = false
 let authenticationSuccessful = false
+let reconnecting = false
 
 // Below code to make Web Audio work on iOS modified from:
 // https://paulbakaus.com/tutorials/html5/web-audio-on-ios/
@@ -228,7 +228,6 @@ function createSocket() {
     soc = new WebSocket(socketUrl)
     soc.onopen = () => {
         clearElement(messages)
-        reconnecting = false
         connected = true
         writeMessage("*** Connected ***")
         if (authenticationSuccessful) {
@@ -242,10 +241,8 @@ function createSocket() {
             writeMessage("*** Disconnected ***")
             commands.stop_loops()
         }
-        if (!reconnecting) {
-            reconnecting = true
-            setTimeout(createSocket, 1)
-        }
+        reconnecting = true
+        setTimeout(createSocket, 1)
     }
     soc.onmessage = (e) => {
         let data = JSON.parse(e.data)
@@ -257,11 +254,11 @@ function createSocket() {
         }
     }
     soc.onerror = () => {
-        if (reconnecting) {
-            createSocket()
+        if (!reconnecting) {
+            writeMessage("*** Connection failed. ***")
         }
     }
-    soc.command = (name, args) => {
+        soc.command = (name, args) => {
         if (!args) {
             args = {}
         }
