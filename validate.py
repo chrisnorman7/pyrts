@@ -1,6 +1,6 @@
 """Check for inconsistancies in the database."""
 
-from server.db import load, MobileType
+from server.db import BuildingBuilder, BuildingType, load, MobileType
 
 
 def main():
@@ -10,6 +10,9 @@ def main():
             continue
         else:
             print(f'There is no mobile that can gather {name}.')
+    for bt in BuildingType.all():
+        if not BuildingBuilder.count(building_type_id=bt.id):
+            print(f'There is no way to build {bt.name}.')
 
 
 if __name__ == '__main__':

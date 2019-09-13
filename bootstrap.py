@@ -45,10 +45,11 @@ def main():
     scout = MobileType(name='Scout', stone=1)
     for thing in (peasant, farmer, scout):
         thing.save()
-    peasant.add_building(town_hall).save()
-    peasant.add_building(farm).save()
+    for b in (town_hall, farm):
+        peasant.add_building(b).save()
     town_hall.add_recruit(peasant, food=1, water=1, gold=3).save()
-    farmer.add_building(farm).save()
+    for b in (farm, stable):
+        farmer.add_building(b).save()
     farm.add_recruit(farmer, food=2, gold=4, water=2).save()
     stable.add_recruit(scout, food=4, water=5, gold=6).save()
     FeatureType(name='Mine', gold=1).save()
