@@ -377,3 +377,31 @@ def test_health(farm, map):
     b.heal(value)
     assert b.hp == b.max_hp
     assert b.health is None
+
+
+def test_focussed_object(farm, peasant, mine, player, map):
+    b = map.add_building(farm, 0, 0)
+    m = map.add_feature(mine, 0, 0)
+    p = map.add_mobile(peasant, 0, 0)
+    for thing in (b, m, p):
+        thing.save()
+    player.location = map
+    assert player.focussed_class is None
+    assert player.focussed_id is None
+    assert player.focussed_object is None
+    player.focussed_object = b
+    assert player.focussed_class == 'Building'
+    assert player.focussed_id == b.id
+    assert player.focussed_object is b
+    player.focussed_object = m
+    assert player.focussed_class == 'Feature'
+    assert player.focussed_id == m.id
+    assert player.focussed_object is m
+    player.focussed_object = p
+    assert player.focussed_class == 'Mobile'
+    assert player.focussed_id == p.id
+    assert player.focussed_object is p
+    player.focussed_object = None
+    assert player.focussed_class is None
+    assert player.focussed_id is None
+    assert player.focussed_object is None

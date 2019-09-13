@@ -27,7 +27,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     password = Column(String(120), nullable=False)
     admin = Column(Boolean, nullable=False, default=False)
     connected = Column(Boolean, nullable=False, default=False)
-    focus = Column(Integer, nullable=False, default=0)
+    focussed_class = Column(String(20), nullable=True)
+    focussed_id = Column(Integer, nullable=True)
     volume = Column(Float, nullable=False, default=0.2)
 
     @classmethod
@@ -105,7 +106,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
 
     def move(self, x, y):
         """Move this player to the given coordinates."""
-        self.focus = 0
+        self.focussed_object = None
         self.x = x
         self.y = y
         self.save()
@@ -153,12 +154,20 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     @property
     def focussed_object(self):
         """Return the object this player is currently focussed on."""
-        if self.location is None:
+        if self.focussed_class is None or self.focussed_id is None:
             return
-        try:
-            return self.visible_objects[self.focus]
-        except IndexError:
-            pass
+        return Base._decl_class_registry[self.focussed_class].get(
+            self.focussed_id
+        )
+
+    @focussed_object.setter
+    def focussed_object(self, value):
+        if value is None:
+            self.focussed_class = None
+            self.focussed_id = None
+        else:
+            self.focussed_class = type(value).__name__
+            self.focussed_id = value.id
 
     def join_map(self, m):
         """Allow this player to join a Map instance m."""
