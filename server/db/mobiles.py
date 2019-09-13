@@ -26,7 +26,7 @@ class MobileActions(_Enum):
     travel = 4
 
 
-class BuildingBuilder(Base, ResourcesMixin):
+class BuildingBuilder(Base):
     """Provides a link betwene building and mobile types, allowing mobiles to
     build buildings."""
 
@@ -52,11 +52,11 @@ class MobileType(
     )
     speed = Column(Integer, nullable=False, default=3)
 
-    def add_building(self, type, **kwargs):
+    def add_building(self, type):
         """Add a BuildingType instance that can be built by mobiles of this
         type."""
         return BuildingBuilder(
-            mobile_type_id=self.id, building_type_id=type.id, **kwargs
+            mobile_type_id=self.id, building_type_id=type.id
         )
 
     def get_building(self, type):

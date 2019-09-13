@@ -423,11 +423,11 @@ def test_visible_objects(player, farm, mine, peasant, map):
 def test_builder(peasant):
     castle = BuildingType(name='Castle')
     castle.save()
-    bb = peasant.add_building(castle, gold=2, water=3)
+    bb = peasant.add_building(castle)
     assert isinstance(bb, BuildingBuilder)
     assert bb.building_type_id == castle.id
     assert bb.mobile_type_id == peasant.id
-    assert bb.gold == 2
-    assert bb.water == 3
     bb.save()
     assert peasant.get_building(castle) is bb
+    assert castle in peasant.can_build
+    assert peasant in castle.builders
