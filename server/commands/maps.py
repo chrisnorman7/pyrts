@@ -513,7 +513,7 @@ def acquire(player, id):
         player.message('Done.')
 
 
-def _recruit(player_id, building_id, building_mobile_id):
+def _recruit(building_id, building_mobile_id):
     """Actually perform the recruiting."""
     b = Building.get(building_id)
     if b is None:
@@ -521,7 +521,7 @@ def _recruit(player_id, building_id, building_mobile_id):
     bm = BuildingMobile.get(building_mobile_id)
     t = MobileType.get(bm.mobile_type_id)
     m = b.location.add_mobile(t, *b.coordinates)
-    player = Player.get(player_id)
+    player = b.owner
     m.owner = player
     m.home = b
     m.save()
@@ -541,12 +541,12 @@ def recruit(player, location, building, mobile):
         player.message('Invalid recruitment.')
     else:
         bm = b.type.get_recruit(m)
-        d = b.get_difference(bm)
+        d = bm.get_difference(b)
         if d:
             player.message(f'You require {difference_string(d)}.')
         else:
             b.take_requirements(bm)
-            player.call_later(bm.pop_time, _recruit, player.id, b.id, bm.id)
+            player.call_later(bm.pop_time, _recruit, b.id, bm.id)
 
 
 @command()
@@ -564,12 +564,10 @@ def set_home(player, id):
 
 
 @command()
-def exploit(
-    con, args, location, command_name, player, class_name, id, resource=None
-):
+def exploit(con, args, command_name, player, class_name, id, resource=None):
     """Exploit a feature."""
     cls = Base._decl_class_registry[class_name]
-    f = cls.first(location=location, id=id, x=player.x, y=player.y)
+    f = cls.first(id=id, **player.same_coordinates())
     if f is None:
         player.message('You cannot see that here.')
     elif resource is None:
@@ -589,10 +587,14 @@ def exploit(
     q = player.selected_mobiles.join(
         Mobile.type
     ).filter(getattr(MobileType, resource) == 1)
-    el = english_list(q, key=lambda o: o.get_name())
-    player.message(f'Employing {el}.')
     for m in q:
-        m.exploit(f, resource)
+        if m.home is None:
+            player.message(
+                f'{m.get_name()} has no home to bring resources back to.'
+            )
+        else:
+            player.message(f'Dispatching {m.get_name()}.')
+            m.exploit(f, resource)
 
 
 @command()
@@ -627,10 +629,7 @@ def get_resources(player):
     if fo is None:
         player.message('You must first focus something.')
     else:
-        if isinstance(fo, Building) and not fo.type.homely:
-            player.message(f'{fo.get_name()} cannot store resources.')
-        else:
-            player.message(fo.resources_string('Nothing'))
+        player.message(fo.resources_string('Nothing'))
 
 
 @command(location_type=LocationTypes.finalised)
@@ -652,7 +651,7 @@ def build_building(location, player, id):
     home = obj.home
     if home is None:
         return player.message(f'{obj.get_name()} has no home.')
-    d = home.get_difference(t)
+    d = t.get_difference(home)
     if d:
         return player.message(f'You require {difference_string(d)}.')
     home.take_requirements(t)

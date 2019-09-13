@@ -1,5 +1,7 @@
 """Provides the Player class."""
 
+import os.path
+
 from random import choice
 
 from passlib.hash import sha512_crypt
@@ -221,6 +223,9 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Tell the client to play a sound. The URL will have options.base_url
         prepended."""
         if self.connection is not None:
+            if os.path.isfile(path):
+                path += f'?{os.path.getmtime(path)}'
+            self.connection.logger.info('Playing sound %s.', path)
             url = base_url + path
             self.connection.send('sound', url)
 

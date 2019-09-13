@@ -179,8 +179,8 @@ class ResourcesMixin:
         return [
             x for x in dir(ResourcesMixin) if
             not x.startswith('_') and x not in [
-                'resources', 'resources_string', 'resource_names',
-                'get_difference', 'take_requirements'
+                'resources', 'resources_dict', 'resources_string',
+                'resource_names', 'get_difference', 'take_requirements'
             ]
         ]
 
@@ -193,6 +193,11 @@ class ResourcesMixin:
             if getattr(self, name) is not None:
                 names.append(name)
         return names
+
+    def resources_dict(self):
+        """Return a dictionary of name: value pairs, where name is the name of
+        a resource, and value is the value of that resource on this object."""
+        return {name: getattr(self, name) for name in self.resources}
 
     def resources_string(self, empty='free'):
         res = []

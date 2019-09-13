@@ -202,24 +202,23 @@ class Mobile(
                     value = getattr(self, name)
                     setattr(self, name, 0)
                     setattr(self.home, name, getattr(self.home, name) + value)
+                self.sound('static/sounds/drop.wav')
                 self.action = MobileActions.exploit
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is MobileActions.exploit:
             if self.coordinates == self.target:
                 # We are in place.
-                if self.exploiting is None:
-                    # We have nothing to do. That resource is exhausted.
-                    return
                 name = self.exploiting_material
-                self.sound(f'static/sounds/exploit/{self.type.name}.wav')
+                value = getattr(self.exploiting, name)
+                if not value:
+                    return  # Empty resource.
+                self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
-                value = getattr(self.exploiting, name) - 1
+                value -= 1
                 if value:
                     setattr(self.exploiting, name, value)
                 else:
-                    if not isinstance(self.exploiting, Building):
-                        self.exploiting.delete()
                     self.exploiting = None
                 self.action = MobileActions.drop
             else:

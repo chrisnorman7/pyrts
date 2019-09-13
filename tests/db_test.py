@@ -445,3 +445,10 @@ def test_check_difference(peasant):
     bm.save()
     d = c.get_difference(bm)
     assert d == dict(water=1, stone=2)
+
+
+def test_resources_dict(map, farm):
+    b = map.add_building(farm, 0, 0)
+    b.save()
+    d = b.resources_dict()
+    assert d == dict(wood=0, gold=0, food=0, water=0, stone=0)
