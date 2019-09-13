@@ -71,7 +71,7 @@ def jump(con, player, location):
     for cls in (Player, Building, Mobile, Feature):
         objects.extend(cls.query(location=location))
     objects.remove(player)
-    locations = sorted(objects, key=lambda thing: str(thing))
+    locations = sorted(objects, key=lambda thing: player.distance_to(thing))
     if not locations:
         player.message('This map is empty.')
     else:
