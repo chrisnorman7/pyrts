@@ -479,7 +479,6 @@ def activate(player, con):
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
             if fo.type.homely:
-                m.add_item('Set Home', 'set_home', args={'id': fo.id})
                 for bm in BuildingMobile.query(
                     BuildingMobile.building_type_id.in_(
                         [b.type.id for b in player.owned_buildings]
@@ -490,6 +489,7 @@ def activate(player, con):
                         f'Recruit {t} (requires {bm.resources_string()}',
                         'recruit', args=dict(building=fo.id, mobile=t.id)
                     )
+                m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
             m.add_item(
                 'Exploit', 'exploit', args=dict(
