@@ -213,3 +213,31 @@ class GetNameMixin:
             index = results.index(self) + 1
             append = f' {index}'
         return self.type.name + append
+
+
+class MaxHealthMixin:
+    max_health = Column(Integer, nullable=False, default=20)
+
+
+class HealthMixin:
+    health = Column(Integer, nullable=True)
+
+    @property
+    def max_hp(self):
+        return self.type.max_health
+
+    @property
+    def hp(self):
+        if self.health is None:
+            return self.type.max_health
+        return self.health
+
+    @hp.setter
+    def hp(self, value):
+        if value == self.max_hp:
+            value = None
+        self.health = value
+
+    def heal(self, amount):
+        """Heal this object to a maximum of self.max_health."""
+        self.hp = min(self.max_hp, self.hp + amount)

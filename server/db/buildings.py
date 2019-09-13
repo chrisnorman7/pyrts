@@ -5,7 +5,8 @@ from sqlalchemy.orm import relationship
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
-    OwnerMixin, ResourcesMixin, TypeMixin, SoundMixin, GetNameMixin
+    OwnerMixin, ResourcesMixin, TypeMixin, SoundMixin, GetNameMixin,
+    MaxHealthMixin, HealthMixin
 )
 
 
@@ -24,7 +25,8 @@ class BuildingMobile(Base, ResourcesMixin):
 
 
 class BuildingType(
-    Base, NameMixin, ResistanceMixin, ResourcesMixin, SoundMixin
+    Base, NameMixin, ResistanceMixin, ResourcesMixin, SoundMixin,
+    MaxHealthMixin
 ):
     """A type of building."""
 
@@ -74,7 +76,7 @@ class BuildingType(
 
 class Building(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin,
-    ResourcesMixin, GetNameMixin
+    ResourcesMixin, GetNameMixin, HealthMixin
 ):
     """A building on a map."""
 

@@ -10,7 +10,8 @@ from twisted.internet.error import AlreadyCancelled
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
-    OwnerMixin, TypeMixin, SoundMixin, GetNameMixin, ResourcesMixin
+    OwnerMixin, TypeMixin, SoundMixin, GetNameMixin, ResourcesMixin,
+    MaxHealthMixin, HealthMixin
 )
 
 tasks = {}
@@ -38,7 +39,10 @@ class BuildingBuilder(Base):
     )
 
 
-class MobileType(Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin):
+class MobileType(
+    Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin,
+    MaxHealthMixin
+):
     """A type of mobile."""
 
     __tablename__ = 'mobile_types'
@@ -50,7 +54,8 @@ class MobileType(Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin):
 
 
 class Mobile(
-    Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, GetNameMixin
+    Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, GetNameMixin,
+    HealthMixin
 ):
     """A mobile on a map."""
 

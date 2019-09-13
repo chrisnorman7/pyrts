@@ -364,3 +364,16 @@ def test_exploit(player, map, peasant, mine, farm):
     assert p.action is MobileActions.exploit
     check_peasant()
     assert p.coordinates == (1, 1)
+
+
+def test_health(farm, map):
+    b = map.add_building(farm, 0, 0)
+    b.save()
+    assert b.max_hp == farm.max_health
+    assert b.hp == b.max_hp
+    value = b.max_hp * 2
+    b.hp = value
+    assert b.health == value
+    b.heal(value)
+    assert b.hp == b.max_hp
+    assert b.health is None
