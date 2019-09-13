@@ -164,7 +164,7 @@ class Mobile(
         self.move(x, y)
 
     def exploit(self, feature, material):
-        """Start explotoing a Feature f."""
+        """Start exploiting a Feature f."""
         self.exploiting = feature
         self.target = feature.coordinates
         self.action = MobileActions.exploit
