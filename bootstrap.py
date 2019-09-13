@@ -29,24 +29,28 @@ from server.db.util import _filename as fn
 def main():
     if os.path.isfile(fn):
         return print('Refusing to continue with existing database file.')
-    town_hall = BuildingType(name='Town Hall', homely=True)
-    farm = BuildingType(name='Farm', depends=town_hall)
-    stable = BuildingType(name='Stable', depends=farm)
+    town_hall = BuildingType(
+        name='Town Hall', homely=True, gold=15, wood=30, stone=10
+    )
+    farm = BuildingType(
+        name='Farm', depends=town_hall, gold=5, wood=5, stone=1
+    )
+    stable = BuildingType(
+        name='Stable', depends=farm, wood=30, stone=15, gold=30
+    )
     for thing in (town_hall, farm, stable):
         thing.save()
     peasant = MobileType(name='Peasant', wood=1, gold=1)
-    peasant.save()
-    for t in (town_hall, farm):
-        t.builders.append(peasant)
-    town_hall.add_recruit(peasant, food=1, water=1, gold=1).save()
-    farmer = MobileType(name='Farmer', food=1, water=1, wood=1)
-    farmer.save()
-    for t in (farm, stable):
-        t.builders.append(farmer)
-    farm.add_recruit(farmer, food=2, gold=2, water=2)
+    farmer = MobileType(name='Farmer', food=1, water=1)
     scout = MobileType(name='Scout', stone=1)
-    scout.save()
-    stable.add_recruit(scout, food=4, water=5, gold=3)
+    for thing in (peasant, farmer, scout):
+        thing.save()
+    peasant.add_building(town_hall)
+    peasant.add_building(farm)
+    town_hall.add_recruit(peasant, food=1, water=1, gold=3).save()
+    farmer.add_building(farm)
+    farm.add_recruit(farmer, food=2, gold=4, water=2)
+    stable.add_recruit(scout, food=4, water=5, gold=6)
     FeatureType(name='Mine', gold=1).save()
     FeatureType(name='Quarry', stone=1).save()
     FeatureType(name='Lake', water=1).save()
