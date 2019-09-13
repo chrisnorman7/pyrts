@@ -123,7 +123,9 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             self.message(str(ep))
         self.message('(%d, %d).' % (self.x, self.y))
 
-    def do_social(self, string, perspectives=None, sound=None, **kwargs):
+    def do_social(
+        self, string, perspectives=None, sound=None, local=False, **kwargs
+    ):
         """Perform a social in the context of this player. If perspectives is a
         list, add it to a list containing this player, to form a full
         perspectives list."""
@@ -133,13 +135,20 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         perspectives.insert(0, self)
         strings = factory.get_strings(string, perspectives, **kwargs)
         filter_args = []
-        for i, player in enumerate(perspectives):
-            filter_args.append(cls.id != player.id)
+        if local:
+            filter_kwargs = self.same_coordinates()
+        else:
+            filter_kwargs = {}
+        for player in type(self).query(*filter_args):
+            try:
+                index = perspectives.index(player)
+            except IndexError:
+                index = -1
+            player.message(strings[index])
             if sound is not None:
                 player.sound(sound)
-            player.message(strings[i])
-        for player in self.neighbours.filter(*filter_args):
-            player.message(strings[-1])
+            else:
+                print(sound)
 
     @property
     def focussed_object(self):
