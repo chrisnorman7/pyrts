@@ -209,6 +209,8 @@ class ResourcesMixin:
         for name in self.resources:
             required = getattr(self, name)
             value = getattr(thing, name)
+            if value is None:
+                continue
             if value < required:
                 d[name] = required - value
         return d
