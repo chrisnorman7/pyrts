@@ -244,7 +244,7 @@ function createSocket() {
         }
         if (!reconnecting) {
             reconnecting = true
-            createSocket()
+            setTimeout(createSocket, 1)
         }
     }
     soc.onmessage = (e) => {
