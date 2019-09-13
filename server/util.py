@@ -34,3 +34,10 @@ def english_list(l, empty='nothing', key=str, sep=', ', and_='and '):
             res += sep
         res += item
     return res
+
+
+def difference_string(d, empty='nothing'):
+    """Given the result of ResourcesMixin.get_difference as a dictionary d,
+    return a sensible string."""
+    strings = [f'{value} {name}' for name, value in d.items()]
+    return english_list(strings, empty=empty)
