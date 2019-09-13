@@ -1,7 +1,8 @@
-/* globals socketUrl, hotkeys, Sound, audio, gain, startAudio */
+/* globals socketUrl, Sound, audio, gain, startAudio */
 // Main script for the RTS.
 
 let debug = false
+let hotkeys = null
 let startMusicURL = null
 let authenticationSuccessful = false
 let reconnecting = false
@@ -34,6 +35,9 @@ function playMusic() {
 }
 
 const commands = {
+    hotkeys: args => {
+        hotkeys = args[0]
+    },
     start_music: (args) => startMusicURL = args[0],
     message: args => {
         writeMessage(args[0])
