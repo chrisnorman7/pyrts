@@ -1,7 +1,5 @@
 """Provides map-related commands."""
 
-from twisted.internet import reactor
-
 from .commands import command, LocationTypes
 
 from ..db import (
@@ -9,7 +7,7 @@ from ..db import (
     Map, Mobile, MobileType, Player, Base
 )
 from ..menus import Menu, YesNoMenu
-from ..util import pluralise, is_are, english_list
+from ..util import pluralise, is_are, english_list, difference_string
 
 
 @command(location_type=LocationTypes.not_map, admin=True)
@@ -467,8 +465,8 @@ def activate(player, con):
             for t in fo.type.recruits:
                 bm = fo.type.get_recruit(t)
                 m.add_item(
-                    f'Recruit {t} ({bm.resources_string()}', 'recruit',
-                    args=dict(building=fo.id, mobile=t.id)
+                    f'Recruit {t} (requires {bm.resources_string()}',
+                    'recruit', args=dict(building=fo.id, mobile=t.id)
                 )
             if fo.type.homely:
                 m.add_item('Set Home', 'set_home', args={'id': fo.id})
@@ -491,7 +489,10 @@ def activate(player, con):
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
     m.add_item('Summon', 'summon')
     for t in BuildingType.all():
-        m.add_item(f'Build {t.name}', 'build_building', args=dict(id=t.id))
+        m.add_item(
+            f'Build {t.name} (requires {t.resources_string("nothing")}',
+            'build_building', args=dict(id=t.id)
+        )
     m.send(con)
 
 
@@ -519,7 +520,7 @@ def _recruit(player_id, building_id, building_mobile_id):
         return  # It has since been destroyed.
     bm = BuildingMobile.get(building_mobile_id)
     t = MobileType.get(bm.mobile_type_id)
-    m = b.location.add_mobile(t, b.x, b.y)
+    m = b.location.add_mobile(t, *b.coordinates)
     player = Player.get(player_id)
     m.owner = player
     m.home = b
@@ -531,33 +532,21 @@ def _recruit(player_id, building_id, building_mobile_id):
 def recruit(player, location, building, mobile):
     """Recruit a mobile."""
     b = Building.one(id=building, owner=player, **player.same_coordinates())
+    m = MobileType.get(mobile)
     if b is None:
         player.message(
             'You can only recruit using buildings at your current location.'
         )
+    elif m is None:
+        player.message('Invalid recruitment.')
     else:
-        m = MobileType.get(mobile)
-        if m is None:
-            player.message('Invalid recruitment.')
+        bm = b.type.get_recruit(m)
+        d = bm.get_difference(b)
+        if d:
+            player.message(f'You require {difference_string(d)}.')
         else:
-            take = {}
-            bm = b.type.get_recruit(m)
-            for name in BuildingMobile.resource_names():
-                requires = getattr(bm, name)
-                value = getattr(b, name)
-                if requires is not None:
-                    take[name] = requires
-                    if value < requires:
-                        player.message(
-                            f'You are short {requires - value} {name}.'
-                        )
-                        return
-            else:
-                for name, value in take.items():
-                    setattr(b, name, getattr(b, name) - value)
-                pt = bm.pop_time
-                reactor.callLater(pt, _recruit, player.id, b.id, bm.id)
-                player.message(f'({pt} {pluralise(pt, "second")})')
+            b.subtract_resources(bm)
+            player.call_later(bm.pop_time, _recruit, player.id, b.id, bm.id)
 
 
 @command()
@@ -628,6 +617,24 @@ def health(player):
         player.message(f'{fo.hp} / {fo.max_hp} health.')
     elif isinstance(fo, Feature):
         player.message(fo.resources_string())
+
+
+@command(hotkey='x')
+def get_resources(player):
+    """Show the resources for the currently-selected object. For land features,
+    this is the same as checking h."""
+    fo = player.focussed_object
+    if fo is None:
+        player.message('You must first focus something.')
+    elif isinstance(fo, Mobile):
+        player.message(
+            'This command only works on buildings and land features.'
+        )
+    else:
+        if isinstance(fo, Building) and not fo.type.homely:
+            player.message(f'{fo.get_name()} cannot store resources.')
+        else:
+            player.message(fo.resources_string())
 
 
 @command(location_type=LocationTypes.finalised)
