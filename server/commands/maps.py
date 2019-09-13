@@ -324,8 +324,8 @@ def random_map(
         for b in Building.query(location=m).join(Building.type).filter(
             BuildingType.homely.is_(True)
         ):
-            for name in Building.resource_names():
-                setattr(b, name, 10)
+            for name in b.resources:
+                setattr(b, name, 25)
             b.save()
         player.join_map(m)
 
@@ -541,7 +541,7 @@ def recruit(player, location, building, mobile):
         player.message('Invalid recruitment.')
     else:
         bm = b.type.get_recruit(m)
-        d = bm.get_difference(b)
+        d = b.get_difference(bm)
         if d:
             player.message(f'You require {difference_string(d)}.')
         else:
@@ -626,15 +626,11 @@ def get_resources(player):
     fo = player.focussed_object
     if fo is None:
         player.message('You must first focus something.')
-    elif isinstance(fo, Mobile):
-        player.message(
-            'This command only works on buildings and land features.'
-        )
     else:
         if isinstance(fo, Building) and not fo.type.homely:
             player.message(f'{fo.get_name()} cannot store resources.')
         else:
-            player.message(fo.resources_string())
+            player.message(fo.resources_string('Nothing'))
 
 
 @command(location_type=LocationTypes.finalised)
@@ -656,7 +652,7 @@ def build_building(location, player, id):
     home = obj.home
     if home is None:
         return player.message(f'{obj.get_name()} has no home.')
-    d = t.get_difference(home)
+    d = home.get_difference(t)
     if d:
         return player.message(f'You require {difference_string(d)}.')
     home.take_requirements(t)

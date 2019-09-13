@@ -198,8 +198,10 @@ class Mobile(
                     return
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
-                name = self.exploiting_material
-                setattr(self.home, name, getattr(self.home, name) + 1)
+                for name in self.resources:
+                    value = getattr(self, name)
+                    setattr(self, name, 0)
+                    setattr(self.home, name, getattr(self.home, name) + value)
                 self.action = MobileActions.exploit
             else:
                 self.move_towards(*self.home.coordinates)
@@ -209,16 +211,17 @@ class Mobile(
                 if self.exploiting is None:
                     # We have nothing to do. That resource is exhausted.
                     return
+                name = self.exploiting_material
+                self.sound(f'static/sounds/exploit/{self.type.name}.wav')
+                setattr(self, name, 1)
+                value = getattr(self.exploiting, name) - 1
+                if value:
+                    setattr(self.exploiting, name, value)
                 else:
-                    name = self.exploiting_material
-                    value = getattr(self.exploiting, name) - 1
-                    if value:
-                        setattr(self.exploiting, name, value)
-                    else:
-                        if not isinstance(self.exploiting, Building):
-                            self.exploiting.delete()
-                        self.exploiting = None
-                    self.action = MobileActions.drop
+                    if not isinstance(self.exploiting, Building):
+                        self.exploiting.delete()
+                    self.exploiting = None
+                self.action = MobileActions.drop
             else:
                 self.move_towards(*self.target)
         elif a is MobileActions.patrol_out:

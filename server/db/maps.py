@@ -49,7 +49,10 @@ class Map(Base, NameMixin, OwnerMixin):
 
     def add_mobile(self, type, x, y):
         """Add a mobile to this map."""
-        return Mobile(location=self, type=type, x=x, y=y)
+        m = Mobile(location=self, type=type, x=x, y=y)
+        for name in Mobile.resource_names():
+            setattr(m, name, 0)
+        return m
 
     def broadcast(self, text):
         """Broadcast a message to all players on this map."""
