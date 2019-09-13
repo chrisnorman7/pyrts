@@ -179,7 +179,8 @@ class ResourcesMixin:
         return [
             x for x in dir(ResourcesMixin) if
             not x.startswith('_') and x not in [
-                'resources', 'resources_string', 'resource_names'
+                'resources', 'resources_string', 'resource_names',
+                'get_difference'
             ]
         ]
 
@@ -200,6 +201,17 @@ class ResourcesMixin:
             if value:
                 res.append(f'{value} {name}')
         return english_list(res, empty=empty)
+
+    def get_difference(self, thing):
+        """Return a dictionary containing name: value pairs for every resource
+        on thing that does not match up to the resources on this object."""
+        d = {}
+        for name in self.resources:
+            required = getattr(self, name)
+            value = getattr(thing, name)
+            if value < required:
+                d[name] = required - value
+        return d
 
 
 class SoundMixin:

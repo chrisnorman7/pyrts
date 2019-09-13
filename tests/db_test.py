@@ -431,3 +431,12 @@ def test_builder(peasant):
     assert peasant.get_building(castle) is bb
     assert castle in peasant.can_build
     assert peasant in castle.builders
+
+
+def test_check_difference(peasant):
+    c = BuildingType(name='Castle', gold=1, water=2, stone=3)
+    c.save()
+    bm = c.add_recruit(peasant, gold=1, water=1, stone=1)
+    bm.save()
+    d = c.get_difference(bm)
+    assert d == dict(water=1, stone=2)
