@@ -50,6 +50,11 @@ def test_mobile(peasant, player, map):
     assert isinstance(m, Mobile)
     assert m.x == 1
     assert m.y == 2
+    assert m.gold == 0
+    assert m.wood == 0
+    assert m.food == 0
+    assert m.water == 0
+    assert m.stone == 0
     assert m.owner is None
     assert m.get_full_name() == f'{peasant.name} [Unemployed]'
     m.owner = player
