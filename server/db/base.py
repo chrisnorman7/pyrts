@@ -204,7 +204,7 @@ class ResourcesMixin:
 
     def get_difference(self, thing):
         """Return a dictionary containing name: value pairs for every resource
-        on thing that does not match up to the resources on this object."""
+        on thing that is less than the same resource on this object."""
         d = {}
         for name in self.resources:
             required = getattr(self, name)
