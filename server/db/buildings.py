@@ -12,7 +12,7 @@ from .base import (
 
 class BuildingMobile(Base, ResourcesMixin):
     """Provides a link betwene building and mobile types, allowing buildings
-    to provide mobiles."""
+    to provide mobiles. Resources are used during reruitment."""
 
     __tablename__ = 'building_mobiles'
     building_type_id = Column(
@@ -28,7 +28,7 @@ class BuildingType(
     Base, NameMixin, ResistanceMixin, ResourcesMixin, SoundMixin,
     MaxHealthMixin
 ):
-    """A type of building."""
+    """A type of building. Resources are used during construction."""
 
     __tablename__ = 'building_types'
     homely = Column(Boolean, nullable=False, default=False)
@@ -60,7 +60,7 @@ class BuildingType(
 
     def add_recruit(self, type, **resources):
         """Add the given MobileType instance as a recruit of this building
-        type."""
+        type. It will cost the provided resources to recruit."""
         return BuildingMobile(
             mobile_type_id=type.id, building_type_id=self.id, **resources
         )
@@ -77,7 +77,7 @@ class Building(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin,
     ResourcesMixin, GetNameMixin, HealthMixin
 ):
-    """A building on a map."""
+    """A building on a map. Resources are used for storage."""
 
     __tablename__ = 'buildings'
     __type_class__ = BuildingType

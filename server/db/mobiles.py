@@ -43,7 +43,8 @@ class MobileType(
     Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin,
     MaxHealthMixin
 ):
-    """A type of mobile."""
+    """A type of mobile. Resources are used to decide which resources can be
+    exploited by mobiles of this type."""
 
     __tablename__ = 'mobile_types'
     strength = Column(Integer, nullable=False, default=1)
@@ -69,9 +70,9 @@ class MobileType(
 
 class Mobile(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, GetNameMixin,
-    HealthMixin
+    HealthMixin, ResourcesMixin
 ):
-    """A mobile on a map."""
+    """A mobile on a map. Resources are used for storage (carrying)."""
 
     __tablename__ = 'mobiles'
     __type_class__ = MobileType
