@@ -333,7 +333,12 @@ def focus_object(hotkey, player):
     q = player.visible_objects
     c = len(q)
     if c < hotkey:
-        player.message(f'There {is_are(c)} only {c} {pluralise(c, "object")}.')
+        if c:
+            player.message(
+                f'There {is_are(c)} only {c} {pluralise(c, "object")}.'
+            )
+        else:
+            player.message('There is nothing here.')
     else:
         player.focus = hotkey
         switch_object(player, -1)
@@ -349,9 +354,9 @@ for x in range(10):
     )(lambda player, index=x: focus_object(index, player))
 
 
-def select_mobile(index, player):
+def select_mobiles(index, player):
     """Select a group of mobiles."""
-    player.selected_mobiles.update({Mobile.selected: False})
+    player.deselect_mobiles()
     if not index:
         group = 'All'
         q = Mobile.query(owner=player)
@@ -363,12 +368,46 @@ def select_mobile(index, player):
             q = Mobile.query(owner=player, type=t)
         except IndexError:
             c = len(q)
-            player.message(
-                f'There are only {c} {pluralise(c, "type")} of mobile.'
-            )
+            if c:
+                player.message(
+                    f'There are only {c} {pluralise(c, "type")} of unit.'
+                )
+            else:
+                player.message('There is nothing here.')
             return
     c = q.update({Mobile.selected: True})
     player.message(f'{group}: {c} {pluralise(c, "unit")} selected.')
+
+
+def select_mobile_list(index, player):
+    """Select a mobile from a list grouped by types."""
+    if not index:
+        name = 'All Units'
+        kwargs = {}
+    else:
+        types = MobileType.all()
+        try:
+            type = types[index - 1]
+            kwargs = dict(type=type)
+            name = f'{type.name} Units'
+        except IndexError:
+            c = len(types)
+            return player.message(
+                f'There are only {c} {pluralise(c, "type")} of unit.'
+            )
+    q = Mobile.query(location=player.location, owner=player, **kwargs)
+    c = q.count()
+    if c:
+        m = Menu(name)
+        m.add_label(f'Units: {c}')
+        for u in q:
+            m.add_item(
+                f'{u.get_name()} {u.coordinates}', 'select_mobile',
+                args=dict(id=u.id)
+            )
+            m.send(player.connection)
+    else:
+        player.message('No units to show.')
 
 
 for x, hotkey in enumerate('aqwertyuiop'):
@@ -377,10 +416,30 @@ for x, hotkey in enumerate('aqwertyuiop'):
     else:
         description = 'Select a group of mobiles.'
     command(
-        name=f'select_mobile_{hotkey}', description=description, hotkey=hotkey
+        name=f'select_mobiles_{hotkey}', description=description, hotkey=hotkey
     )(
-        lambda player, index=x: select_mobile(index, player)
+        lambda player, index=x: select_mobiles(index, player)
     )
+    command(
+        name=f'select_mobile_list_{hotkey}',
+        description='Select a single mobile from a list.',
+        hotkey=f'shift+{hotkey}'
+    )(
+        lambda player, index=x: select_mobile_list(index, player)
+    )
+
+
+@command()
+def select_mobile(location, player, id):
+    """Select a unit by its id."""
+    player.deselect_mobiles()
+    u = Mobile.first(owner=player, location=location, id=id)
+    if u is None:
+        player.message('That unit does not exist.')
+    else:
+        u.selected = True
+        u.save()
+        player.message(f'{u.get_name()} selected.')
 
 
 @command(hotkey=' ')

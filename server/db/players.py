@@ -235,3 +235,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Return a set of query-ready args representing this player's current
         location and coordinates."""
         return dict(location=self.location, x=self.x, y=self.y)
+
+    def deselect_mobiles(self):
+        """Deselect any selected mobiles."""
+        self.selected_mobiles.update({Mobile.selected: False})
