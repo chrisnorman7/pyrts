@@ -474,6 +474,8 @@ def activate(player, con):
             m.add_label(f'{fo.hp} / {fo.max_hp} health')
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
+            elif isinstance(fo, Mobile):
+                m.add_item('Release', 'release')
         if isinstance(fo, Building) and fo.owner is player:
             for name in BuildingType.resource_names():
                 value = getattr(fo, name)
@@ -688,3 +690,30 @@ def build_building(location, player, id):
     b.hp = 1
     b.save()
     player.message(f'{b.get_name()} ready.')
+
+
+@command()
+def release(player):
+    """Release a mobile from the employ of this player."""
+    fo = player.focussed_object
+    if not isinstance(fo, Mobile):
+        player.message('You can only release units from your employ.')
+    elif fo.owner is not player:
+        player.message('You can only release your own units from employment.')
+    elif fo.home is None:
+        player.message('That unit has no home.')
+    elif fo.coordinates != fo.home.coordinates:
+        player.message(
+            'That unit cannot be released from your employ until it is back '
+            'home.'
+        )
+    else:
+        bm = BuildingMobile.first(mobile_type_id=fo.type_id)
+        for name in bm.resources:
+            value = getattr(fo.home, name)
+            value += getattr(bm, name)
+            setattr(fo.home, name, value)
+        fo.owner = None
+        fo.home = None
+        fo.save()
+        player.message(f'You release {fo.get_name()} from your employ.')
