@@ -25,6 +25,7 @@ class MobileActions(_Enum):
     patrol_back = 3
     travel = 4
     repair = 5
+    guard = 6
 
 
 class BuildingBuilder(Base):
@@ -187,6 +188,10 @@ class Mobile(
         self.exploiting = None
         self.action = MobileActions.travel
         reactor.callLater(self.random_speed(), self.progress)
+
+    def guard(self):
+        """Guard the current coordinates."""
+        self.action = MobileActions.guard
 
     def progress(self):
         """Progress this object through whatever task it is performing."""

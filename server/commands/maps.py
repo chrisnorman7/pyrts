@@ -169,7 +169,7 @@ def set_resource(con, player, location, command_name, name=None, value=None):
         con.call_command('select_object_0')  # Show them what they did.
 
 
-@command(location_type=LocationTypes.map, hotkey='s')
+@command(hotkey='s')
 def stats(player, location):
     """Show resources for this map."""
     d = {}
@@ -197,7 +197,7 @@ def join_map(player, id):
             player.join_map(m)
 
 
-@command(location_type=LocationTypes.map)
+@command()
 def leave_map(con, command_name, player, response=None):
     """Leave the current map."""
     if response is None:
@@ -215,7 +215,17 @@ def start_game(location, player, con, command_name, id=None):
     """Start a new game."""
     if id is None:
         m = Menu('Maps')
-        m.add_item('Create Random Map', 'random_map')
+        rm = 'random_map'
+        m.add_item('Create Random Map', rm)
+        features = {}
+        for t in FeatureType.all():
+            features[str(t.id)] = 50
+        m.add_item(
+            'Create Practise Map', rm, args=dict(
+                name='Practise Map', players=1, min_resource=20000,
+                max_resource=1000000, features=features, done=True
+            )
+        )
         for map in Map.alphabetized(template=True):
             length = len(map.entry_points)
             if not length:
@@ -514,6 +524,7 @@ def activate(player, location, con):
                 if fo.connected:
                     m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
+    m.add_item('guard', 'guard')
     m.add_item('Summon', 'summon')
     for t in BuildingType.all():
         m.add_item(
@@ -743,3 +754,16 @@ def repair(player, id):
             m.repair(b)
             m.save()
             player.message(f'Employing {m.get_name()}.')
+
+
+@command(location_type=LocationTypes.finalised)
+def guard(player):
+    """Set the currently-selected group of mobiles to guard their current
+    location."""
+    sm = player.selected_mobiles
+    if sm.count():
+        for m in sm:
+            m.guard()
+            player.message(f'{m.get_name()} begins to guard.')
+    else:
+        player.message('You must select at least one unit.')
