@@ -137,6 +137,11 @@ class Mobile(
         """Return a random speed between 0.0 and self.type.speed."""
         return uniform(0.0, self.type.speed)
 
+    def start_task(self):
+        """Start a task for this mobile."""
+        self.kill_task()
+        reactor.callLater(self.random_speed(), self.progress)
+
     def sound(self, path):
         """Make this object emit a sound."""
         # We need to hack out the Player class because Mobile is imported in
@@ -172,26 +177,61 @@ class Mobile(
         self.target = feature.coordinates
         self.action = MobileActions.exploit
         self.exploiting_material = material
-        reactor.callLater(self.random_speed(), self.progress)
+        self.start_task()
 
     def repair(self, building):
         """Repair the given building. The reference will be stored on
         self.exploiting."""
         self.action = MobileActions.repair
         self.exploiting = building
-        reactor.callLater(self.random_speed(), self.progress)
+        self.start_task()
 
     def travel(self, x, y):
         """Start this mobile travelling."""
-        self.kill_task()
         self.target = x, y
         self.exploiting = None
         self.action = MobileActions.travel
-        reactor.callLater(self.random_speed(), self.progress)
+        self.start_task()
 
     def guard(self):
         """Guard the current coordinates."""
+        self.kill_task()
         self.action = MobileActions.guard
+
+    def patrol(self, x, y):
+        """Start this mobile patrolling."""
+        self.target = (x, y)
+        self.action = MobileActions.patrol_out
+        self.start_task()
+
+    def action_description(self):
+        """Return a string describing what this mobile is up to."""
+        a = self.action
+        if a is MobileActions.guard:
+            return f'guarding {self.coordinates}'
+        elif a is MobileActions.exploit:
+            x = self.exploiting
+            if x is None:
+                return 'exploiting a non-existant resource'
+            else:
+                return f'exploiting {x.get_name()}'
+        elif a is MobileActions.drop:
+            h = self.home
+            if h is None:
+                return 'attempting to deliver resources'
+            else:
+                return f'delivering resources to {h.get_name()}'
+        elif a is MobileActions.travel:
+            return f'travelling to {self.target}'
+        elif a in (MobileActions.patrol_out, MobileActions.patrol_back):
+            h = self.home
+            if h is None:
+                h = 'nowhere'
+            else:
+                h = h.coordinates
+            return f'patrolling between {self.target} and {h}'
+        else:
+            return str(a)
 
     def progress(self):
         """Progress this object through whatever task it is performing."""
@@ -209,6 +249,10 @@ class Mobile(
                 ).filter(BuildingType.homely.is_(True)).first()
                 if self.home is None:
                     # They have no buildings left, we are probably unemployed.
+                    self.owner.message(
+                        f'Cannot find a home for {self.get_name()} to deliver '
+                        'resources.'
+                    )
                     return
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
@@ -224,16 +268,18 @@ class Mobile(
             if self.coordinates == self.target:
                 # We are in place.
                 name = self.exploiting_material
-                if self.exploiting is None:
+                x = self.exploiting
+                if x is None:
                     self.action = None
                     return  # Not exploiting anymore.
-                value = getattr(self.exploiting, name)
+                value = getattr(x, name)
                 if not value:
+                    self.owner.message(f'{x.get_name()} exhausted.')
                     return  # Empty resource.
                 self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
                 value -= 1
-                setattr(self.exploiting, name, value)
+                setattr(x, name, value)
                 if not value:
                     self.exploiting = None
                 self.action = MobileActions.drop
@@ -243,18 +289,24 @@ class Mobile(
             if self.coordinates == self.target:
                 self.action = MobileActions.patrol_back
             else:
-                self.move_towards(self.target)
+                self.move_towards(*self.target)
         elif a is MobileActions.patrol_back:
             if self.home is None:
                 self.action = None
+                self.owner.message(
+                    f'{self.get_name()} has nowhere to patrol back to.'
+                )
                 return  # Homeless.
             elif self.coordinates == self.home.coordinates:
                 self.action = MobileActions.patrol_out
             else:
-                self.move_towards(self.home)
+                self.move_towards(*self.home.coordinates)
         elif a is MobileActions.travel:
             if self.coordinates == self.target:
                 self.action = None
+                self.owner.message(
+                    f'{self.get_name()} has arrived at {self.coordinates}.'
+                )
                 return  # Done.
             else:
                 self.move_towards(*self.target)
@@ -269,6 +321,9 @@ class Mobile(
                 # We are here, do the repair.
                 x.heal(randint(0, self.repair_amount))
                 self.sound('static/sounds/repair.wav')
+                x.save()
+                if x.health is None:
+                    self.owner.message(f'{x.get_name()} has been repaired.')
             else:
                 self.move_towards(*x.coordinates)
         else:

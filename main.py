@@ -24,7 +24,7 @@ def main():
         if c:
             logging.info('Resuming %d %s.', c, pluralise(c, 'task'))
             for m in q:
-                m.progress()
+                m.start_task()
         else:
             logging.info('No tasks to resume.')
     except FileNotFoundError:
