@@ -604,7 +604,7 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
     cls = Base._decl_class_registry[class_name]
     f = cls.first(id=id, **player.same_coordinates())
     if f is None:
-        player.message('You cannot see that here.')
+        return player.message('You cannot see that here.')
     elif resource is None:
         if isinstance(f, Feature):
             resources = f.type.resources
