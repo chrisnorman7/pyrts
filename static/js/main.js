@@ -5,6 +5,7 @@ let debug = false
 let hotkeys = null
 let startMusicURL = null
 let authenticationSuccessful = false
+let disconnecting = false
 let reconnecting = false
 
 // Below code to make Web Audio work on iOS modified from:
@@ -35,6 +36,9 @@ function playMusic() {
 }
 
 const commands = {
+    disconnecting: () => {
+        disconnecting = true
+    },
     hotkeys: args => {
         hotkeys = args[0]
     },
@@ -258,8 +262,10 @@ function createSocket() {
             writeMessage("*** Disconnected ***")
             commands.stop_loops()
         }
-        reconnecting = true
-        setTimeout(createSocket, 1)
+        if (!disconnecting) {
+            reconnecting = true
+            setTimeout(createSocket, 1)
+        }
     }
     soc.onmessage = (e) => {
         let data = JSON.parse(e.data)

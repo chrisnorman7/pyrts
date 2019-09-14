@@ -78,6 +78,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             if old is not None:
                 old.message('Logging you in from somewhere else.')
                 old.player_id = None
+                old.send('disconnecting')
                 old.transport.loseConnection()
             self.connected = True
             value.authenticated(self)
