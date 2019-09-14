@@ -202,6 +202,11 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
                 loc.announce_waiting()
             elif not loc.template:
                 loc.delete()
+        else:
+            if loc.players:
+                loc.finalised = None
+            else:
+                loc.delete()
         if self.connection is not None:
             self.connection.send('stop_loops')
             self.send_title()

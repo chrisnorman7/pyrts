@@ -64,7 +64,7 @@ def rename_player(con, player, text=None):
             player.save()
             player.message(f'You will now be known as {player.name}.')
             con.logger.info('Renamed to %s.', text)
-            player.send_location()
+            player.send_title()
             con.set_logger(player=player)
         else:
             player.message('That name is already taken.')
