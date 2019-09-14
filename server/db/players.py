@@ -210,7 +210,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Return a list of those objects that this player can see."""
         results = []
         kwargs = self.same_coordinates()
-        for cls in (Player, Building, Mobile, Feature):
+        for cls in (Player, Building, Feature, Mobile):
             if cls is Player:
                 args = [cls.id.isnot(self.id)]
             else:
@@ -224,7 +224,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         if self.connection is not None:
             if os.path.isfile(path):
                 path += f'?{os.path.getmtime(path)}'
-            self.connection.logger.info('Playing sound %s.', path)
+            self.connection.logger.debug('Playing sound %s.', path)
             url = base_url + path
             self.connection.send('sound', url)
 
