@@ -420,7 +420,7 @@ def test_visible_objects(player, farm, mine, peasant, map):
     m = map.add_feature(mine, *player.coordinates)
     assert player.visible_objects == [b, m]
     p = map.add_mobile(peasant, *player.coordinates)
-    assert player.visible_objects == [b, p, m]
+    assert player.visible_objects == [b, m, p]
     player.coordinates = (1, 1)
     assert player.visible_objects == []
 
@@ -461,7 +461,7 @@ def test_distance_to(map, farm, peasant):
     p.coordinates = (3, 3)
     assert b.distance_to(p) == 3
     p.coordinates = (5, 4)
-    assert b.distance_to(p) == 4
+    assert b.distance_to(p) == 5
 
 
 def test_directions_to(map, farm, peasant):
