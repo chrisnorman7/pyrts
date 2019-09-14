@@ -464,7 +464,7 @@ def toggle_select_mobile(player):
 
 
 @command(hotkey=' ')
-def activate(player, con):
+def activate(player, location, con):
     """Show the activation menu for the currently focussed object."""
     m = Menu('Object Menu')
     fo = player.focussed_object
@@ -483,12 +483,15 @@ def activate(player, con):
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
             if fo.type.homely:
+                buildings = Building.query(
+                    health=None, owner=player, location=location
+                )
                 for bm in BuildingMobile.query(
                     BuildingMobile.building_type_id.in_(
-                        [b.type.id for b in player.owned_buildings]
+                        [b.type.id for b in buildings]
                     )
                 ):
-                    t = MobileType.get(bm.building_type_id)
+                    t = MobileType.get(bm.mobile_type_id)
                     m.add_item(
                         f'Recruit {t} (requires {bm.resources_string()}',
                         'recruit', args=dict(building=fo.id, mobile=t.id)
@@ -567,7 +570,9 @@ def recruit(player, location, building, mobile):
         types = []
         for bm in BuildingMobile.all(mobile_type_id=m.id):
             t = BuildingType.get(bm.building_type_id)
-            if Building.count(owner=player, location=location, type=t):
+            if Building.count(
+                health=None, owner=player, location=location, type=t
+            ):
                 break  # They can build.
         else:
             return player.message(f'Requires {english_list(types)}.')
