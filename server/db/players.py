@@ -81,8 +81,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
                 old.send('disconnecting')
                 old.transport.loseConnection()
             self.connected = True
-            value.authenticated(self)
             connections[self.id] = value
+            value.authenticated(self)
             self.send_volume()
             if self.location is None:
                 value.call_command('main_menu')
@@ -186,6 +186,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             b.owner = self
             b.save()
         self.move(e.x, e.y)
+        self.send_title()
         self.save()
 
     def leave_map(self):
@@ -203,6 +204,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
                 loc.delete()
         if self.connection is not None:
             self.connection.send('stop_loops')
+            self.send_title()
+        self.save()
 
     @property
     def visible_objects(self):
@@ -265,9 +268,10 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
 
     def send_title(self):
         """Send the title which should be used in the client's browser."""
-        n = f'({self.get_name()})'
-        if self.location is None:
-            n += f' | {self.location.get_name()}'
+        n = self.get_name()
+        if self.location is not None:
+            n += f' ({self.location.get_name()})'
         if self.connection is None:
             return False
-        self.connection.send('title', f'{server_name} {n}')
+        self.connection.send('title', f'{server_name} | {n}')
+        return True

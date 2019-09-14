@@ -36,6 +36,9 @@ function playMusic() {
 }
 
 const commands = {
+    title: args => {
+        document.title = args[0]
+    },
     disconnecting: () => {
         disconnecting = true
     },
@@ -114,10 +117,9 @@ const commands = {
             li.innerText = item.title
         }
     },
-    authenticated: args => {
+    authenticated: () => {
         authenticationSuccessful = true
         loginForm.hidden = true
-        document.title = `RTS | ${args[0]}`
         keyboard.focus()
         playMusic()
     },

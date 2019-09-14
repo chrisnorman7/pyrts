@@ -9,6 +9,7 @@ interface = '0.0.0.0'
 http_port = 7873
 websocket_port = http_port + 1
 
+server_name = 'RTS'
 base_url = f'http://{getfqdn()}:{http_port}/'
 static_path = 'static'
 sounds_path = os.path.join(static_path, 'sounds')

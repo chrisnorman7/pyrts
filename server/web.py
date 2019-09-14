@@ -195,7 +195,8 @@ class WebSocketProtocol(WebSocketServerProtocol):
         instance."""
         self.player_id = player.id
         self.message('Welcome, %s.' % player.name)
-        self.send('authenticated', player.name)
+        player.send_title()
+        self.send("authenticated")
         self.set_logger(player=player)
         self.logger.info('Authenticated.')
 
