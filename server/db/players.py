@@ -15,7 +15,7 @@ from .features import Feature
 from .mobiles import Mobile
 
 from ..exc import InvalidUsername, InvalidPassword, NoSuchSound
-from ..options import base_url
+from ..options import base_url, server_name
 from ..socials import factory
 from ..util import pluralise
 
@@ -240,9 +240,6 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         self.connection.transport.loseConnection()
         return True
 
-    def get_name(self):
-        return self.name
-
     def get_full_name(self):
         connected = "connected" if self. connected else "disconnected"
         return f'{self.name} ({connected})'
@@ -265,3 +262,12 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         long they have to wait."""
         reactor.callLater(time, *args, **kwargs)
         self.message(f'({time} {pluralise(time, "second")})')
+
+    def send_title(self):
+        """Send the title which should be used in the client's browser."""
+        n = f'({self.get_name()})'
+        if self.location is None:
+            n += f' | {self.location.get_name()}'
+        if self.connection is None:
+            return False
+        self.connection.send('title', f'{server_name} {n}')

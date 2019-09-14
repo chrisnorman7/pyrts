@@ -10,8 +10,8 @@ from twisted.internet.error import AlreadyCancelled
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
-    OwnerMixin, TypeMixin, SoundMixin, GetNameMixin, ResourcesMixin,
-    MaxHealthMixin, HealthMixin
+    OwnerMixin, TypeMixin, SoundMixin, ResourcesMixin, MaxHealthMixin,
+    HealthMixin, GetNameMixin
 )
 
 tasks = {}
@@ -71,8 +71,8 @@ class MobileType(
 
 
 class Mobile(
-    Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, GetNameMixin,
-    HealthMixin, ResourcesMixin
+    Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, HealthMixin,
+    ResourcesMixin, GetNameMixin
 ):
     """A mobile on a map. Resources are used for storage (carrying)."""
 

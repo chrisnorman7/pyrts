@@ -152,7 +152,26 @@ class NameMixin:
         """Return a list of items, sorted by name."""
         return cls.query(*args, **kwargs).order_by(cls.name)
 
+    def get_name(self):
+        """Use GetNameMixin to get a name."""
+        return GetNameMixin.get_name(self)
+
     def __str__(self):
+        return self.get_name()
+
+
+class GetNameMixin:
+    def get_name(self):
+        """Return this object's name."""
+        cls = type(self)
+        if OwnerMixin in cls.__bases__:
+            if self.owner is None:
+                append = ''
+            else:
+                results = cls.all(type=self.type, owner=self.owner)
+                index = results.index(self) + 1
+                append = f' {index}'
+            return self.type.name + append
         return self.name
 
 
@@ -272,17 +291,6 @@ class SoundMixin:
             url = quote(path.replace(os.path.sep, '/'))
             return f'{base_url}{url}?{os.path.getmtime(path)}'
         raise NoSuchSound(path)
-
-
-class GetNameMixin:
-    def get_name(self):
-        if self.owner is None:
-            append = ''
-        else:
-            results = type(self).all(type=self.type, owner=self.owner)
-            index = results.index(self) + 1
-            append = f' {index}'
-        return self.type.name + append
 
 
 class MaxHealthMixin:

@@ -5,8 +5,8 @@ from sqlalchemy.orm import relationship
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
-    OwnerMixin, ResourcesMixin, TypeMixin, SoundMixin, GetNameMixin,
-    MaxHealthMixin, HealthMixin
+    OwnerMixin, ResourcesMixin, TypeMixin, SoundMixin, MaxHealthMixin,
+    HealthMixin, GetNameMixin
 )
 
 
@@ -75,7 +75,7 @@ class BuildingType(
 
 class Building(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin,
-    ResourcesMixin, GetNameMixin, HealthMixin
+    ResourcesMixin, HealthMixin, GetNameMixin
 ):
     """A building on a map. Resources are used for storage."""
 
