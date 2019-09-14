@@ -219,15 +219,17 @@ class Mobile(
             if self.coordinates == self.target:
                 # We are in place.
                 name = self.exploiting_material
+                if self.exploiting is None:
+                    self.action = None
+                    return  # Not exploiting anymore.
                 value = getattr(self.exploiting, name)
                 if not value:
                     return  # Empty resource.
                 self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
                 value -= 1
-                if value:
-                    setattr(self.exploiting, name, value)
-                else:
+                setattr(self.exploiting, name, value)
+                if not value:
                     self.exploiting = None
                 self.action = MobileActions.drop
             else:
