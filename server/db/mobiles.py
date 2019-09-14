@@ -52,7 +52,7 @@ class MobileType(
     can_build = relationship(
         'BuildingType', backref='builders', secondary=BuildingBuilder.__table__
     )
-    speed = Column(Integer, nullable=False, default=3)
+    speed = Column(Integer, nullable=False, default=8)
 
     def add_building(self, type):
         """Add a BuildingType instance that can be built by mobiles of this
@@ -254,6 +254,9 @@ class Mobile(
         elif a is MobileActions.repair:
             x = self.exploiting
             if x is None or x.health is None:
+                # We are done.
+                self.action = None
+                self.exploiting = None
                 return
             if self.coordinates == x.coordinates:
                 # We are here, do the repair.
