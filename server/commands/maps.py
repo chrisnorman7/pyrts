@@ -416,7 +416,8 @@ def select_mobile_list(index, player):
         m.add_label(f'Units: {c}')
         for u in q:
             m.add_item(
-                f'{u.get_name()} {u.coordinates}', 'select_mobile',
+                f'{u.get_name()} [{u.action_description()}] {u.coordinates}',
+                'select_mobile',
                 args=dict(id=u.id)
             )
             m.send(player.connection)
@@ -443,7 +444,7 @@ for x, hotkey in enumerate('aqwertyuiop'):
     )
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def select_mobile(location, player, id):
     """Select a unit by its id."""
     player.deselect_mobiles()
@@ -456,7 +457,7 @@ def select_mobile(location, player, id):
         player.message(f'{u.get_name()} selected.')
 
 
-@command(hotkey='x')
+@command(location_type=LocationTypes.finalised, hotkey='x')
 def toggle_select_mobile(player):
     """Select r deselect a mobile."""
     fo = player.focussed_object
@@ -473,7 +474,7 @@ def toggle_select_mobile(player):
     player.message(f'{verb}ing {fo.get_name()}.')
 
 
-@command(hotkey=' ')
+@command(location_type=LocationTypes.finalised, hotkey=' ')
 def activate(player, location, con):
     """Show the activation menu for the currently focussed object."""
     m = Menu('Object Menu')
@@ -524,8 +525,11 @@ def activate(player, location, con):
                 if fo.connected:
                     m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
-    m.add_item('guard', 'guard')
+    m.add_label('General')
     m.add_item('Summon', 'summon')
+    m.add_item('Patrol', 'patrol')
+    m.add_item('guard', 'guard')
+    m.add_label('Building')
     for t in BuildingType.all():
         m.add_item(
             f'Build {t.name} (requires {t.resources_string("nothing")}',
@@ -595,7 +599,7 @@ def recruit(player, location, building, mobile):
             player.call_later(bm.pop_time, _recruit, b.id, bm.id)
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def set_home(player, id):
     """Set the home of all selected mobiles."""
     q = player.selected_mobiles
@@ -609,7 +613,7 @@ def set_home(player, id):
         player.message(f'Updated {c} {pluralise(c, "home")}.')
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def exploit(con, args, command_name, player, class_name, id, resource=None):
     """Exploit a feature."""
     cls = Base._decl_class_registry[class_name]
@@ -645,7 +649,7 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
             m.exploit(f, resource)
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def summon(player):
     """Summon all selected objects."""
     q = player.selected_mobiles
@@ -710,7 +714,7 @@ def build_building(location, player, id):
     player.message(f'{b.get_name()} ready.')
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def release(player):
     """Release a mobile from the employ of this player."""
     fo = player.focussed_object
@@ -737,7 +741,7 @@ def release(player):
         player.message(f'You release {fo.get_name()} from your employ.')
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def repair(player, id):
     """Repair the building with the given ID."""
     b = Building.first(id=id, **player.same_coordinates())
@@ -760,10 +764,23 @@ def repair(player, id):
 def guard(player):
     """Set the currently-selected group of mobiles to guard their current
     location."""
-    sm = player.selected_mobiles
-    if sm.count():
-        for m in sm:
+    q = player.selected_mobiles
+    if q.count():
+        for m in q:
             m.guard()
             player.message(f'{m.get_name()} begins to guard.')
+    else:
+        player.message('You must select at least one unit.')
+
+
+@command(location_type=LocationTypes.finalised)
+def patrol(player):
+    """Set the currently-selected group of mobiles to patrolling between their
+    home, and the current coordinates."""
+    q = player.selected_mobiles
+    if q.count():
+        for m in q:
+            m.patrol(*player.coordinates)
+            player.message(f'{m.get_name()} begins to patrol.')
     else:
         player.message('You must select at least one unit.')
