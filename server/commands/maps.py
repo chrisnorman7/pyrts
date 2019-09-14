@@ -117,11 +117,15 @@ def switch_object(player, direction):
             obj = q[0]
     player.focussed_object = obj
     player.save()
-    player.message(obj.get_name())
+    msg = obj.get_name()
     if isinstance(obj, Mobile):
-        player.deselect_mobiles()
-        obj.selected = True
-        obj.save()
+        msg += ' ('
+        if obj.selected:
+            msg += 'Selected'
+        else:
+            msg += 'Not selected'
+        msg += ')'
+    player.message(msg)
 
 
 @command(hotkey='[')
@@ -472,6 +476,13 @@ def toggle_select_mobile(player):
     fo.selected = value
     fo.save()
     player.message(f'{verb}ing {fo.get_name()}.')
+
+
+@command(location_type=LocationTypes.finalised, hotkey='shift+x')
+def deselect_mobiles(player):
+    """Deselect all units."""
+    player.deselect_mobiles()
+    player.message('Unit selections cleared.')
 
 
 @command(location_type=LocationTypes.finalised, hotkey=' ')
