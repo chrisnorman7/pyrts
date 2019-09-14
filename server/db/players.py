@@ -144,7 +144,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         for player in cls.query(*filter_args, **filter_kwargs):
             try:
                 index = perspectives.index(player)
-            except IndexError:
+            except (ValueError, IndexError):
                 index = -1
             player.message(strings[index])
             if sound is not None:
