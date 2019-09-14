@@ -118,6 +118,7 @@ class Mobile(
         self.target_x, self.target_y = value
 
     def get_full_name(self):
+        """Get this mobile's name, and the name of their employer (if any)."""
         if self.owner is None:
             owner = 'Unemployed'
         else:

@@ -164,15 +164,15 @@ class GetNameMixin:
     def get_name(self):
         """Return this object's name."""
         cls = type(self)
+        if TypeMixin not in cls.__bases__:
+            return self.name
         if OwnerMixin in cls.__bases__:
-            if self.owner is None:
-                append = ''
-            else:
-                results = cls.all(type=self.type, owner=self.owner)
-                index = results.index(self) + 1
-                append = f' {index}'
-            return self.type.name + append
-        return self.name
+            kwargs = dict(owner=self.owner)
+        else:
+            kwargs = {}
+        results = cls.all(type=self.type, **kwargs)
+        index = results.index(self) + 1
+        return f'{self.type.name} {index}'
 
 
 class LocationMixin:

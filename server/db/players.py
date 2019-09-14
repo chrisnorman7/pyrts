@@ -112,16 +112,16 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         self.x = x
         self.y = y
         self.save()
-        if self.connection is not None:
-            self.connection.stop_loops()
+        if self.connection is None:
+            return  # No point in telling them stuff they can't see.
+        self.connection.stop_loops()
         for obj in self.visible_objects:
-            if isinstance(obj, (Feature, Building)) and \
-               self.connection is not None:
+            if isinstance(obj, (Feature, Building)):
                 try:
                     self.connection.start_loop(obj.type.sound)
                 except NoSuchSound:
                     pass
-            self.message(obj.get_full_name())
+            self.message(obj.get_name())
         for ep in EntryPoint.all(x=self.x, y=self.y, location=self.location):
             self.message(str(ep))
         self.message('(%d, %d).' % (self.x, self.y))

@@ -117,14 +117,20 @@ def switch_object(player, direction):
             obj = q[0]
     player.focussed_object = obj
     player.save()
-    msg = obj.get_name()
-    if isinstance(obj, Mobile):
+    if getattr(obj, 'owner', None) is None:
+        msg = obj.get_full_name()
+    else:
+        msg = obj.get_name()
+    if isinstance(obj, Mobile) and obj.owner is player:
+        msg = obj.get_name()
         msg += ' ('
         if obj.selected:
             msg += 'Selected'
         else:
             msg += 'Not selected'
         msg += ')'
+    if isinstance(obj, Building) and obj.owner is player:
+        msg += f' ({obj.resources_string(empty="empty")})'
     player.message(msg)
 
 

@@ -2,10 +2,8 @@
 
 from .base import (
     Base, CoordinatesMixin, NameMixin, LocationMixin, ResourcesMixin,
-    TypeMixin, SoundMixin
+    TypeMixin, SoundMixin, GetNameMixin
 )
-
-from ..util import english_list
 
 
 class FeatureType(Base, NameMixin, ResourcesMixin, SoundMixin):
@@ -16,7 +14,8 @@ class FeatureType(Base, NameMixin, ResourcesMixin, SoundMixin):
 
 
 class Feature(
-    Base, CoordinatesMixin, LocationMixin, ResourcesMixin, TypeMixin
+    Base, CoordinatesMixin, LocationMixin, ResourcesMixin, TypeMixin,
+    GetNameMixin
 ):
     """A fixture or feature on a map. Resources are used for storage."""
 
@@ -24,11 +23,5 @@ class Feature(
     __type_class__ = FeatureType
 
     def get_full_name(self):
-        resources = []
-        for name in self.type.resources:
-            value = getattr(self, name)
-            resources.append(f'{value} {name}')
-        return f'{self.type.name} [{english_list(resources)}]'
-
-    def get_name(self):
-        return self.type.name
+        """Get this feature's name with all the stored resources."""
+        return f'{self.get_name()} [{self.resources_string()}]'
