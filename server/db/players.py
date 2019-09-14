@@ -139,7 +139,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         if local:
             filter_kwargs = self.same_coordinates()
         else:
-            filter_kwargs = {}
+            filter_kwargs = dict(location=self.location)
         cls = type(self)
         for player in cls.query(*filter_args, **filter_kwargs):
             try:
@@ -149,8 +149,6 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             player.message(strings[index])
             if sound is not None:
                 player.sound(sound)
-            else:
-                print(sound)
 
     @property
     def focussed_object(self):
