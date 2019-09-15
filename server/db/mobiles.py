@@ -1,7 +1,7 @@
 """Provides the MobileType and Mobile classes."""
 
 from enum import Enum as _Enum
-from random import uniform, randint
+from random import uniform, choice
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
@@ -321,13 +321,23 @@ class Mobile(
                 return
             elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
-                x.heal(randint(0, self.repair_amount))
+                x.heal(0, self.repair_amount)
                 self.sound('static/sounds/repair.wav')
                 x.save()
                 if x.health is None:
                     self.owner.message(f'{x.get_name()} has been repaired.')
             else:
                 self.move_towards(*x.coordinates)
+        if a is MobileActions.guard:
+            if self.type.auto_repair:
+                q = Building.all(
+                    Building.health.isnot(None), owner=self.owner,
+                    location=self.location, x=self.x, y=self.y
+                )
+                if len(q):
+                    b = choice(q)
+                    b.heal(self.repair_amount)
+                    self.sound('static/sounds/repair.wav')
         else:
             return  # No action.
         self.save()  # Better save since we might be inside a deferred.
