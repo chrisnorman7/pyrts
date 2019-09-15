@@ -13,6 +13,7 @@ from twisted.web.static import File
 from .commands.commands import commands, LocationTypes
 from .db import Map, Feature, Player
 from .options import websocket_port, start_music
+from .util import format_exception
 
 app = Klein()
 
@@ -175,11 +176,14 @@ class WebSocketProtocol(WebSocketServerProtocol):
                 entry_point=entry_point, args=kwargs, **kwargs
             )
             return True
-        except Exception:
+        except Exception as e:
             self.logger.exception(
                 'A problem occurred while running command %r.', command
             )
-            self.message('There was an error.')
+            if player is None or not player.admin:
+                self.message('There was an error.')
+            else:
+                self.message(format_exception(e))
 
     def set_logger(self, player=None):
         """Set self.logger to a logger with a sensible name."""

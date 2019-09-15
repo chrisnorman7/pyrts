@@ -1,5 +1,7 @@
 """Utility functions."""
 
+from traceback import format_exception as _format_exception
+
 
 def pluralise(n, singular, plural=None):
     """Return singular or plural, depending on the value of n. If plural is
@@ -41,3 +43,8 @@ def difference_string(d, empty='nothing'):
     return a sensible string."""
     strings = [f'{value} {name}' for name, value in d.items()]
     return english_list(strings, empty=empty)
+
+
+def format_exception(e):
+    """Return a string representing the provided Exception instance."""
+    return ''.join(_format_exception(type(e), e, e.__traceback__))
