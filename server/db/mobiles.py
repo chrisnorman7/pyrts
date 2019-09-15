@@ -54,6 +54,7 @@ class MobileType(
         'BuildingType', backref='builders', secondary=BuildingBuilder.__table__
     )
     speed = Column(Integer, nullable=False, default=8)
+    auto_repair = Column(Boolean, nullable=False, default=False)
 
     def add_building(self, type):
         """Add a BuildingType instance that can be built by mobiles of this
@@ -318,7 +319,7 @@ class Mobile(
                 self.action = None
                 self.exploiting = None
                 return
-            if self.coordinates == x.coordinates:
+            elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
                 x.heal(randint(0, self.repair_amount))
                 self.sound('static/sounds/repair.wav')
