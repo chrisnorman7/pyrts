@@ -1,9 +1,33 @@
 """Administrative commands."""
 
+from code import InteractiveConsole
+from contextlib import redirect_stdout, redirect_stderr
+
 from .commands import command
 
 from ..db import Player
 from ..menus import YesNoMenu
+
+consoles = {}
+
+
+class Console(InteractiveConsole):
+    """A console with updated push and write methods."""
+
+    def write(self, string):
+        """Send the provided string to self.player.message."""
+        self.player.message(string)
+
+    def push(self, con, player, location, entry_point, code):
+        """Update self.locals, then run the code."""
+        self.player = player
+        kwargs = con.get_default_kwargs(player, location, entry_point)
+        self.locals.update(**kwargs, console=self)
+        res = super().push(code)
+        for name in kwargs:
+            del self.locals[name]
+        self.player = None
+        return res
 
 
 @command(admin=True)
@@ -68,3 +92,19 @@ def revoke_admin(player, id):
     else:
         p.admin = False
         player.message(f'{p} is no longer an admin.')
+
+
+@command(admin=True, hotkey='backspace')
+def python(command_name, con, player, location, entry_point, text=None):
+    """Run some code."""
+    if text is None:
+        con.text('Code', command_name, value=player.code)
+    else:
+        player.code = text
+        if player.id not in consoles:
+            consoles[player.id] = Console()
+        c = consoles[player.id]
+        with redirect_stdout(c), redirect_stderr(c):
+            res = c.push(con, player, location, entry_point, text)
+        if res:
+            consoles[player.id] = c

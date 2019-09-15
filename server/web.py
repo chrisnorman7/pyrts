@@ -105,6 +105,18 @@ class WebSocketProtocol(WebSocketServerProtocol):
         kwargs = data['args']
         self.call_command(name, **kwargs)
 
+    def get_default_kwargs(self, player=None, location=None, entry_point=None):
+        """Get the default keyword arguments that are sent to every command."""
+        if player is None:
+            player = self.player
+        if location is None and player is not None:
+            location = player.location
+        if entry_point is None and player is not None:
+            entry_point = player.entry_point
+        return dict(
+            con=self, player=player, location=location, entry_point=entry_point
+        )
+
     def call_command(self, _name, **kwargs):
         """Call a command on this connection."""
         if _name not in commands:
@@ -170,10 +182,12 @@ class WebSocketProtocol(WebSocketServerProtocol):
                         'You cannot use this command until the game has begun.'
                     )
                     return False
+        default_kwargs = self.get_default_kwargs(
+            player=player, location=location, entry_point=entry_point
+        )
         try:
             command.call(
-                con=self, command_name=_name, player=player, location=location,
-                entry_point=entry_point, args=kwargs, **kwargs
+                **default_kwargs, command_name=_name, args=kwargs, **kwargs
             )
             return True
         except Exception as e:
