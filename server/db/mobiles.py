@@ -234,6 +234,12 @@ class Mobile(
             else:
                 h = h.coordinates
             return f'patrolling between {self.target} and {h}'
+        elif a is MobileActions.repair:
+            if self.exploiting is None:
+                name = 'nothing'
+            else:
+                name = self.exploiting.get_name()
+            return f'repairing {name}'
         else:
             return str(a)
 
