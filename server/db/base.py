@@ -253,11 +253,14 @@ class ResourcesMixin:
         return {name: getattr(self, name) for name in self.resources}
 
     def resources_string(self, empty='free'):
+        """Return a string explaining this object's resources. This string can
+        be sent directly to a player."""
+        d = self.resources_dict()
+        resource_names = sorted(d, key=lambda name: d[name])
+        resources = {name: d[name] for name in resource_names}
         res = []
-        for name in self.resources:
-            value = getattr(self, name)
-            if value:
-                res.append(f'{value} {name}')
+        for name, value in resources.items():
+            res.append(f'{value} {name}')
         return english_list(res, empty=empty)
 
     def get_difference(self, thing):
