@@ -6,7 +6,7 @@ from random import uniform, choice
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
 from twisted.internet import reactor
-from twisted.internet.error import AlreadyCancelled
+from twisted.internet.error import AlreadyCancelled, AlreadyCalled
 
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
@@ -55,6 +55,7 @@ class MobileType(
     )
     speed = Column(Integer, nullable=False, default=8)
     auto_repair = Column(Boolean, nullable=False, default=False)
+    repair_amount = Column(Integer, nullable=False, default=1)
 
     def add_building(self, type):
         """Add a BuildingType instance that can be built by mobiles of this
@@ -88,7 +89,6 @@ class Mobile(
     # If self.action is None, this mobile is considered to be standing around
     # doing nothing.
     action = Column(Enum(MobileActions), nullable=True)
-    repair_amount = Column(Integer, nullable=False, default=1)
     target_x = Column(Integer, nullable=False, default=0)
     target_y = Column(Integer, nullable=False, default=0)
 
@@ -132,7 +132,7 @@ class Mobile(
         t = tasks.pop(self.id, None)
         try:
             t.cancel()
-        except (AlreadyCancelled, AttributeError):
+        except (AlreadyCancelled, AlreadyCalled, AttributeError):
             pass  # Already cancelled or non existant.
 
     def random_speed(self):
@@ -142,7 +142,7 @@ class Mobile(
     def start_task(self):
         """Start a task for this mobile."""
         self.kill_task()
-        reactor.callLater(self.random_speed(), self.progress)
+        tasks[self.id] = reactor.callLater(self.random_speed(), self.progress)
 
     def sound(self, path):
         """Make this object emit a sound."""
@@ -209,7 +209,9 @@ class Mobile(
     def action_description(self):
         """Return a string describing what this mobile is up to."""
         a = self.action
-        if a is MobileActions.guard:
+        if a is None:
+            return 'doing nothing'
+        elif a is MobileActions.guard:
             return f'guarding {self.coordinates}'
         elif a is MobileActions.exploit:
             x = self.exploiting
@@ -235,27 +237,42 @@ class Mobile(
         else:
             return str(a)
 
-    def progress(self):
-        """Progress this object through whatever task it is performing."""
-        self.kill_task()
+    def reset_action(self):
+        """Returns this mobile to its default state."""
+        self.action = None
+        self.exploiting = None
+        self.exploiting_material = None
+        self.target = self.coordinates
+
+    def rehome(self):
+        """In the event that self.home becomes None, try and find a new
+        home."""
         Building = Base._decl_class_registry['Building']
         BuildingType = Base._decl_class_registry['BuildingType']
+        self.home = Building.query(
+            location=self.location, owner=self.owner
+        ).join(
+            Building.type
+        ).filter(BuildingType.homely.is_(True)).first()
+
+    def progress(self):
+        """Progress this object through whatever task it is performing."""
+        Building = Base._decl_class_registry['Building']
         a = self.action
         if self.owner is None:
-            return  # Stop what we are doing while unemployed.
+            # Stop what we are doing while unemployed.
+            return self.reset_action()
         elif a is MobileActions.drop:
             if self.home is None:
                 # Homeless now. Try and reroute.
-                self.home = Building.query(owner_id=self.owner_id).join(
-                    Building.type
-                ).filter(BuildingType.homely.is_(True)).first()
+                self.rehome()
                 if self.home is None:
                     # They have no buildings left, we are probably unemployed.
                     self.owner.message(
                         f'Cannot find a home for {self.get_name()} to deliver '
                         'resources.'
                     )
-                    return
+                    return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
                 for name in self.resources:
@@ -272,12 +289,16 @@ class Mobile(
                 name = self.exploiting_material
                 x = self.exploiting
                 if x is None:
-                    self.action = None
-                    return  # Not exploiting anymore.
+                    # Not exploiting anymore.
+                    self.owner.message(
+                        f'{self.get_name()} cannot find anything to exploit.'
+                    )
+                    return self.reset_action()
                 value = getattr(x, name)
                 if not value:
+                    # Empty resource.
                     self.owner.message(f'{x.get_name()} exhausted.')
-                    return  # Empty resource.
+                    return self.reset_action()
                 self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
                 value -= 1
@@ -294,51 +315,49 @@ class Mobile(
                 self.move_towards(*self.target)
         elif a is MobileActions.patrol_back:
             if self.home is None:
-                self.action = None
-                self.owner.message(
-                    f'{self.get_name()} has nowhere to patrol back to.'
-                )
-                return  # Homeless.
+                self. rehome()
+                if self.home is None:
+                    self.owner.message(
+                        f'{self.get_name()} has no home to patrol back to.'
+                    )
+                    return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 self.action = MobileActions.patrol_out
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is MobileActions.travel:
             if self.coordinates == self.target:
-                self.action = None
                 self.owner.message(
                     f'{self.get_name()} has arrived at {self.coordinates}.'
                 )
-                return  # Done.
+                return self.reset_action()  # Done.
             else:
                 self.move_towards(*self.target)
         elif a is MobileActions.repair:
             x = self.exploiting
             if x is None or x.health is None:
                 # We are done.
-                self.action = None
-                self.exploiting = None
-                return
+                return self.reset_action()
             elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
-                x.heal(0, self.repair_amount)
+                x.heal(self.type.repair_amount)
                 self.sound('static/sounds/repair.wav')
                 x.save()
                 if x.health is None:
                     self.owner.message(f'{x.get_name()} has been repaired.')
             else:
                 self.move_towards(*x.coordinates)
-        if a is MobileActions.guard:
+        elif a is MobileActions.guard:
             if self.type.auto_repair:
                 q = Building.all(
-                    Building.health.isnot(None), owner=self.owner,
-                    location=self.location, x=self.x, y=self.y
+                    Building.health.isnot(None),
+                    **self.owner.same_coordinates()
                 )
                 if len(q):
                     b = choice(q)
-                    b.heal(self.repair_amount)
+                    b.heal(self.type.repair_amount)
                     self.sound('static/sounds/repair.wav')
         else:
-            return  # No action.
+            return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
-        reactor.callLater(self.random_speed(), self.progress)
+        self.start_task()
