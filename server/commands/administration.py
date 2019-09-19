@@ -3,7 +3,7 @@
 from code import InteractiveConsole
 from contextlib import redirect_stdout, redirect_stderr
 
-from .commands import command
+from .commands import command, LocationTypes
 
 from ..db import Player
 from ..menus import YesNoMenu
@@ -94,7 +94,7 @@ def revoke_admin(player, id):
         player.message(f'{p} is no longer an admin.')
 
 
-@command(admin=True, hotkey='backspace')
+@command(location_type=LocationTypes.any, admin=True, hotkey='backspace')
 def python(command_name, con, player, location, entry_point, text=None):
     """Run some code."""
     if text is None:
