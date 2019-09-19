@@ -5,14 +5,21 @@ from contextlib import redirect_stdout, redirect_stderr
 
 from .commands import command, LocationTypes
 
-from ..db import Player
+from .. import db
 from ..menus import YesNoMenu
 
+Player = db.Player
 consoles = {}
 
 
 class Console(InteractiveConsole):
     """A console with updated push and write methods."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in dir(db):
+            if not name.startswith('_'):
+                self.locals[name] = getattr(db, name)
 
     def write(self, string):
         """Send the provided string to self.player.message."""
