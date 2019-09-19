@@ -265,6 +265,10 @@ class Mobile(
             Building.type
         ).filter(BuildingType.homely.is_(True)).first()
 
+    def declair_homeless(self):
+        """This mobile is homeless. Tell the world."""
+        return self.speak('I am homeless')
+
     def progress(self):
         """Progress this object through whatever task it is performing."""
         Building = Base._decl_class_registry['Building']
@@ -278,10 +282,7 @@ class Mobile(
                 self.rehome()
                 if self.home is None:
                     # They have no buildings left, we are probably unemployed.
-                    self.owner.message(
-                        f'Cannot find a home for {self.get_name()} to deliver '
-                        'resources.'
-                    )
+                    self.declair_homeless()
                     return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
@@ -300,21 +301,17 @@ class Mobile(
                 x = self.exploiting
                 if x is None:
                     # Not exploiting anymore.
-                    self.owner.message(
-                        f'{self.get_name()} cannot find anything to exploit.'
-                    )
+                    self.speak('Nothing there')
                     return self.reset_action()
                 value = getattr(x, name)
                 if not value:
                     # Empty resource.
-                    self.owner.message(f'{x.get_name()} exhausted.')
+                    self.speak('Finished')
                     return self.reset_action()
                 self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
                 value -= 1
                 setattr(x, name, value)
-                if not value:
-                    self.exploiting = None
                 self.action = MobileActions.drop
             else:
                 self.move_towards(*self.target)
@@ -327,9 +324,7 @@ class Mobile(
             if self.home is None:
                 self. rehome()
                 if self.home is None:
-                    self.owner.message(
-                        f'{self.get_name()} has no home to patrol back to.'
-                    )
+                    self.declair_homeless()
                     return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 self.action = MobileActions.patrol_out
@@ -337,9 +332,7 @@ class Mobile(
                 self.move_towards(*self.home.coordinates)
         elif a is MobileActions.travel:
             if self.coordinates == self.target:
-                self.owner.message(
-                    f'{self.get_name()} has arrived at {self.coordinates}.'
-                )
+                self.speak('Here I am')
                 return self.reset_action()  # Done.
             else:
                 self.move_towards(*self.target)
@@ -354,7 +347,7 @@ class Mobile(
                 self.sound('static/sounds/repair.wav')
                 x.save()
                 if x.health is None:
-                    self.owner.message(f'{x.get_name()} has been repaired.')
+                    self.speak('Finished')
             else:
                 self.move_towards(*x.coordinates)
         elif a is MobileActions.guard:
@@ -367,6 +360,8 @@ class Mobile(
                     b = choice(q)
                     b.heal(self.type.repair_amount)
                     self.sound('static/sounds/repair.wav')
+                    if b.health is None:
+                        self.speak('Finished')
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.

@@ -680,7 +680,7 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
                 f'{m.get_name()} has no home to bring resources back to.'
             )
         else:
-            player.message(f'Dispatching {m.get_name()}.')
+            m.speak('Off I go')
             m.exploit(f, resource)
 
 
@@ -693,9 +693,8 @@ def summon(player):
         player.message('You have not selected any mobiles.')
     else:
         for m in q:
+            m.speak('Coming')
             m.travel(player.x, player.y)
-        el = english_list(q, key=lambda o: o.get_name())
-        player.message(f'You summon {el}.')
 
 
 @command(hotkey='h')
@@ -746,6 +745,7 @@ def build_building(location, player, id):
     if d:
         return player.message(f'You require {difference_string(d)}.')
     home.take_requirements(t)
+    obj.speak('OK')
     b = location.add_building(t, *player.coordinates)
     b.owner = player
     b.hp = 0
@@ -794,6 +794,10 @@ def repair(player, id):
         )
     else:
         for m in player.selected_mobiles:
+            if m.coordinates == player.coordinates:
+                m.speak('OK')
+            else:
+                m.speak('On my way')
             m.repair(b)
             m.save()
             player.message(f'Employing {m.get_name()}.')
