@@ -4,7 +4,7 @@ from .commands import command, LocationTypes
 
 from ..db import (
     Building, BuildingMobile, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Mobile, MobileType, Player, Base
+    Map, Mobile, MobileType, Player, Base, BuildingBuilder
 )
 from ..menus import Menu, YesNoMenu
 from ..util import pluralise, is_are, english_list, difference_string
@@ -547,7 +547,16 @@ def activate(player, location, con):
     m.add_item('Patrol', 'patrol')
     m.add_item('guard', 'guard')
     m.add_label('Building')
-    for t in BuildingType.all():
+    mobile_type_ids = set([m.type_id for m in Mobile.all(
+        owner=player, location=location
+    )])
+    building_type_ids = set()
+    for bb in BuildingBuilder.query(
+        BuildingBuilder.mobile_type_id.in_(mobile_type_ids)
+    ):
+        building_type_ids.add(bb.building_type_id)
+    for id in building_type_ids:
+        t = BuildingType.get(id)
         m.add_item(
             f'Build {t.name} (requires {t.resources_string("nothing")}',
             'build_building', args=dict(id=t.id)
