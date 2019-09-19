@@ -1,5 +1,6 @@
 """Provides the MobileType and Mobile classes."""
 
+import os.path
 from enum import Enum as _Enum
 from random import uniform, choice
 
@@ -370,3 +371,27 @@ class Mobile(
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
         self.start_task()
+
+    def speak(self, text):
+        """If text has a wave file associated with it, then play the sound.
+        Otherwise use text."""
+        if self.owner is None:
+            owner_player = False
+        elif self.owner.coordinates == self.coordinates:
+            owner_player = False
+        else:
+            owner_player = True
+        sound = f'static/sounds/speech/{text}.wav'
+        if os.path.isfile(sound):
+            if owner_player:
+                self.owner.sound(sound)
+            return self.sound(sound)
+        else:
+            text += '.'
+            if owner_player:
+                self.owner.message(text)
+            Player = Base._decl_class_registry['Player']
+            for player in Player.all(
+                location=self.location, x=self.x, y=self.y
+            ):
+                player.message(text)
