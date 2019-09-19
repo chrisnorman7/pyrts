@@ -1,8 +1,10 @@
+buildings: []
 name: Guard
 recruits:
 - building: Guard House
   food: 25
   gold: 50
+  pop_time: 10
   water: 25
 repair_amount: 2
 speed: 7

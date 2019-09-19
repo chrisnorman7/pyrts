@@ -5,6 +5,7 @@ recruits:
 - building: University
   food: 3
   gold: 15
+  pop_time: 7
   water: 4
 repair_amount: 3
 speed: 7

@@ -6,6 +6,7 @@ recruits:
 - building: University
   food: 4
   gold: 6
+  pop_time: 8
   water: 5
 speed: 18
 stone: 1
