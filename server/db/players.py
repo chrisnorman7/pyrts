@@ -116,10 +116,14 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         if self.connection is None:
             return  # No point in telling them stuff they can't see.
         self.connection.stop_loops()
+        loops = []  # Only play unique loops.
         for obj in self.visible_objects:
             if isinstance(obj, (Feature, Building)):
                 try:
-                    self.connection.start_loop(obj.type.sound)
+                    sound = obj.type.sound
+                    if sound not in loops:
+                        loops.append(sound)
+                        self.connection.start_loop(sound)
                 except NoSuchSound:
                     pass
             self.message(obj.get_name())
