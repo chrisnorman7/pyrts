@@ -385,8 +385,12 @@ def select_mobiles(index, player):
         group = 'All'
         q = Mobile.query(owner=player)
     else:
+        location = player.location
+        mobile_type_ids = set([m.type_id for m in Mobile.query(
+            location=location, owner=player
+        )])
+        q = MobileType.all(MobileType.id.in_(mobile_type_ids))
         try:
-            q = MobileType.all()
             t = q[index - 1]
             group = t.name
             q = Mobile.query(owner=player, type=t)
@@ -409,7 +413,11 @@ def select_mobile_list(index, player):
         name = 'All Units'
         kwargs = {}
     else:
-        types = MobileType.all()
+        location = player.location
+        mobile_type_ids = set([m.type_id for m in Mobile.query(
+            location=location, owner=player
+        )])
+        types = MobileType.all(MobileType.id.in_(mobile_type_ids))
         try:
             type = types[index - 1]
             kwargs = dict(type=type)
