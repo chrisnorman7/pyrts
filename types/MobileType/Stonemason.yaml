@@ -1,4 +1,5 @@
-buildings: []
+buildings:
+- Guard House
 max_health: 25
 name: Stonemason
 recruits:
