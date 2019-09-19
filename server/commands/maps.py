@@ -511,12 +511,12 @@ def activate(player, location, con):
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
             if fo.type.homely:
-                buildings = Building.query(
+                buildings = Building.all(
                     health=None, owner=player, location=location
                 )
                 for bm in BuildingMobile.query(
                     BuildingMobile.building_type_id.in_(
-                        [b.type.id for b in buildings]
+                        [b.type_id for b in buildings]
                     )
                 ):
                     t = MobileType.get(bm.mobile_type_id)
