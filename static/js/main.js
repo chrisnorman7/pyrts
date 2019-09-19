@@ -30,6 +30,36 @@ function unlockAudio() {
     }
 }
 
+let menuIndex = null
+let menuSearch = ""
+let menuLastSearch = 0
+let menuSearchInterval = 1000 // Milliseconds
+
+const menuKeys = {}
+
+function searchMenu(e) {
+    e.preventDefault()
+    let now = new Date().getTime()
+    if (now - menuLastSearch >= menuSearchInterval) {
+        menuSearch = ""
+        menuIndex = 0
+    }
+    menuLastSearch = now
+    menuSearch += e.key.toLowerCase()
+    for (let i = menuIndex; i < menuEntries.length; i++) {
+        let child = menuEntries[i]
+        if (child.innerText.toLowerCase().startsWith(menuSearch)) {
+            child.focus()
+            menuIndex = i
+            return
+        }
+    }
+}
+
+for (let char of "abcdefghijklmnopqrstuvwxyz1234567890 -='#/\\`[],.") {
+    menuKeys[char] = searchMenu
+}
+
 function playMusic() {
     let s = new Sound(startMusicURL)
     s.play()
@@ -93,9 +123,13 @@ const commands = {
                     menuEntries[menuEntries.length - 1].focus()
                 } else if (data.dismissable && key == "escape") {
                     resetScreen()
-                } else if (["Enter", " "].includes(e.key) && item.type == "item") {
+                } else if (e.key == "Enter" && item.type == "item") {
                     li.click()
                 } else {
+                    let func = menuKeys[key]
+                    if (func !== undefined) {
+                        func(e)
+                    }
                     return
                 }
                 e.preventDefault()
