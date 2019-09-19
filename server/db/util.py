@@ -1,12 +1,24 @@
 """Provides utility functions."""
 
+import logging
+import os
+import os.path
+from glob import glob
+
 from db_dumper import dump as db_dump, load as db_load
 from sqlalchemy import inspect
+from sqlalchemy.exc import InvalidRequestError
 from yaml import dump as yaml_dump, load as yaml_load, FullLoader
 
 from .base import Base
+from .buildings import BuildingType
+from .features import FeatureType
+from .mobiles import MobileType
 from .session import session
 
+from ..exc import InvalidName
+
+logger = logging.getLogger(__name__)
 _filename = 'db.yaml'
 
 
@@ -59,3 +71,57 @@ def load(filename=None):
     with open(filename, 'r') as f:
         data = yaml_load(f, Loader=FullLoader)
     load_objects(data)
+
+
+def get_object_by_name(cls, name):
+    """Get an object of type cls by the given name. If no name is found,
+    InvalidName(cls, name) will be raised."""
+    try:
+        return cls.one(name=name)
+    except InvalidRequestError:
+        raise InvalidName(cls, name)
+
+
+def bootstrap():
+    """Load all types in the types directory."""
+    depends = {}
+    buildings = {}
+    recruits = {}
+    for cls in (FeatureType, BuildingType, MobileType):
+        logger.info('Checking class %s.', cls)
+        path = os.path.join('types', cls.__name__, '*.yaml')
+        for filename in glob(path):
+            with open(filename, 'r') as f:
+                d = yaml_load(f, FullLoader)
+            if cls is MobileType:
+                _buildings = d.pop('buildings', [])
+                _recruits = d.pop('recruits', [])
+            elif cls is BuildingType:
+                _depends = d.pop('depends', None)
+            if 'id' in d:
+                del d['id']
+            if not cls.count(**d):
+                obj = cls(**d)
+                obj.save()
+                logger.info('Created %r.', obj)
+            else:
+                logger.info('Skipping %s.', d['name'])
+                continue
+            if cls is MobileType:
+                buildings[obj.id] = _buildings
+                recruits[obj.id] = _recruits
+            elif cls is BuildingType:
+                depends[obj.id] = _depends
+    for mt in MobileType.all():
+        for name in buildings.get(mt.id, []):
+            mt.can_build.append(get_object_by_name(BuildingType, name))
+        for r in recruits.get(mt.id, []):
+            building_type_name = r.pop('building')
+            bt = get_object_by_name(BuildingType, building_type_name)
+            bt.add_recruit(mt, **r)
+        mt.save()
+    for bt in BuildingType.all():
+        name = depends.get(bt.id, None)
+        if name is not None:
+            bt.depends = get_object_by_name(BuildingType, name)
+            bt.save()

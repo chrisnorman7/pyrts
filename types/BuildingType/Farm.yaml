@@ -1,0 +1,6 @@
+depends: Town Hall
+gold: 5
+max_health: 22
+name: Farm
+stone: 1
+wood: 5

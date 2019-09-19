@@ -1,0 +1,10 @@
+buildings: []
+max_health: 25
+name: Stonemason
+recruits:
+- building: University
+  food: 4
+  gold: 6
+  water: 5
+speed: 18
+stone: 1

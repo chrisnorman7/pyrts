@@ -1,0 +1,12 @@
+buildings:
+- Farm
+- University
+food: 1
+name: Farmer
+recruits:
+- building: Farm
+  food: 2
+  gold: 4
+  water: 2
+speed: 10
+water: 1

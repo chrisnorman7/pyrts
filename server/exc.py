@@ -31,3 +31,11 @@ class SoundError(Error):
 
 class NoSuchSound(SoundError):
     """There is no such sound."""
+
+
+class DBError(Error):
+    """A database error."""
+
+
+class InvalidName(DBError):
+    """An invalid name was passed."""

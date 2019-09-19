@@ -16,6 +16,7 @@ for cls in (MobileType, BuildingType, FeatureType):
         d = dump_object(obj)
         del d['id']
         if isinstance(obj, BuildingType) and obj.depends is not None:
+            del d['depends_id']
             d['depends'] = obj.depends.name
         if isinstance(obj, MobileType):
             d['buildings'] = [b.name for b in obj.can_build]

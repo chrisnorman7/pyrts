@@ -1,0 +1,10 @@
+auto_repair: true
+buildings: []
+name: Engineer
+recruits:
+- building: University
+  food: 3
+  gold: 15
+  water: 4
+repair_amount: 3
+speed: 7

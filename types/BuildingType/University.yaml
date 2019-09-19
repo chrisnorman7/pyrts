@@ -1,0 +1,6 @@
+depends: Farm
+gold: 30
+max_health: 30
+name: University
+stone: 15
+wood: 30
