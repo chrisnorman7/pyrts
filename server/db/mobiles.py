@@ -11,7 +11,7 @@ from twisted.internet.error import AlreadyCancelled, AlreadyCalled
 from .base import (
     Base, NameMixin, CoordinatesMixin, ResistanceMixin, LocationMixin,
     OwnerMixin, TypeMixin, SoundMixin, ResourcesMixin, MaxHealthMixin,
-    HealthMixin, GetNameMixin
+    HealthMixin, GetNameMixin, StrengthMixin
 )
 
 tasks = {}
@@ -43,13 +43,12 @@ class BuildingBuilder(Base):
 
 class MobileType(
     Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin,
-    MaxHealthMixin
+    MaxHealthMixin, StrengthMixin
 ):
     """A type of mobile. Resources are used to decide which resources can be
     exploited by mobiles of this type."""
 
     __tablename__ = 'mobile_types'
-    strength = Column(Integer, nullable=False, default=1)
     can_build = relationship(
         'BuildingType', backref='builders', secondary=BuildingBuilder.__table__
     )

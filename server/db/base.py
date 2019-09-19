@@ -322,3 +322,7 @@ class HealthMixin:
     def heal(self, amount):
         """Heal this object to a maximum of self.max_health."""
         self.hp = min(self.max_hp, self.hp + amount)
+
+
+class StrengthMixin:
+    strength = Column(Integer, nullable=False, default=1)
