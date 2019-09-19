@@ -36,7 +36,7 @@ def test_building(player, farm, map):
     assert b.location is map
     assert b.x == 0
     assert b.y == 0
-    assert b.get_full_name() == f'{b.type.name} (Unclaimed)'
+    assert b.get_full_name() == f'{b.get_name()} (Unclaimed)'
     b.owner = player
     b.save()
     assert b.owner_id == player.id
@@ -56,7 +56,7 @@ def test_mobile(peasant, player, map):
     assert m.water == 0
     assert m.stone == 0
     assert m.owner is None
-    assert m.get_full_name() == f'{peasant.name} [Unemployed]'
+    assert m.get_full_name() == f'{m.get_name()} [Unemployed]'
     m.owner = player
     m.save()
     assert m.owner_id == player.id
@@ -70,11 +70,11 @@ def test_feature(map, mine):
     assert f.type is mine
     assert f.x == 4
     assert f.y == 5
-    assert f.get_full_name() == f'{mine.name} [0 gold]'
+    assert f.get_full_name() == f'{f.get_name()} [0 gold]'
     f.gold = 0
-    assert f.get_full_name() == f'{mine.name} [0 gold]'
+    assert f.get_full_name() == f'{f.get_name()} [0 gold]'
     f.gold = 95
-    assert f.get_full_name() == f'{mine.name} [95 gold]'
+    assert f.get_full_name() == f'{f.get_name()} [95 gold]'
     assert f in map.features
 
 
