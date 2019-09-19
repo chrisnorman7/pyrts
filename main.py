@@ -33,7 +33,7 @@ def main():
         logging.info('Starting with a blank database.')
     logging.info('Phase: Bootstrap.')
     bootstrap()
-    logging.info('State: Listen.')
+    logging.info('Phase: Listen.')
     site = Site(app.resource())
     port = reactor.listenTCP(http_port, site, interface=interface)
     logging.info(
