@@ -55,6 +55,10 @@ class MobileType(
     speed = Column(Integer, nullable=False, default=8)
     auto_repair = Column(Boolean, nullable=False, default=False)
     repair_amount = Column(Integer, nullable=False, default=1)
+    attack_type_id = Column(
+        Integer, ForeignKey('attack_types.id'), nullable=True
+    )
+    attack_type = relationship('AttackType', backref='mobiles')
 
     def add_building(self, type):
         """Add a BuildingType instance that can be built by mobiles of this

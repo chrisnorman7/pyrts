@@ -10,6 +10,7 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import InvalidRequestError
 from yaml import dump as yaml_dump, load as yaml_load, FullLoader
 
+from .attacks import AttackType
 from .base import Base
 from .buildings import BuildingType
 from .features import FeatureType
@@ -84,16 +85,18 @@ def get_object_by_name(cls, name):
 
 def bootstrap():
     """Load all types in the types directory."""
+    attacks = {}
     depends = {}
     buildings = {}
     recruits = {}
-    for cls in (FeatureType, BuildingType, MobileType):
+    for cls in (FeatureType, BuildingType, MobileType, AttackType):
         logger.info('Checking class %s.', cls)
         path = os.path.join('types', cls.__name__, '*.yaml')
         for filename in glob(path):
             with open(filename, 'r') as f:
                 d = yaml_load(f, FullLoader)
             if cls is MobileType:
+                _attack = d.pop('attack', None)
                 _buildings = d.pop('buildings', [])
                 _recruits = d.pop('recruits', [])
             elif cls is BuildingType:
@@ -108,11 +111,15 @@ def bootstrap():
                 logger.info('Skipping %s.', d['name'])
                 continue
             if cls is MobileType:
+                attacks[obj.id] = _attack
                 buildings[obj.id] = _buildings
                 recruits[obj.id] = _recruits
             elif cls is BuildingType:
                 depends[obj.id] = _depends
     for mt in MobileType.all():
+        attack_name = attacks.pop(mt.id, None)
+        if attack_name is not None:
+            mt.attack_type = get_object_by_name(AttackType, attack_name)
         for name in buildings.get(mt.id, []):
             bt = get_object_by_name(BuildingType, name)
             mt.can_build.append(bt)

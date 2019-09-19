@@ -1,3 +1,6 @@
+"""The database imports."""
+
+from .attacks import AttackType
 from .base import Base
 from .buildings import Building, BuildingMobile, BuildingType
 from .engine import engine
@@ -12,8 +15,8 @@ from .util import bootstrap, dump, dump_object, load
 Base.metadata.create_all()
 
 __all__ = [
-    'Base', 'bootstrap', 'Building', 'BuildingBuilder', 'BuildingMobile',
-    'BuildingType', 'connections', 'dump', 'dump_object', 'engine',
-    'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Mobile',
+    'AttackType', 'Base', 'bootstrap', 'Building', 'BuildingBuilder',
+    'BuildingMobile', 'BuildingType', 'connections', 'dump', 'dump_object',
+    'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Mobile',
     'MobileType', 'Player', 'session'
 ]

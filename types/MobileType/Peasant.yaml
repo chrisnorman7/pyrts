@@ -1,3 +1,5 @@
+attack: Punch
+attack_type_id: 1
 buildings:
 - Town Hall
 - Farm

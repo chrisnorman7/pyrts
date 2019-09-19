@@ -1,3 +1,5 @@
+attack: Punch
+attack_type_id: 1
 auto_repair: true
 buildings: []
 name: Engineer
