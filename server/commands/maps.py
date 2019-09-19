@@ -398,7 +398,8 @@ def select_mobiles(index, player):
             c = len(q)
             if c:
                 player.message(
-                    f'There are only {c} {pluralise(c, "type")} of unit.'
+                    f'There {is_are(c)} only {c} {pluralise(c, "type")} of '
+                    'unit.'
                 )
             else:
                 player.message('There is nothing here.')
