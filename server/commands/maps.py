@@ -731,9 +731,13 @@ def build_building(location, player, id):
             obj = m
             break
     else:
-        return player.message(
-            'First select and summon a unit capable of building this building.'
+        mobile_types = map(
+            MobileType.get, set(m.id for m in t.builders)
         )
+        el = english_list(
+            mobile_types, key=lambda thing: thing.get_name(), and_='or '
+        )
+        return player.message(f'{t} can only be built by {el}.')
     home = obj.home
     if home is None:
         return player.message(f'{obj.get_name()} has no home.')
