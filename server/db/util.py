@@ -103,7 +103,7 @@ def bootstrap():
             if not cls.count(**d):
                 obj = cls(**d)
                 obj.save()
-                logger.info('Created %r.', obj)
+                logger.info('Created %s (#%d).', obj, obj.id)
             else:
                 logger.info('Skipping %s.', d['name'])
                 continue
@@ -114,11 +114,14 @@ def bootstrap():
                 depends[obj.id] = _depends
     for mt in MobileType.all():
         for name in buildings.get(mt.id, []):
-            mt.can_build.append(get_object_by_name(BuildingType, name))
+            bt = get_object_by_name(BuildingType, name)
+            mt.can_build.append(bt)
+            logger.info('%s can build %s.', mt, bt)
         for r in recruits.get(mt.id, []):
             building_type_name = r.pop('building')
             bt = get_object_by_name(BuildingType, building_type_name)
-            bt.add_recruit(mt, **r)
+            bt.add_recruit(mt, **r).save()
+            logger.info('%s can recruit %s.', bt, mt)
         mt.save()
     for bt in BuildingType.all():
         name = depends.get(bt.id, None)
