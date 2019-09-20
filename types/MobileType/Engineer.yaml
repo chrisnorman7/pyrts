@@ -4,10 +4,9 @@ buildings: []
 name: Engineer
 recruits:
 - building: University
-  food: 3
+  food: 10
   gold: 15
-  pop_time: 7
-  water: 4
+  water: 10
 repair_amount: 3
 resistance: 3
 speed: 7

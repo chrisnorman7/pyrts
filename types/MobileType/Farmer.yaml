@@ -3,6 +3,7 @@ attack_type_id: 9
 buildings:
 - Farm
 - University
+- Town Hall
 food: 1
 name: Farmer
 recruits:

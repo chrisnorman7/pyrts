@@ -2,13 +2,14 @@ attack: Kick
 attack_type_id: 4
 buildings:
 - Guard House
+- Keep
 max_health: 25
 name: Stonemason
 recruits:
 - building: University
-  food: 4
-  gold: 6
-  pop_time: 8
-  water: 5
+  food: 20
+  gold: 20
+  water: 20
+  wood: 15
 speed: 18
 stone: 1

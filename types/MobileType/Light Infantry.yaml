@@ -1,0 +1,13 @@
+attack: Pistol
+attack_type_id: 6
+buildings: []
+max_health: 55
+name: Light Infantry
+recruits:
+- building: Keep
+  food: 15
+  gold: 30
+  water: 10
+resistance: 25
+speed: 4
+strength: 30

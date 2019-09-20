@@ -1,0 +1,8 @@
+depends: University
+gold: 150
+max_health: 55
+name: Keep
+resistance: 50
+stone: 250
+water: 100
+wood: 175
