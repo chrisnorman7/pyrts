@@ -9,9 +9,13 @@ from sqlalchemy import Boolean, inspect
 from .commands import command, LocationTypes
 
 from .. import db
+from ..db import (
+    Player, BuildingType, MobileType, AttackType, FeatureType, Base,
+    BuildingMobile
+)
 from ..menus import Menu, YesNoMenu
+from ..util import english_list
 
-Player = db.Player
 consoles = {}
 
 
@@ -124,89 +128,87 @@ def python(command_name, con, player, location, entry_point, text=None):
 def make_menu(con):
     """Add / remove types."""
     m = Menu('Add / Remove Types')
-    for cls in (db.MobileType, db.BuildingType, db.AttackType, db.FeatureType):
+    for cls in (MobileType, BuildingType, AttackType, FeatureType):
         m.add_label(cls.__tablename__.replace('_', ' ').title())
         for action in ('add', 'edit', 'remove'):
             m.add_item(
-                action.title(), f'{action}_type', args=dict(cls=cls.__name__)
+                action.title(), f'{action}_type',
+                args=dict(class_name=cls.__name__)
             )
     m.send(con)
 
 
 @command(admin=True)
-def add_type(player, cls):
+def add_type(player, class_name):
     """Add a new type."""
-    cls = db.Base._decl_class_registry[cls]
+    cls = Base._decl_class_registry[class_name]
     cls(name='Untitled').save()
     player.message('Done.')
 
 
 @command(admin=True)
-def remove_type(con, command_name, cls, id=None, response=None):
+def remove_type(con, command_name, class_name, id=None, response=None):
     """Remove a type."""
-    cls = db.Base._decl_class_registry[cls]
+    cls = Base._decl_class_registry[class_name]
     if id is None:
         m = Menu('Select Object')
         for obj in cls.all():
             m.add_item(
                 obj.get_name(), command_name,
-                args=dict(cls=cls.__name__, id=obj.id)
+                args=dict(class_name=class_name, id=obj.id)
             )
         m.send(con)
-    elif response is None:
-        m = YesNoMenu(
-            'Are you sure?', command_name, args=dict(cls=cls.__name__, id=id)
-        )
-        m.send(con)
-    elif response:
-        obj = cls.get(id)
-        if obj is None:
-            con.message('Invalid type.')
-        else:
-            obj.delete()
-            con.message('Done.')
     else:
-        con.message('Cancelled.')
+        kwargs = dict(class_name=class_name, id=id)
+        if response is None:
+            m = YesNoMenu('Are you sure?', command_name, args=kwargs)
+            m.send(con)
+        elif response:
+            obj = cls.get(id)
+            if obj is None:
+                con.message('Invalid type.')
+            else:
+                obj.delete()
+                con.message('Done.')
+        else:
+            con.message('Cancelled.')
 
 
 @command(admin=True)
-def edit_type(con, command_name, cls, id=None, column=None, text=None):
+def edit_type(con, command_name, class_name, id=None, column=None, text=None):
     """Edit a type."""
-    cls = db.Base._decl_class_registry[cls]
-    class_name = cls.__name__
+    cls = Base._decl_class_registry[class_name]
     if id is None:
         m = Menu('Objects')
         for obj in cls.all():
             m.add_item(
                 obj.get_name(), command_name,
-                args=dict(cls=class_name, id=obj.id)
+                args=dict(class_name=class_name, id=obj.id)
             )
         m.send(con)
     else:
         i = inspect(cls)
         obj = cls.get(id)
         if column is not None:
+            kwargs = dict(class_name=class_name, id=id, column=column)
             c = i.c[column]
             if text is None:
                 keys = list(c.foreign_keys)
                 if len(keys) == 1:
                     key = keys[0]
-                    remote_class = db.Base.get_class_from_table(
+                    remote_class = Base.get_class_from_table(
                         key.column.table
                     )
                     m = Menu('Select Object')
                     if c.nullable:
-                        m.add_item(
-                            'NULL', command_name, args=dict(
-                                cls=class_name, id=id, column=column, text=''
-                            )
-                        )
+                        null_kwargs = kwargs.copy()
+                        null_kwargs['text'] = ''
+                        m.add_item('NULL', command_name, args=null_kwargs)
                     for thing in remote_class.all():
+                        remote_kwargs = kwargs.copy()
+                        remote_kwargs['text'] = str(thing.id)
                         m.add_item(
-                            thing.get_name(), command_name, args=dict(
-                                cls=class_name, id=id, column=column,
-                                text=str(thing.id)
-                            )
+                            thing.get_name(), command_name, args=remote_kwargs
                         )
                     return m.send(con)
                 value = getattr(obj, column)
@@ -215,9 +217,7 @@ def edit_type(con, command_name, cls, id=None, column=None, text=None):
                 else:
                     value = str(value)
                 return con.text(
-                    'Enter value', command_name, value=value, args=dict(
-                        cls=class_name, id=id, column=column
-                    )
+                    'Enter value', command_name, value=value, args=kwargs
                 )
             else:
                 if text == '':  # Same as None.
@@ -237,30 +237,186 @@ def edit_type(con, command_name, cls, id=None, column=None, text=None):
                     obj.save()
         m = Menu(obj.get_name())
         m.add_label(getdoc(cls))
+        kwargs = dict(class_name=class_name, id=obj.id)
         for c in sorted(i.c, key=lambda thing: thing.name):
             if c.primary_key:
                 continue
             name = c.name
+            column_kwargs = kwargs.copy()
+            column_kwargs['column'] = name
             title = name.replace('_', ' ').title()
             value = getattr(obj, name)
             keys = list(c.foreign_keys)
+            new_value = None
             if value is not None:
+                if isinstance(c.type, Boolean):
+                    new_value = not value
                 if keys:
-                    if len(keys) > 1:
-                        continue  # Don't mess with that.
                     key = keys[0]
-                    remote_class = db.Base.get_class_from_table(key.column.table)
+                    remote_class = Base.get_class_from_table(
+                        key.column.table
+                    )
                     value = remote_class.get(value).get_name()
                 else:
                     value = repr(value)
-            if isinstance(c.type, Boolean):
-                new_value = not value
-            else:
-                new_value = None
+            column_kwargs['text'] = new_value
             m.add_item(
-                f'{title}: {value} [{c.type}]', command_name, args=dict(
-                    cls=class_name, id=id, column=name, text=new_value
+                f'{title}: {value} [{c.type}]', command_name,
+                args=column_kwargs
+            )
+        if cls is BuildingType:
+            kwargs = dict(building_type_id=obj.id)
+            el = english_list(obj.builders, empty='None')
+            m.add_item(
+                f'Mobile types that can build this building: {el}',
+                'edit_builders', args=kwargs
+            )
+            el = english_list(obj.recruits, empty='None')
+            m.add_item(
+                f'Mobile types this building can recruit: {el}',
+                'edit_recruits', args=kwargs
+            )
+        m.add_item('Done', command_name, args=dict(class_name=class_name))
+        m.send(con)
+
+
+@command(admin=True)
+def edit_builders(con, command_name, building_type_id, mobile_type_id=None):
+    """Add and remove mobile types that can build buildings."""
+    bt = BuildingType.get(building_type_id)
+    if mobile_type_id is None:
+        m = Menu('Mobile Types')
+        for mt in MobileType.all():
+            if bt in mt.can_build:
+                checked = '*'
+            else:
+                checked = ' '
+            m.add_item(
+                f'{mt.get_name()} ({checked})', command_name, args=dict(
+                    building_type_id=bt.id, mobile_type_id=mt.id
                 )
             )
-        m.add_item('Done', command_name, args=dict(cls=class_name))
+        m.add_item(
+            'Done', 'edit_type', args=dict(class_name='BuildingType', id=bt.id)
+        )
+        m.send(con)
+    else:
+        mt = MobileType.get(mobile_type_id)
+        if mt in bt.builders:
+            bt.builders.remove(mt)
+            action = 'no longer'
+        else:
+            bt.builders.append(mt)
+            action = 'now'
+        con.message(f'{mt.get_name()} can {action} build {bt.get_name()}.')
+        con.call_command(command_name, building_type_id=bt.id)
+
+
+@command(admin=True)
+def delete_object(con, command_name, class_name, id=None, response=None):
+    """Delete the given object."""
+    cls = Base._decl_class_registry[class_name]
+    if id is None:
+        m = Menu('Objects')
+        for obj in cls.all():
+            m.add_item(
+                str(obj), command_name, args=dict(
+                    class_name=class_name, id=obj.id
+                )
+            )
+        m.send(con)
+    elif response is None:
+        m = YesNoMenu(
+            'Are you sure?', command_name, args=dict(
+                class_name=class_name, id=id
+            )
+        )
+        m.send(con)
+    elif response:
+        obj = cls.get(id)
+        obj.delete()
+        con.message('Done.')
+    else:
+        con.message('Cancelled.')
+
+
+@command(admin=True)
+def add_recruit(con, command_name, building_type_id, mobile_type_id=None):
+    """Add a recruit to the given building type."""
+    bt = BuildingType.get(building_type_id)
+    if mobile_type_id is None:
+        m = Menu('Mobile Types')
+        for mt in MobileType.all():
+            m.add_item(
+                mt.get_name(), command_name, args=dict(
+                    building_type_id=bt.id, mobile_type_id=mt.id
+                )
+            )
+        m.send(con)
+    else:
+        mt = MobileType.get(mobile_type_id)
+        bt.add_recruit(mt).save()
+        con.call_command('edit_recruits', building_type_id=bt.id)
+
+
+@command(admin=True)
+def edit_recruits(
+    con, command_name, building_type_id, building_mobile_id=None,
+    resource_name=None, text=None
+):
+    """Edit recruits for the given building type."""
+    bt = BuildingType.get(building_type_id)
+    if building_mobile_id is None:
+        m = Menu('Recruits')
+        m.add_item(
+            'Add Recruit', 'add_recruit', args=dict(building_type_id=bt.id)
+        )
+        for bm in BuildingMobile.all(building_type_id=bt.id):
+            mt = MobileType.get(bm.mobile_type_id)
+            m.add_item(
+                f'{mt.get_name()}: {bm.resources_string()}', command_name,
+                args=dict(building_type_id=bt.id, building_mobile_id=bm.id)
+            )
+        m.add_item(
+            'Done', 'edit_type', args=dict(class_name='BuildingType', id=bt.id)
+        )
+        m.send(con)
+    else:
+        bm = BuildingMobile.get(building_mobile_id)
+        kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
+        if resource_name is not None:
+            if text is None:
+                kwargs['resource_name'] = resource_name
+                return con.text('Enter value', command_name, args=kwargs)
+            else:
+                if not text:
+                    value = None
+                else:
+                    try:
+                        value = int(text)
+                    except ValueError:
+                        con.message('Invalid value.')
+                        value = _empty
+                if value is not _empty:
+                    if resource_name in BuildingMobile.resource_names():
+                        setattr(bm, resource_name, value)
+                    else:
+                        con.message('Invalid resource name.')
+        kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
+        m = Menu('Recruit Options')
+        for name in BuildingMobile.resource_names():
+            resource_kwargs = kwargs.copy()
+            resource_kwargs['resource_name'] = name
+            value = getattr(bm, name)
+            m.add_item(
+                f'{name.title()}: {value}', command_name, args=resource_kwargs
+            )
+        m.add_item(
+            'Delete', 'delete_object', args=dict(
+                class_name='BuildingMobile', id=bm.id
+            )
+        )
+        m.add_item(
+            'Done', 'edit_type', args=dict(class_name='BuildingType', id=bt.id)
+        )
         m.send(con)
