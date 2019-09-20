@@ -1,5 +1,7 @@
 """Movement-related commands."""
 
+from math import inf
+
 from .commands import command
 
 from ..db import Building, Feature, Mobile, Player
@@ -64,6 +66,16 @@ def move(player, location, x, y):
         player.move(x, y)
 
 
+def object_key(player, thing):
+    """Used for sorting objects by distance."""
+    if isinstance(thing, Feature):
+        for name, value in thing.resources_dict().items():
+            if value:
+                return player.distance_to(thing)
+        return inf
+    return player.distance_to(thing)
+
+
 @command(hotkey='j')
 def jump(con, player, location):
     """Move to a feature on the map."""
@@ -75,7 +87,7 @@ def jump(con, player, location):
         player.message('This map is empty.')
     else:
         locations = sorted(
-            objects, key=lambda thing: player.distance_to(thing)
+            objects, key=lambda thing: object_key(player, thing)
         )
         m = Menu('Jump')
         for thing in locations:
