@@ -797,7 +797,7 @@ def repair(player, id):
             if m.coordinates == player.coordinates:
                 m.speak('OK')
             else:
-                m.speak('On my way')
+                m.speak('Off I go')
             m.repair(b)
             m.save()
             player.message(f'Employing {m.get_name()}.')
