@@ -4,7 +4,7 @@ from datetime import datetime
 
 from server.db import (
     Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Mobile, Player
+    Map, Mobile, Player, Base
 )
 from server.db.mobiles import MobileActions
 from server.db.util import dump_object
@@ -473,3 +473,8 @@ def test_directions_to(map, farm, peasant):
     p.coordinates = (2, 3)
     assert b.directions_to(p) == '3 north, 2 east'
     assert p.directions_to(b) == '3 south, 2 west'
+
+
+def test_class_from_table():
+    assert Base.get_class_from_table(FeatureType.__table__) is FeatureType
+    assert Base.get_class_from_table(Player.__table__) is Player

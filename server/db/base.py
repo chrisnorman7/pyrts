@@ -93,6 +93,13 @@ class _Base:
         string += ', '.join(attributes)
         return string + ')'
 
+    @classmethod
+    def get_class_from_table(cls, table):
+        """Return the class whose __table__ attribute is the provided Table instance."""
+        for value in cls._decl_class_registry.values():
+            if getattr(value, '__table__', None) is table:
+                return value
+
 
 Base = declarative_base(bind=engine, cls=_Base)
 
