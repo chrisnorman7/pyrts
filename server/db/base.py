@@ -95,7 +95,8 @@ class _Base:
 
     @classmethod
     def get_class_from_table(cls, table):
-        """Return the class whose __table__ attribute is the provided Table instance."""
+        """Return the class whose __table__ attribute is the provided Table
+        instance."""
         for value in cls._decl_class_registry.values():
             if getattr(value, '__table__', None) is table:
                 return value
