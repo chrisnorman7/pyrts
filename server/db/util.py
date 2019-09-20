@@ -103,7 +103,7 @@ def bootstrap():
                 _depends = d.pop('depends', None)
             if 'id' in d:
                 del d['id']
-            if not cls.count(**d):
+            if not cls.count(name=d['name']):
                 obj = cls(**d)
                 obj.save()
                 logger.info('Created %s (#%d).', obj, obj.id)
