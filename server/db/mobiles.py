@@ -15,6 +15,8 @@ from .base import (
     HealthMixin, GetNameMixin, StrengthMixin
 )
 
+from ..exc import NoSuchSound
+
 tasks = {}
 
 
@@ -370,23 +372,15 @@ class Mobile(
     def speak(self, text):
         """If text has a wave file associated with it, then play the sound.
         Otherwise use text."""
+        sound = f'static/sounds/speech/{text}.wav'
+        if not os.path.isfile(sound):
+            raise NoSuchSound(sound)
         if self.owner is None:
             owner_player = False
         elif self.owner.coordinates == self.coordinates:
             owner_player = False
         else:
             owner_player = True
-        sound = f'static/sounds/speech/{text}.wav'
-        if os.path.isfile(sound):
-            if owner_player:
-                self.owner.sound(sound)
-            return self.sound(sound)
-        else:
-            text += '.'
-            if owner_player:
-                self.owner.message(text)
-            Player = Base._decl_class_registry['Player']
-            for player in Player.all(
-                location=self.location, x=self.x, y=self.y
-            ):
-                player.message(text)
+        if owner_player:
+            self.owner.sound(sound)
+        return self.sound(sound)
