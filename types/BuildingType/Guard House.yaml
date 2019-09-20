@@ -2,5 +2,6 @@ depends: University
 gold: 100
 max_health: 45
 name: Guard House
+resistance: 10
 stone: 150
 wood: 100

@@ -1,5 +1,5 @@
-attack: Punch
-attack_type_id: 7
+attack: Kick
+attack_type_id: 4
 buildings:
 - Guard House
 max_health: 25

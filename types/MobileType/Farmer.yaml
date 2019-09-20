@@ -1,5 +1,5 @@
-attack: Punch
-attack_type_id: 7
+attack: Shotgun
+attack_type_id: 9
 buildings:
 - Farm
 - University
@@ -11,5 +11,7 @@ recruits:
   gold: 4
   pop_time: 6
   water: 2
+resistance: 2
 speed: 10
+strength: 3
 water: 1
