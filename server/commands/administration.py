@@ -276,6 +276,22 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                 f'Mobile types this building can recruit: {el}',
                 'edit_recruits', args=kwargs
             )
+        elif cls is MobileType:
+            m.add_label('Buildings which can be built by units of this type')
+            for bt in obj.can_build:
+                m.add_item(
+                    bt.get_name(), 'edit_type', args=dict(
+                        class_name='BuildingType', id=bt.id
+                    )
+                )
+            m.add_label('Buildings which can recruit units of this type')
+            for bm in BuildingMobile.all(mobile_type_id=obj.id):
+                bt = BuildingType.get(bm.building_type_id)
+                m.add_item(
+                    bt.get_name(), 'edit_recruits', args=dict(
+                        building_type_id=bt.id, building_mobile_id=bm.id
+                    )
+                )
         m.add_item('Done', command_name, args=dict(class_name=class_name))
         m.send(con)
 
