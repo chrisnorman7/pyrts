@@ -15,7 +15,7 @@ from .features import Feature
 from .mobiles import Mobile
 
 from ..exc import InvalidUsername, InvalidPassword, NoSuchSound
-from ..options import base_url, server_name
+from ..options import options
 from ..socials import factory
 from ..util import pluralise
 
@@ -237,7 +237,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             if os.path.isfile(path):
                 path += f'?{os.path.getmtime(path)}'
             self.connection.logger.debug('Playing sound %s.', path)
-            url = base_url + path
+            url = options.base_url + path
             self.connection.send('sound', url)
 
     def delete(self):
@@ -283,5 +283,5 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             n += f' ({self.location.get_name()})'
         if self.connection is None:
             return False
-        self.connection.send('title', f'{server_name} | {n}')
+        self.connection.send('title', f'{options.server_name} | {n}')
         return True

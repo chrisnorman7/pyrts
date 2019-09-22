@@ -2,8 +2,10 @@ from pytest import fixture
 
 from server.db import BuildingType, FeatureType, Map, MobileType, Player
 from server.db.base import Base
+from server.options import options
 
 Base.metadata.create_all()
+options.set_defaults()
 
 password = 'TestsAreFun123'
 farm = 'Farm'

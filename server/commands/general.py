@@ -5,7 +5,7 @@ from .commands import command, commands, LocationTypes
 from ..db import Map, Player
 from ..exc import InvalidUsername, InvalidPassword
 from ..menus import Menu
-from ..options import volume_adjust
+from ..options import options
 from ..util import english_list
 
 
@@ -86,7 +86,7 @@ def help(con):
 @command(location_type=LocationTypes.any, hotkey='f9')
 def volume_down(player):
     """Set sound volume."""
-    player.volume = max(0.0, player.volume - volume_adjust)
+    player.volume = max(0.0, player.volume - options.volume_adjust)
     player.save()
     player.send_volume()
 
@@ -94,6 +94,6 @@ def volume_down(player):
 @command(location_type=LocationTypes.any, hotkey='f10')
 def volume_up(player):
     """Set sound volume."""
-    player.volume = min(1.0, player.volume + volume_adjust)
+    player.volume = min(1.0, player.volume + options.volume_adjust)
     player.save()
     player.send_volume()

@@ -7,7 +7,7 @@ from twisted.internet import reactor
 from twisted.web.server import Site
 
 from server.db import Base, bootstrap, load, dump, Mobile
-from server.options import interface, http_port, websocket_port
+from server.options import options
 from server.util import pluralise
 from server.web import app, WebSocketProtocol
 
@@ -31,19 +31,22 @@ def main():
             logging.info('No tasks to resume.')
     except FileNotFoundError:
         logging.info('Starting with a blank database.')
+    options.set_defaults()
     logging.info('Phase: Bootstrap.')
     bootstrap()
     logging.info('Phase: Listen.')
     site = Site(app.resource())
-    port = reactor.listenTCP(http_port, site, interface=interface)
+    port = reactor.listenTCP(
+        options.http_port, site, interface=options.interface
+    )
     logging.info(
         'Listening for HTTP connections on %s:%d.', port.interface, port.port
     )
     factory = WebSocketServerFactory(
-        'ws://%s:%d' % (interface, websocket_port)
+        'ws://%s:%d' % (options.interface, options.websocket_port)
     )
     factory.protocol = WebSocketProtocol
-    port = listenWS(factory, interface=interface)
+    port = listenWS(factory, interface=options.interface)
     logging.info(
         'Listening for websockets on %s:%d.', port.interface, port.port
     )

@@ -39,3 +39,15 @@ class DBError(Error):
 
 class InvalidName(DBError):
     """An invalid name was passed."""
+
+
+class OptionsError(Error):
+    """Error with the options framework."""
+
+
+class NoSuchOption(OptionsError):
+    """There is no option with that name."""
+
+
+class DuplicateOption(OptionsError):
+    """Tried to create a duplicate option."""

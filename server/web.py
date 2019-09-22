@@ -12,7 +12,7 @@ from twisted.web.static import File
 
 from .commands.commands import commands, LocationTypes
 from .db import Map, Feature, Player
-from .options import http_port, websocket_port, start_music
+from .options import options
 from .util import format_exception
 
 hostname = getfqdn()
@@ -22,9 +22,9 @@ app = Klein()
 @app.route('/')
 def index(request):
     """Return the index page."""
-    h = f'{hostname.lower()}:{http_port}'.encode()
+    h = f'{hostname.lower()}:{options.http_port}'.encode()
     if request.requestHeaders.getRawHeaders(b'host', [None])[0] != h:
-        return request.redirect(f'http://{hostname}:{http_port}')
+        return request.redirect(f'http://{hostname}:{options.http_port}')
     with open(os.path.join('templates', 'index.html'), 'r') as f:
         return f.read()
 
@@ -44,7 +44,7 @@ def db_stats(request):
 
 @app.route('/constants.js', branch=False)
 def js_constants(request):
-    socket_url = f'ws://{hostname}:{websocket_port}'
+    socket_url = f'ws://{hostname}:{options.websocket_port}'
     return f'const socketUrl = "{socket_url}"\n'
 
 
@@ -68,7 +68,7 @@ class WebSocketProtocol(WebSocketServerProtocol):
     def onOpen(self):
         """Send a welcome message."""
         self.message('Welcome. Please login or create a character.')
-        self.send('start_music', start_music)
+        self.send('start_music', options.start_music)
         hotkeys = {}
         for command in commands.values():
             if command.hotkey is not None:

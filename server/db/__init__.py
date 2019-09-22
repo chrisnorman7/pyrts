@@ -8,6 +8,7 @@ from .entry_points import EntryPoint
 from .features import Feature, FeatureType
 from .maps import Map
 from .mobiles import BuildingBuilder, Mobile, MobileType
+from .options import Option
 from .players import connections, Player
 from .session import session
 from .util import bootstrap, dump, dump_object, load
@@ -18,5 +19,5 @@ __all__ = [
     'AttackType', 'Base', 'bootstrap', 'Building', 'BuildingBuilder',
     'BuildingRecruit', 'BuildingType', 'connections', 'dump', 'dump_object',
     'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Mobile',
-    'MobileType', 'Player', 'session'
+    'MobileType', 'Option', 'Player', 'session'
 ]

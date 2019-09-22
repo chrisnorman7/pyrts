@@ -1,19 +1,84 @@
-"""Configuration options. Can probably be overridden with command line
-arguments."""
+"""Provides the Options class, and options instance."""
 
 import os.path
 
 from socket import getfqdn
 
-interface = '0.0.0.0'
-http_port = 7873
-websocket_port = http_port + 1
+from sqlalchemy.orm.exc import NoResultFound
 
-server_name = 'RTS'
-base_url = f'http://{getfqdn()}:{http_port}/'
-static_path = 'static'
-sounds_path = os.path.join(static_path, 'sounds')
-sounds_url = f'{base_url}{sounds_path.replace(os.path.sep, "/")}/'
-start_music = f'{sounds_url}music/start.wav'
+from .exc import NoSuchOption, DuplicateOption
 
-volume_adjust = 0.01
+Option = None
+
+
+class Options:
+    """Reads and writes option rows from the database."""
+
+    def __dir__(self):
+        return [x.name for x in Option.all()]
+
+    def __getattr__(self, name):
+        """Get an option from the database."""
+        try:
+            return self.get_option(name).value
+        except NoSuchOption:
+            raise AttributeError(name)
+
+    def get_option(self, name):
+        """Get an option row with the given name."""
+        try:
+            return Option.one(name=name)
+        except NoResultFound:
+            raise NoSuchOption(name)
+
+    def __setattr__(self, name, value):
+        """Set an option's value."""
+        try:
+            o = self.get_option(name)
+        except NoSuchOption:
+            raise AttributeError(name)
+        o.value = value
+        o.save()
+
+    def set_default(self, name, value):
+        """Like dict.setdefault, but for options rows."""
+        try:
+            o = self.get_option(name)
+            o.value = value
+            o.save()
+        except NoSuchOption:
+            self.add_option(name, value)
+
+    def add_option(self, name, value):
+        """Create a new option."""
+        if Option.count(name=name):
+            raise DuplicateOption(name)
+        o = Option(name=name, data='')
+        o.value = value
+        o.save()
+        return o
+
+    def remove_option(self, name):
+        """Delete the named option."""
+        return Option.query(name=name).delete()
+
+    def set_defaults(self):
+        """Set some defaults."""
+        self.set_default('interface', '0.0.0.0')
+        self.set_default('http_port', 7873)
+        self.set_default('websocket_port', self.http_port + 1)
+        self.set_default('server_name', 'RTS')
+        self.set_default('base_url', f'http://{getfqdn()}:{self.http_port}/')
+        self.set_default('static_path', 'static')
+        self.set_default(
+            'sounds_path', os.path.join(self.static_path, 'sounds')
+        )
+        self.set_default(
+            'sounds_url',
+            f'{self.base_url}{self.sounds_path.replace(os.path.sep, "/")}/'
+        )
+        self.set_default('start_music', f'{self.sounds_url}music/start.wav')
+        self.set_default('volume_adjust', 0.01)
+
+
+options = Options()

@@ -14,7 +14,7 @@ from .engine import engine
 from .session import session
 
 from ..exc import NoSuchSound
-from ..options import sounds_path, base_url
+from ..options import options
 from ..util import english_list
 
 
@@ -296,11 +296,13 @@ class SoundMixin:
 
     @property
     def sound(self):
-        path = os.path.join(sounds_path, 'amb', self.__tablename__, self.name)
+        path = os.path.join(
+            options.sounds_path, 'amb', self.__tablename__, self.name
+        )
         path += '.wav'
         if os.path.isfile(path):
             url = quote(path.replace(os.path.sep, '/'))
-            return f'{base_url}{url}?{os.path.getmtime(path)}'
+            return f'{options.base_url}{url}?{os.path.getmtime(path)}'
         raise NoSuchSound(path)
 
 
