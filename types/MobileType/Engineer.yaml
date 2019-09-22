@@ -1,11 +1,13 @@
 attack: Kick
 attack_type_id: 4
+auto_repair: true
 buildings: []
 name: Engineer
 recruits:
 - building: University
   food: 10
   gold: 15
+  pop_time: 10
   water: 10
 repair_amount: 3
 resistance: 3
