@@ -17,6 +17,15 @@ class Options:
     def __dir__(self):
         return [x.name for x in Option.all()]
 
+    def __repr__(self):
+        string = f'{type(self).__name__}('
+        args = []
+        for name in dir(self):
+            args.append(f'{name}={repr(getattr(self, name))}')
+        string += ', '.join(args)
+        string += ')'
+        return string
+
     def __getattr__(self, name):
         """Get an option from the database."""
         try:
