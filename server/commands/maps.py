@@ -811,7 +811,7 @@ def guard(player):
     if q.count():
         for m in q:
             m.guard()
-            player.message(f'{m.get_name()} begins to guard.')
+            m.speak('OK')
     else:
         player.message('You must select at least one unit.')
 
