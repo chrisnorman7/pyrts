@@ -14,6 +14,7 @@ from ..db import (
     BuildingRecruit
 )
 from ..menus import Menu, YesNoMenu
+from ..options import options
 from ..util import english_list
 
 consoles = {}
@@ -27,6 +28,7 @@ class Console(InteractiveConsole):
         for name in dir(db):
             if not name.startswith('_'):
                 self.locals[name] = getattr(db, name)
+        self.locals['options'] = options
 
     def write(self, string):
         """Send the provided string to self.player.message."""
