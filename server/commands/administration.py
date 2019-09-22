@@ -381,6 +381,9 @@ def edit_recruits(
     resource_name=None, text=None
 ):
     """Edit recruits for the given building type."""
+    columns = inspect(BuildingMobile).c
+    resource_names = BuildingMobile.resource_names()
+    resource_names.append('pop_time')
     bt = BuildingType.get(building_type_id)
     if building_mobile_id is None:
         m = Menu('Recruits')
@@ -403,10 +406,19 @@ def edit_recruits(
         if resource_name is not None:
             if text is None:
                 kwargs['resource_name'] = resource_name
-                return con.text('Enter value', command_name, args=kwargs)
+                value = getattr(bm, resource_name)
+                if value is None:
+                    value = ''
+                return con.text(
+                    'Enter value', command_name, value=value, args=kwargs
+                )
             else:
                 if not text:
-                    value = None
+                    if columns[resource_name].nullable:
+                        value = None
+                    else:
+                        con.message('Value cannot be null.')
+                        value = _empty
                 else:
                     try:
                         value = int(text)
@@ -414,13 +426,14 @@ def edit_recruits(
                         con.message('Invalid value.')
                         value = _empty
                 if value is not _empty:
-                    if resource_name in BuildingMobile.resource_names():
+                    if resource_name in resource_names:
                         setattr(bm, resource_name, value)
+                        bm.save()
                     else:
                         con.message('Invalid resource name.')
         kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
         m = Menu('Recruit Options')
-        for name in BuildingMobile.resource_names():
+        for name in resource_names:
             resource_kwargs = kwargs.copy()
             resource_kwargs['resource_name'] = name
             value = getattr(bm, name)
