@@ -12,15 +12,19 @@ from twisted.web.static import File
 
 from .commands.commands import commands, LocationTypes
 from .db import Map, Feature, Player
-from .options import websocket_port, start_music
+from .options import http_port, websocket_port, start_music
 from .util import format_exception
 
+hostname = getfqdn()
 app = Klein()
 
 
 @app.route('/')
 def index(request):
     """Return the index page."""
+    h = f'{hostname.lower()}:{http_port}'.encode()
+    if request.requestHeaders.getRawHeaders(b'host', [None])[0] != h:
+        return request.redirect(f'http://{hostname}:{http_port}')
     with open(os.path.join('templates', 'index.html'), 'r') as f:
         return f.read()
 
@@ -40,7 +44,7 @@ def db_stats(request):
 
 @app.route('/constants.js', branch=False)
 def js_constants(request):
-    socket_url = f'ws://{getfqdn()}:{websocket_port}'
+    socket_url = f'ws://{hostname}:{websocket_port}'
     return f'const socketUrl = "{socket_url}"\n'
 
 
