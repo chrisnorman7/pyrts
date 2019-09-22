@@ -10,11 +10,11 @@ from .base import (
 )
 
 
-class BuildingMobile(Base, ResourcesMixin):
+class BuildingRecruit(Base, ResourcesMixin):
     """Provides a link betwene building and mobile types, allowing buildings
     to provide mobiles. Resources are used during reruitment."""
 
-    __tablename__ = 'building_mobiles'
+    __tablename__ = 'building_recruits'
     building_type_id = Column(
         Integer, ForeignKey('building_types.id'), nullable=False
     )
@@ -40,35 +40,35 @@ class BuildingType(
         remote_side='BuildingType.id'
     )
     recruits = relationship(
-        'MobileType', backref='recruiters', secondary=BuildingMobile.__table__
+        'MobileType', backref='recruiters', secondary=BuildingRecruit.__table__
     )
 
     def get_pop_time(self, mobile_type):
         """Get the pop time for the given MobileType instance."""
-        return BuildingMobile.one(
+        return BuildingRecruit.one(
             building_type_id=self.id, mobile_type_id=mobile_type.id
         ).pop_time
 
     def set_pop_time(self, mobile_type, value):
         """Set the pop time for the given MobileType instance to the given
         value."""
-        BuildingMobile.query(
+        BuildingRecruit.query(
             building_type_id=self.id, mobile_type_id=mobile_type.id
         ).update(
-            {BuildingMobile.pop_time: value}
+            {BuildingRecruit.pop_time: value}
             )
 
     def add_recruit(self, type, **resources):
         """Add the given MobileType instance as a recruit of this building
         type. It will cost the provided resources to recruit."""
-        return BuildingMobile(
+        return BuildingRecruit(
             mobile_type_id=type.id, building_type_id=self.id, **resources
         )
 
     def get_recruit(self, type):
-        """Return the BuildingMobile instance that represents the given
+        """Return the BuildingRecruit instance that represents the given
         MobileType instance."""
-        return BuildingMobile.one(
+        return BuildingRecruit.one(
             building_type_id=self.id, mobile_type_id=type.id
         )
 

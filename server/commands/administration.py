@@ -11,7 +11,7 @@ from .commands import command, LocationTypes
 from .. import db
 from ..db import (
     Player, BuildingType, MobileType, AttackType, FeatureType, Base,
-    BuildingMobile
+    BuildingRecruit
 )
 from ..menus import Menu, YesNoMenu
 from ..util import english_list
@@ -285,7 +285,7 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                     )
                 )
             m.add_label('Buildings which can recruit units of this type')
-            for bm in BuildingMobile.all(mobile_type_id=obj.id):
+            for bm in BuildingRecruit.all(mobile_type_id=obj.id):
                 bt = BuildingType.get(bm.building_type_id)
                 m.add_item(
                     bt.get_name(), 'edit_recruits', args=dict(
@@ -381,8 +381,8 @@ def edit_recruits(
     resource_name=None, text=None
 ):
     """Edit recruits for the given building type."""
-    columns = inspect(BuildingMobile).c
-    resource_names = BuildingMobile.resource_names()
+    columns = inspect(BuildingRecruit).c
+    resource_names = BuildingRecruit.resource_names()
     resource_names.append('pop_time')
     bt = BuildingType.get(building_type_id)
     if building_mobile_id is None:
@@ -390,7 +390,7 @@ def edit_recruits(
         m.add_item(
             'Add Recruit', 'add_recruit', args=dict(building_type_id=bt.id)
         )
-        for bm in BuildingMobile.all(building_type_id=bt.id):
+        for bm in BuildingRecruit.all(building_type_id=bt.id):
             mt = MobileType.get(bm.mobile_type_id)
             m.add_item(
                 f'{mt.get_name()}: {bm.resources_string()}', command_name,
@@ -401,7 +401,7 @@ def edit_recruits(
         )
         m.send(con)
     else:
-        bm = BuildingMobile.get(building_mobile_id)
+        bm = BuildingRecruit.get(building_mobile_id)
         kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
         if resource_name is not None:
             if text is None:
@@ -442,7 +442,7 @@ def edit_recruits(
             )
         m.add_item(
             'Delete', 'delete_object', args=dict(
-                class_name='BuildingMobile', id=bm.id
+                class_name='BuildingRecruit', id=bm.id
             )
         )
         m.add_item(

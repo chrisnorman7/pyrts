@@ -3,7 +3,7 @@
 from .commands import command, LocationTypes
 
 from ..db import (
-    Building, BuildingMobile, BuildingType, EntryPoint, Feature, FeatureType,
+    Building, BuildingRecruit, BuildingType, EntryPoint, Feature, FeatureType,
     Map, Mobile, MobileType, Player, Base, BuildingBuilder
 )
 from ..menus import Menu, YesNoMenu
@@ -523,8 +523,8 @@ def activate(player, location, con):
                 buildings = Building.all(
                     health=None, owner=player, location=location
                 )
-                for bm in BuildingMobile.query(
-                    BuildingMobile.building_type_id.in_(
+                for bm in BuildingRecruit.query(
+                    BuildingRecruit.building_type_id.in_(
                         [b.type_id for b in buildings]
                     )
                 ):
@@ -595,7 +595,7 @@ def _recruit(building_id, building_mobile_id):
     b = Building.get(building_id)
     if b is None:
         return  # It has since been destroyed.
-    bm = BuildingMobile.get(building_mobile_id)
+    bm = BuildingRecruit.get(building_mobile_id)
     t = MobileType.get(bm.mobile_type_id)
     m = b.location.add_mobile(t, *b.coordinates)
     player = b.owner
@@ -618,7 +618,7 @@ def recruit(player, location, building, mobile):
         player.message('Invalid recruitment.')
     else:
         types = []
-        for bm in BuildingMobile.all(mobile_type_id=m.id):
+        for bm in BuildingRecruit.all(mobile_type_id=m.id):
             t = BuildingType.get(bm.building_type_id)
             if Building.count(
                 health=None, owner=player, location=location, type=t
@@ -769,7 +769,7 @@ def release(player):
             'home.'
         )
     else:
-        bm = BuildingMobile.first(mobile_type_id=fo.type_id)
+        bm = BuildingRecruit.first(mobile_type_id=fo.type_id)
         for name in bm.resources:
             value = getattr(fo.home, name)
             value += getattr(bm, name)
