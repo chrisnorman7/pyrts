@@ -1,7 +1,8 @@
 attack: Kick
 attack_type_id: 4
 auto_repair: true
-buildings: []
+buildings:
+- Garrison
 name: Engineer
 recruits:
 - building: University

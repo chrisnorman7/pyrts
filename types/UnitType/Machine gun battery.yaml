@@ -1,0 +1,17 @@
+attack: Machine Gun
+attack_type_id: 5
+buildings: []
+max_health: 35
+name: Machine gun battery
+recruits:
+- building: Garrison
+  food: 5
+  gold: 2000
+  pop_time: 30
+  stone: 50
+  water: 4
+  wood: 50
+repair_amount: 0
+resistance: 20
+speed: 15
+strength: 40

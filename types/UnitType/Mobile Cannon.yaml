@@ -1,0 +1,17 @@
+attack: Cannon
+attack_type_id: 2
+buildings: []
+max_health: 50
+name: Mobile Cannon
+recruits:
+- building: Garrison
+  food: 10
+  gold: 1500
+  pop_time: 25
+  stone: 400
+  water: 15
+  wood: 500
+repair_amount: 0
+resistance: 40
+speed: 20
+strength: 100

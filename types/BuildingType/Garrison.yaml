@@ -1,0 +1,7 @@
+depends: Keep
+gold: 1000
+max_health: 200
+name: Garrison
+resistance: 100
+stone: 500
+wood: 300
