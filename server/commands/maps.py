@@ -4,7 +4,7 @@ from .commands import command, LocationTypes
 
 from ..db import (
     Building, BuildingRecruit, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Mobile, MobileType, Player, Base, BuildingBuilder
+    Map, Unit, UnitType, Player, Base, BuildingBuilder
 )
 from ..menus import Menu, YesNoMenu
 from ..util import pluralise, is_are, english_list, difference_string
@@ -121,7 +121,7 @@ def switch_object(player, direction):
         msg = obj.get_full_name()
     else:
         msg = obj.get_name()
-    if isinstance(obj, Mobile) and obj.owner is player:
+    if isinstance(obj, Unit) and obj.owner is player:
         msg = obj.get_name()
         msg += ' ('
         if obj.selected:
@@ -378,22 +378,22 @@ for x in range(10):
     )(lambda player, index=x: focus_object(index, player))
 
 
-def select_mobiles(index, player):
-    """Select a group of mobiles."""
-    player.deselect_mobiles()
+def select_units(index, player):
+    """Select a group of units."""
+    player.deselect_units()
     if not index:
         group = 'All'
-        q = Mobile.query(owner=player)
+        q = Unit.query(owner=player)
     else:
         location = player.location
-        mobile_type_ids = set([m.type_id for m in Mobile.query(
+        unit_type_ids = set([m.type_id for m in Unit.query(
             location=location, owner=player
         )])
-        q = MobileType.all(MobileType.id.in_(mobile_type_ids))
+        q = UnitType.all(UnitType.id.in_(unit_type_ids))
         try:
             t = q[index - 1]
             group = t.name
-            q = Mobile.query(owner=player, type=t)
+            q = Unit.query(owner=player, type=t)
         except IndexError:
             c = len(q)
             if c:
@@ -404,21 +404,21 @@ def select_mobiles(index, player):
             else:
                 player.message('There is nothing here.')
             return
-    c = q.update({Mobile.selected: True})
+    c = q.update({Unit.selected: True})
     player.message(f'{group}: {c} {pluralise(c, "unit")} selected.')
 
 
-def select_mobile_list(index, player):
-    """Select a mobile from a list grouped by types."""
+def select_unit_list(index, player):
+    """Select a unit from a list grouped by types."""
     if not index:
         name = 'All Units'
         kwargs = {}
     else:
         location = player.location
-        mobile_type_ids = set([m.type_id for m in Mobile.query(
+        unit_type_ids = set([m.type_id for m in Unit.query(
             location=location, owner=player
         )])
-        types = MobileType.all(MobileType.id.in_(mobile_type_ids))
+        types = UnitType.all(UnitType.id.in_(unit_type_ids))
         try:
             type = types[index - 1]
             kwargs = dict(type=type)
@@ -428,7 +428,7 @@ def select_mobile_list(index, player):
             return player.message(
                 f'There are only {c} {pluralise(c, "type")} of unit.'
             )
-    q = Mobile.query(location=player.location, owner=player, **kwargs)
+    q = Unit.query(location=player.location, owner=player, **kwargs)
     c = q.count()
     if c:
         m = Menu(name)
@@ -436,7 +436,7 @@ def select_mobile_list(index, player):
         for u in q:
             m.add_item(
                 f'{u.get_name()} [{u.action_description()}] {u.coordinates}',
-                'select_mobile',
+                'select_unit',
                 args=dict(id=u.id)
             )
             m.send(player.connection)
@@ -446,28 +446,28 @@ def select_mobile_list(index, player):
 
 for x, hotkey in enumerate('aqwertyuiop'):
     if hotkey == 'a':
-        description = 'Select all your mobiles.'
+        description = 'Select all your units.'
     else:
-        description = 'Select a group of mobiles.'
+        description = 'Select a group of units.'
     command(
-        name=f'select_mobiles_{hotkey}', description=description, hotkey=hotkey
+        name=f'select_units_{hotkey}', description=description, hotkey=hotkey
     )(
-        lambda player, index=x: select_mobiles(index, player)
+        lambda player, index=x: select_units(index, player)
     )
     command(
-        name=f'select_mobile_list_{hotkey}',
-        description='Select a single mobile from a list.',
+        name=f'select_unit_list_{hotkey}',
+        description='Select a single unit from a list.',
         hotkey=f'shift+{hotkey}'
     )(
-        lambda player, index=x: select_mobile_list(index, player)
+        lambda player, index=x: select_unit_list(index, player)
     )
 
 
 @command(location_type=LocationTypes.finalised)
-def select_mobile(location, player, id):
+def select_unit(location, player, id):
     """Select a unit by its id."""
-    player.deselect_mobiles()
-    u = Mobile.first(owner=player, location=location, id=id)
+    player.deselect_units()
+    u = Unit.first(owner=player, location=location, id=id)
     if u is None:
         player.message('That unit does not exist.')
     else:
@@ -477,10 +477,10 @@ def select_mobile(location, player, id):
 
 
 @command(location_type=LocationTypes.finalised, hotkey='x')
-def toggle_select_mobile(player):
-    """Select r deselect a mobile."""
+def toggle_select_unit(player):
+    """Select r deselect a unit."""
     fo = player.focussed_object
-    if not isinstance(fo, Mobile):
+    if not isinstance(fo, Unit):
         return player.message(f'{fo.get_name()} is not a unit.')
     if fo.selected:
         value = False
@@ -494,9 +494,9 @@ def toggle_select_mobile(player):
 
 
 @command(location_type=LocationTypes.finalised, hotkey='shift+x')
-def deselect_mobiles(player):
+def deselect_units(player):
     """Deselect all units."""
-    player.deselect_mobiles()
+    player.deselect_units()
     player.message('Unit selections cleared.')
 
 
@@ -507,11 +507,11 @@ def activate(player, location, con):
     fo = player.focussed_object
     if fo is not None:
         m.add_label(fo.get_name())
-        if isinstance(fo, (Building, Mobile)):
+        if isinstance(fo, (Building, Unit)):
             m.add_label(f'{fo.hp} / {fo.max_hp} health')
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
-            elif isinstance(fo, Mobile):
+            elif isinstance(fo, Unit):
                 m.add_item('Release', 'release')
             elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
                 m.add_item('Repair', 'repair', args=dict(id=fo.id))
@@ -528,10 +528,10 @@ def activate(player, location, con):
                         [b.type_id for b in buildings]
                     )
                 ):
-                    t = MobileType.get(bm.mobile_type_id)
+                    t = UnitType.get(bm.unit_type_id)
                     m.add_item(
                         f'Recruit {t} (requires {bm.resources_string()}',
-                        'recruit', args=dict(building=fo.id, mobile=t.id)
+                        'recruit', args=dict(building=fo.id, unit=t.id)
                     )
                 m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
@@ -556,12 +556,12 @@ def activate(player, location, con):
     m.add_item('Patrol', 'patrol')
     m.add_item('guard', 'guard')
     m.add_label('Building')
-    mobile_type_ids = set([m.type_id for m in Mobile.all(
+    unit_type_ids = set([m.type_id for m in Unit.all(
         owner=player, location=location
     )])
     building_type_ids = set()
     for bb in BuildingBuilder.query(
-        BuildingBuilder.mobile_type_id.in_(mobile_type_ids)
+        BuildingBuilder.unit_type_id.in_(unit_type_ids)
     ):
         building_type_ids.add(bb.building_type_id)
     for id in building_type_ids:
@@ -590,14 +590,14 @@ def acquire(player, id):
         player.message('Done.')
 
 
-def _recruit(building_id, building_mobile_id):
+def _recruit(building_id, building_unit_id):
     """Actually perform the recruiting."""
     b = Building.get(building_id)
     if b is None:
         return  # It has since been destroyed.
-    bm = BuildingRecruit.get(building_mobile_id)
-    t = MobileType.get(bm.mobile_type_id)
-    m = b.location.add_mobile(t, *b.coordinates)
+    bm = BuildingRecruit.get(building_unit_id)
+    t = UnitType.get(bm.unit_type_id)
+    m = b.location.add_unit(t, *b.coordinates)
     player = b.owner
     m.owner = player
     m.home = b
@@ -606,10 +606,10 @@ def _recruit(building_id, building_mobile_id):
 
 
 @command(location_type=LocationTypes.finalised)
-def recruit(player, location, building, mobile):
-    """Recruit a mobile."""
+def recruit(player, location, building, unit):
+    """Recruit a unit."""
     b = player.focussed_object
-    m = MobileType.get(mobile)
+    m = UnitType.get(unit)
     if not isinstance(b, Building):
         player.message('You must select a building.')
     elif not b.type.homely:
@@ -618,7 +618,7 @@ def recruit(player, location, building, mobile):
         player.message('Invalid recruitment.')
     else:
         types = []
-        for bm in BuildingRecruit.all(mobile_type_id=m.id):
+        for bm in BuildingRecruit.all(unit_type_id=m.id):
             t = BuildingType.get(bm.building_type_id)
             if Building.count(
                 health=None, owner=player, location=location, type=t
@@ -636,15 +636,15 @@ def recruit(player, location, building, mobile):
 
 @command(location_type=LocationTypes.finalised)
 def set_home(player, id):
-    """Set the home of all selected mobiles."""
-    q = player.selected_mobiles
+    """Set the home of all selected units."""
+    q = player.selected_units
     b = Building.get(id)
     if b is None or b.owner is not player:
         player.message('Invalid building.')
     elif not b.type.homely:
         player.message('That building cannot be used as a home.')
     else:
-        c = q.update({Mobile.home_id: id})
+        c = q.update({Unit.home_id: id})
         player.message(f'Updated {c} {pluralise(c, "home")}.')
 
 
@@ -669,9 +669,9 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
                 item_args['resource'] = r
                 m.add_item(r.title(), command_name, args=item_args)
             return m.send(con)
-    q = player.selected_mobiles.join(
-        Mobile.type
-    ).filter(getattr(MobileType, resource) == 1)
+    q = player.selected_units.join(
+        Unit.type
+    ).filter(getattr(UnitType, resource) == 1)
     if not q.count():
         return player.message('You have no units capable of doing that.')
     for m in q:
@@ -687,10 +687,10 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
 @command(location_type=LocationTypes.finalised)
 def summon(player):
     """Summon all selected objects."""
-    q = player.selected_mobiles
+    q = player.selected_units
     c = q.count()
     if not c:
-        player.message('You have not selected any mobiles.')
+        player.message('You have not selected any units.')
     else:
         for m in q:
             m.speak('Coming')
@@ -701,7 +701,7 @@ def summon(player):
 def health(player):
     """Show the health of the currently-selected unit, building, or feature."""
     fo = player.focussed_object
-    if isinstance(fo, (Building, Mobile)):
+    if isinstance(fo, (Building, Unit)):
         player.message(f'{fo.hp} / {fo.max_hp} health.')
     elif isinstance(fo, Feature):
         player.message(fo.resources_string())
@@ -726,16 +726,16 @@ def build_building(location, player, id):
         owner=player, location=location, type=t.depends
     ):
         return player.message(f'{t.name} requires {t.depends.name}.')
-    for m in player.selected_mobiles.filter_by(**player.same_coordinates()):
+    for m in player.selected_units.filter_by(**player.same_coordinates()):
         if m.type in t.builders:
             obj = m
             break
     else:
-        mobile_types = map(
-            MobileType.get, set(m.id for m in t.builders)
+        unit_types = map(
+            UnitType.get, set(m.id for m in t.builders)
         )
         el = english_list(
-            mobile_types, key=lambda thing: thing.get_name(), and_='or '
+            unit_types, key=lambda thing: thing.get_name(), and_='or '
         )
         return player.message(f'{t} can only be built by {el}.')
     home = obj.home
@@ -755,9 +755,9 @@ def build_building(location, player, id):
 
 @command(location_type=LocationTypes.finalised)
 def release(player):
-    """Release a mobile from the employ of this player."""
+    """Release a unit from the employ of this player."""
     fo = player.focussed_object
-    if not isinstance(fo, Mobile):
+    if not isinstance(fo, Unit):
         player.message('You can only release units from your employ.')
     elif fo.owner is not player:
         player.message('You can only release your own units from employment.')
@@ -769,7 +769,7 @@ def release(player):
             'home.'
         )
     else:
-        bm = BuildingRecruit.first(mobile_type_id=fo.type_id)
+        bm = BuildingRecruit.first(unit_type_id=fo.type_id)
         for name in bm.resources:
             value = getattr(fo.home, name)
             value += getattr(bm, name)
@@ -788,12 +788,12 @@ def repair(player, id):
         player.message('No such building here.')
     elif b.hp >= b.max_hp:
         player.message(f'{b.get_name()} does not need repairing.')
-    elif not player.selected_mobiles.count():
+    elif not player.selected_units.count():
         player.message(
             'You must select at least one unit to perform the repairs.'
         )
     else:
-        for m in player.selected_mobiles:
+        for m in player.selected_units:
             if m.coordinates == player.coordinates:
                 m.speak('OK')
             else:
@@ -805,9 +805,9 @@ def repair(player, id):
 
 @command(location_type=LocationTypes.finalised)
 def guard(player):
-    """Set the currently-selected group of mobiles to guard their current
+    """Set the currently-selected group of units to guard their current
     location."""
-    q = player.selected_mobiles
+    q = player.selected_units
     if q.count():
         for m in q:
             m.guard()
@@ -818,9 +818,9 @@ def guard(player):
 
 @command(location_type=LocationTypes.finalised)
 def patrol(player):
-    """Set the currently-selected group of mobiles to patrolling between their
+    """Set the currently-selected group of units to patrolling between their
     home, and the current coordinates."""
-    q = player.selected_mobiles
+    q = player.selected_units
     if q.count():
         for m in q:
             m.patrol(*player.coordinates)

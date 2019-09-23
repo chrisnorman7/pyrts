@@ -14,7 +14,7 @@ from .attacks import AttackType
 from .base import Base
 from .buildings import BuildingType
 from .features import FeatureType
-from .mobiles import MobileType
+from .units import UnitType
 from .session import session
 
 from ..exc import InvalidName
@@ -89,13 +89,13 @@ def bootstrap():
     depends = {}
     buildings = {}
     recruits = {}
-    for cls in (FeatureType, BuildingType, MobileType, AttackType):
+    for cls in (FeatureType, BuildingType, UnitType, AttackType):
         logger.info('Checking class %s.', cls)
         path = os.path.join('types', cls.__name__, '*.yaml')
         for filename in glob(path):
             with open(filename, 'r') as f:
                 d = yaml_load(f, FullLoader)
-            if cls is MobileType:
+            if cls is UnitType:
                 _attack = d.pop('attack', None)
                 _buildings = d.pop('buildings', [])
                 _recruits = d.pop('recruits', [])
@@ -110,13 +110,13 @@ def bootstrap():
             else:
                 logger.info('Skipping %s.', d['name'])
                 continue
-            if cls is MobileType:
+            if cls is UnitType:
                 attacks[obj.id] = _attack
                 buildings[obj.id] = _buildings
                 recruits[obj.id] = _recruits
             elif cls is BuildingType:
                 depends[obj.id] = _depends
-    for mt in MobileType.all():
+    for mt in UnitType.all():
         attack_name = attacks.pop(mt.id, None)
         if attack_name is not None:
             mt.attack_type = get_object_by_name(AttackType, attack_name)

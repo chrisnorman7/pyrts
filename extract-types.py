@@ -4,12 +4,12 @@ import os.path
 from yaml import dump
 
 from server.db import (
-    load, MobileType, FeatureType, BuildingType, dump_object, AttackType
+    load, UnitType, FeatureType, BuildingType, dump_object, AttackType
 )
 
 load()
 
-for cls in (MobileType, BuildingType, FeatureType, AttackType):
+for cls in (UnitType, BuildingType, FeatureType, AttackType):
     path = os.path.join('types', cls.__name__)
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -20,7 +20,7 @@ for cls in (MobileType, BuildingType, FeatureType, AttackType):
         if isinstance(obj, BuildingType) and obj.depends is not None:
             del d['depends_id']
             d['depends'] = obj.depends.name
-        if isinstance(obj, MobileType):
+        if isinstance(obj, UnitType):
             if obj.attack_type is not None:
                 d['attack'] = obj.attack_type.name
             d['buildings'] = [b.name for b in obj.can_build]
@@ -28,7 +28,7 @@ for cls in (MobileType, BuildingType, FeatureType, AttackType):
             for bt in obj.recruiters:
                 bm = bt.get_recruit(obj)
                 rd = dump_object(bm)
-                for name in ('id', 'mobile_type_id', 'building_type_id'):
+                for name in ('id', 'unit_type_id', 'building_type_id'):
                     del rd[name]
                 rd['building'] = bt.name
             d['recruits'].append(rd)

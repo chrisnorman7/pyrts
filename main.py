@@ -6,7 +6,7 @@ from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, bootstrap, load, dump, Mobile
+from server.db import Base, bootstrap, load, dump, Unit
 from server.options import options
 from server.util import pluralise
 from server.web import app, WebSocketProtocol
@@ -21,7 +21,7 @@ def main():
         load()
         logging.info('Number of objects loaded: %d.', Base.number_of_objects())
         logging.info('Phase: Start tasks.')
-        q = Mobile.query(Mobile.action.isnot(None),)
+        q = Unit.query(Unit.action.isnot(None),)
         c = q.count()
         if c:
             logging.info('Resuming %d %s.', c, pluralise(c, 'task'))

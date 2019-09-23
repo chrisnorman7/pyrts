@@ -1,4 +1,4 @@
-"""Provides the MobileType and Mobile classes."""
+"""Provides the UnitType and Unit classes."""
 
 import os.path
 from enum import Enum as _Enum
@@ -20,7 +20,7 @@ from ..exc import NoSuchSound
 tasks = {}
 
 
-class MobileActions(_Enum):
+class UnitActions(_Enum):
     """The next action to take."""
     exploit = 0
     drop = 1
@@ -32,26 +32,26 @@ class MobileActions(_Enum):
 
 
 class BuildingBuilder(Base):
-    """Provides a link betwene building and mobile types, allowing mobiles to
+    """Provides a link betwene building and unit types, allowing units to
     build buildings."""
 
     __tablename__ = 'building_builders'
     building_type_id = Column(
         Integer, ForeignKey('building_types.id'), nullable=False
     )
-    mobile_type_id = Column(
-        Integer, ForeignKey('mobile_types.id'), nullable=False
+    unit_type_id = Column(
+        Integer, ForeignKey('unit_types.id'), nullable=False
     )
 
 
-class MobileType(
+class UnitType(
     Base, NameMixin, ResistanceMixin, SoundMixin, ResourcesMixin,
     MaxHealthMixin, StrengthMixin
 ):
-    """A type of mobile. Resources are used to decide which resources can be
-    exploited by mobiles of this type."""
+    """A type of unit. Resources are used to decide which resources can be
+    exploited by units of this type."""
 
-    __tablename__ = 'mobile_types'
+    __tablename__ = 'unit_types'
     can_build = relationship(
         'BuildingType', backref='builders', secondary=BuildingBuilder.__table__
     )
@@ -61,40 +61,40 @@ class MobileType(
     attack_type_id = Column(
         Integer, ForeignKey('attack_types.id'), nullable=True
     )
-    attack_type = relationship('AttackType', backref='mobiles')
+    attack_type = relationship('AttackType', backref='units')
 
     def add_building(self, type):
-        """Add a BuildingType instance that can be built by mobiles of this
+        """Add a BuildingType instance that can be built by units of this
         type."""
         return BuildingBuilder(
-            mobile_type_id=self.id, building_type_id=type.id
+            unit_type_id=self.id, building_type_id=type.id
         )
 
     def get_building(self, type):
-        """Return the BuildingBuilder instance associated with this mobile
+        """Return the BuildingBuilder instance associated with this unit
         type, and the provided BuildingType instance."""
         return BuildingBuilder.one(
-            mobile_type_id=self.id, building_type_id=type.id
+            unit_type_id=self.id, building_type_id=type.id
         )
 
 
-class Mobile(
+class Unit(
     Base, CoordinatesMixin, LocationMixin, OwnerMixin, TypeMixin, HealthMixin,
     ResourcesMixin, GetNameMixin
 ):
-    """A mobile on a map. Resources are used for storage (carrying)."""
+    """A unit on a map. Resources are used for storage (carrying)."""
 
-    __tablename__ = 'mobiles'
-    __type_class__ = MobileType
+    __tablename__ = 'units'
+    __type_class__ = UnitType
     home_id = Column(Integer, ForeignKey('buildings.id'), nullable=True)
-    home = relationship('Building', backref='mobiles')
+    home = relationship('Building', backref='units')
     selected = Column(Boolean, nullable=False, default=False)
     exploiting_class = Column(String(20), nullable=True)
     exploiting_id = Column(Integer, nullable=True)
     exploiting_material = Column(String(20), nullable=True)
-    # If self.action is None, this mobile is considered to be standing around
+    # If self.action is None, this unit is considered to be standing around
     # doing nothing.
-    action = Column(Enum(MobileActions), nullable=True)
+    action = Column(Enum(UnitActions), nullable=True)
     target_x = Column(Integer, nullable=False, default=0)
     target_y = Column(Integer, nullable=False, default=0)
 
@@ -125,7 +125,7 @@ class Mobile(
         self.target_x, self.target_y = value
 
     def get_full_name(self):
-        """Get this mobile's name, and the name of their employer (if any)."""
+        """Get this unit's name, and the name of their employer (if any)."""
         if self.owner is None:
             owner = 'Unemployed'
         else:
@@ -133,7 +133,7 @@ class Mobile(
         return f'{self.get_name()} [{owner}]'
 
     def kill_task(self):
-        """Get any task for this mobile and kill it, to prevent duplicate
+        """Get any task for this unit and kill it, to prevent duplicate
         tasks."""
         t = tasks.pop(self.id, None)
         try:
@@ -146,20 +146,20 @@ class Mobile(
         return uniform(0.0, self.type.speed)
 
     def start_task(self):
-        """Start a task for this mobile."""
+        """Start a task for this unit."""
         self.kill_task()
         tasks[self.id] = reactor.callLater(self.random_speed(), self.progress)
 
     def sound(self, path):
         """Make this object emit a sound."""
-        # We need to hack out the Player class because Mobile is imported in
+        # We need to hack out the Player class because Unit is imported in
         # players.py.
         Player = Base._decl_class_registry['Player']
         for player in Player.all(location=self.location, x=self.x, y=self.y):
             player.sound(path)
 
     def move(self, x, y):
-        """Move this mobile and make a sound."""
+        """Move this unit and make a sound."""
         sound = f'static/sounds/move/{self.type.name}.wav'
         self.sound(sound)
         self.coordinates = x, y
@@ -183,64 +183,64 @@ class Mobile(
         """Start exploiting a Feature f."""
         self.exploiting = feature
         self.target = feature.coordinates
-        self.action = MobileActions.exploit
+        self.action = UnitActions.exploit
         self.exploiting_material = material
         self.start_task()
 
     def repair(self, building):
         """Repair the given building. The reference will be stored on
         self.exploiting."""
-        self.action = MobileActions.repair
+        self.action = UnitActions.repair
         self.exploiting = building
         self.start_task()
 
     def travel(self, x, y):
-        """Start this mobile travelling."""
+        """Start this unit travelling."""
         self.target = x, y
         self.exploiting = None
-        self.action = MobileActions.travel
+        self.action = UnitActions.travel
         self.start_task()
 
     def guard(self):
         """Guard the current coordinates."""
         self.kill_task()
-        self.action = MobileActions.guard
+        self.action = UnitActions.guard
 
     def patrol(self, x, y):
-        """Start this mobile patrolling."""
+        """Start this unit patrolling."""
         self.target = (x, y)
-        self.action = MobileActions.patrol_out
+        self.action = UnitActions.patrol_out
         self.start_task()
 
     def action_description(self):
-        """Return a string describing what this mobile is up to."""
+        """Return a string describing what this unit is up to."""
         a = self.action
         if a is None:
             return 'doing nothing'
-        elif a is MobileActions.guard:
+        elif a is UnitActions.guard:
             return f'guarding {self.coordinates}'
-        elif a is MobileActions.exploit:
+        elif a is UnitActions.exploit:
             x = self.exploiting
             if x is None:
                 return 'exploiting a non-existant resource'
             else:
                 return f'exploiting {x.get_name()}'
-        elif a is MobileActions.drop:
+        elif a is UnitActions.drop:
             h = self.home
             if h is None:
                 return 'attempting to deliver resources'
             else:
                 return f'delivering resources to {h.get_name()}'
-        elif a is MobileActions.travel:
+        elif a is UnitActions.travel:
             return f'travelling to {self.target}'
-        elif a in (MobileActions.patrol_out, MobileActions.patrol_back):
+        elif a in (UnitActions.patrol_out, UnitActions.patrol_back):
             h = self.home
             if h is None:
                 h = 'nowhere'
             else:
                 h = h.coordinates
             return f'patrolling between {self.target} and {h}'
-        elif a is MobileActions.repair:
+        elif a is UnitActions.repair:
             if self.exploiting is None:
                 name = 'nothing'
             else:
@@ -250,7 +250,7 @@ class Mobile(
             return str(a)
 
     def reset_action(self):
-        """Returns this mobile to its default state."""
+        """Returns this unit to its default state."""
         self.action = None
         self.exploiting = None
         self.exploiting_material = None
@@ -268,7 +268,7 @@ class Mobile(
         ).filter(BuildingType.homely.is_(True)).first()
 
     def declair_homeless(self):
-        """This mobile is homeless. Tell the world."""
+        """This unit is homeless. Tell the world."""
         return self.speak('I am homeless')
 
     def progress(self):
@@ -278,7 +278,7 @@ class Mobile(
         if self.owner is None:
             # Stop what we are doing while unemployed.
             return self.reset_action()
-        elif a is MobileActions.drop:
+        elif a is UnitActions.drop:
             if self.home is None:
                 # Homeless now. Try and reroute.
                 self.rehome()
@@ -293,10 +293,10 @@ class Mobile(
                     setattr(self, name, 0)
                     setattr(self.home, name, getattr(self.home, name) + value)
                 self.sound('static/sounds/drop.wav')
-                self.action = MobileActions.exploit
+                self.action = UnitActions.exploit
             else:
                 self.move_towards(*self.home.coordinates)
-        elif a is MobileActions.exploit:
+        elif a is UnitActions.exploit:
             if self.coordinates == self.target:
                 # We are in place.
                 name = self.exploiting_material
@@ -314,31 +314,31 @@ class Mobile(
                 setattr(self, name, 1)
                 value -= 1
                 setattr(x, name, value)
-                self.action = MobileActions.drop
+                self.action = UnitActions.drop
             else:
                 self.move_towards(*self.target)
-        elif a is MobileActions.patrol_out:
+        elif a is UnitActions.patrol_out:
             if self.coordinates == self.target:
-                self.action = MobileActions.patrol_back
+                self.action = UnitActions.patrol_back
             else:
                 self.move_towards(*self.target)
-        elif a is MobileActions.patrol_back:
+        elif a is UnitActions.patrol_back:
             if self.home is None:
                 self. rehome()
                 if self.home is None:
                     self.declair_homeless()
                     return self.reset_action()
             elif self.coordinates == self.home.coordinates:
-                self.action = MobileActions.patrol_out
+                self.action = UnitActions.patrol_out
             else:
                 self.move_towards(*self.home.coordinates)
-        elif a is MobileActions.travel:
+        elif a is UnitActions.travel:
             if self.coordinates == self.target:
                 self.speak('Here I am')
                 return self.reset_action()  # Done.
             else:
                 self.move_towards(*self.target)
-        elif a is MobileActions.repair:
+        elif a is UnitActions.repair:
             x = self.exploiting
             if x is None or x.health is None:
                 # We are done.
@@ -352,7 +352,7 @@ class Mobile(
                     self.speak('Finished')
             else:
                 self.move_towards(*x.coordinates)
-        elif a is MobileActions.guard:
+        elif a is UnitActions.guard:
             if self.type.auto_repair:
                 q = Building.all(
                     Building.health.isnot(None),

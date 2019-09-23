@@ -9,7 +9,7 @@ from .base import Base, NameMixin, OwnerMixin
 from .buildings import Building, BuildingType
 from .entry_points import EntryPoint
 from .features import Feature
-from .mobiles import Mobile
+from .units import Unit
 from .util import dump_object
 
 from ..util import pluralise
@@ -47,10 +47,10 @@ class Map(Base, NameMixin, OwnerMixin):
             setattr(f, name, 0)
         return f
 
-    def add_mobile(self, type, x, y):
-        """Add a mobile to this map."""
-        m = Mobile(location=self, type=type, x=x, y=y)
-        for name in Mobile.resource_names():
+    def add_unit(self, type, x, y):
+        """Add a unit to this map."""
+        m = Unit(location=self, type=type, x=x, y=y)
+        for name in Unit.resource_names():
             setattr(m, name, 0)
         return m
 
@@ -70,7 +70,7 @@ class Map(Base, NameMixin, OwnerMixin):
         for name, cls in (
             ('buildings', Building),
             ('features', Feature),
-            ('mobiles', Mobile),
+            ('units', Unit),
             ('entry_points', EntryPoint)
         ):
             objects[cls] = {}
@@ -78,12 +78,12 @@ class Map(Base, NameMixin, OwnerMixin):
                 data = dump_object(thing)
                 del data['id']
                 del data['location_id']
-                if cls is Mobile:
+                if cls is Unit:
                     del data['home_id']
                 o = cls(**data)
                 objects[cls][thing.id] = o
                 getattr(m, name).append(o)
-                if cls is Mobile:
+                if cls is Unit:
                     o.home = objects[Building][thing.home_id]
         return m
 
@@ -105,7 +105,7 @@ class Map(Base, NameMixin, OwnerMixin):
     def delete(self):
         """Delete this map and everything on it."""
         assert not self.players, 'Cannot delete with players still present.'
-        for name in ('buildings', 'features', 'mobiles', 'entry_points'):
+        for name in ('buildings', 'features', 'units', 'entry_points'):
             for thing in getattr(self, name):
                 thing.delete()
         super().delete()

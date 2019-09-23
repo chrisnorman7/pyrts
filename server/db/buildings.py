@@ -11,15 +11,15 @@ from .base import (
 
 
 class BuildingRecruit(Base, ResourcesMixin):
-    """Provides a link betwene building and mobile types, allowing buildings
-    to provide mobiles. Resources are used during reruitment."""
+    """Provides a link betwene building and unit types, allowing buildings
+    to provide units. Resources are used during reruitment."""
 
     __tablename__ = 'building_recruits'
     building_type_id = Column(
         Integer, ForeignKey('building_types.id'), nullable=False
     )
-    mobile_type_id = Column(
-        Integer, ForeignKey('mobile_types.id'), nullable=False
+    unit_type_id = Column(
+        Integer, ForeignKey('unit_types.id'), nullable=False
     )
     pop_time = Column(Integer, nullable=False, default=4)
 
@@ -40,36 +40,36 @@ class BuildingType(
         remote_side='BuildingType.id'
     )
     recruits = relationship(
-        'MobileType', backref='recruiters', secondary=BuildingRecruit.__table__
+        'UnitType', backref='recruiters', secondary=BuildingRecruit.__table__
     )
 
-    def get_pop_time(self, mobile_type):
-        """Get the pop time for the given MobileType instance."""
+    def get_pop_time(self, unit_type):
+        """Get the pop time for the given UnitType instance."""
         return BuildingRecruit.one(
-            building_type_id=self.id, mobile_type_id=mobile_type.id
+            building_type_id=self.id, unit_type_id=unit_type.id
         ).pop_time
 
-    def set_pop_time(self, mobile_type, value):
-        """Set the pop time for the given MobileType instance to the given
+    def set_pop_time(self, unit_type, value):
+        """Set the pop time for the given UnitType instance to the given
         value."""
         BuildingRecruit.query(
-            building_type_id=self.id, mobile_type_id=mobile_type.id
+            building_type_id=self.id, unit_type_id=unit_type.id
         ).update(
             {BuildingRecruit.pop_time: value}
             )
 
     def add_recruit(self, type, **resources):
-        """Add the given MobileType instance as a recruit of this building
+        """Add the given UnitType instance as a recruit of this building
         type. It will cost the provided resources to recruit."""
         return BuildingRecruit(
-            mobile_type_id=type.id, building_type_id=self.id, **resources
+            unit_type_id=type.id, building_type_id=self.id, **resources
         )
 
     def get_recruit(self, type):
         """Return the BuildingRecruit instance that represents the given
-        MobileType instance."""
+        UnitType instance."""
         return BuildingRecruit.one(
-            building_type_id=self.id, mobile_type_id=type.id
+            building_type_id=self.id, unit_type_id=type.id
         )
 
 

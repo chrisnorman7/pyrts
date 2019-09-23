@@ -7,7 +7,7 @@ from .engine import engine
 from .entry_points import EntryPoint
 from .features import Feature, FeatureType
 from .maps import Map
-from .mobiles import BuildingBuilder, Mobile, MobileType
+from .units import BuildingBuilder, Unit, UnitType
 from .options import Option
 from .players import connections, Player
 from .session import session
@@ -18,6 +18,6 @@ Base.metadata.create_all()
 __all__ = [
     'AttackType', 'Base', 'bootstrap', 'Building', 'BuildingBuilder',
     'BuildingRecruit', 'BuildingType', 'connections', 'dump', 'dump_object',
-    'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Mobile',
-    'MobileType', 'Option', 'Player', 'session'
+    'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Unit',
+    'UnitType', 'Option', 'Player', 'session'
 ]

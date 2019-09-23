@@ -10,7 +10,7 @@ from .commands import command, LocationTypes
 
 from .. import db
 from ..db import (
-    Player, BuildingType, MobileType, AttackType, FeatureType, Base,
+    Player, BuildingType, UnitType, AttackType, FeatureType, Base,
     BuildingRecruit
 )
 from ..menus import Menu, YesNoMenu
@@ -130,7 +130,7 @@ def python(command_name, con, player, location, entry_point, text=None):
 def make_menu(con):
     """Add / remove types."""
     m = Menu('Add / Remove Types')
-    for cls in (MobileType, BuildingType, AttackType, FeatureType):
+    for cls in (UnitType, BuildingType, AttackType, FeatureType):
         m.add_label(cls.__tablename__.replace('_', ' ').title())
         for action in ('add', 'edit', 'remove'):
             m.add_item(
@@ -270,15 +270,15 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
             kwargs = dict(building_type_id=obj.id)
             el = english_list(obj.builders, empty='None')
             m.add_item(
-                f'Mobile types that can build this building: {el}',
+                f'Unit types that can build this building: {el}',
                 'edit_builders', args=kwargs
             )
             el = english_list(obj.recruits, empty='None')
             m.add_item(
-                f'Mobile types this building can recruit: {el}',
+                f'Unit types this building can recruit: {el}',
                 'edit_recruits', args=kwargs
             )
-        elif cls is MobileType:
+        elif cls is UnitType:
             m.add_label('Buildings which can be built by units of this type')
             for bt in obj.can_build:
                 m.add_item(
@@ -287,11 +287,11 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                     )
                 )
             m.add_label('Buildings which can recruit units of this type')
-            for bm in BuildingRecruit.all(mobile_type_id=obj.id):
+            for bm in BuildingRecruit.all(unit_type_id=obj.id):
                 bt = BuildingType.get(bm.building_type_id)
                 m.add_item(
                     bt.get_name(), 'edit_recruits', args=dict(
-                        building_type_id=bt.id, building_mobile_id=bm.id
+                        building_type_id=bt.id, building_unit_id=bm.id
                     )
                 )
         m.add_item('Done', command_name, args=dict(class_name=class_name))
@@ -299,19 +299,19 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
 
 
 @command(admin=True)
-def edit_builders(con, command_name, building_type_id, mobile_type_id=None):
-    """Add and remove mobile types that can build buildings."""
+def edit_builders(con, command_name, building_type_id, unit_type_id=None):
+    """Add and remove unit types that can build buildings."""
     bt = BuildingType.get(building_type_id)
-    if mobile_type_id is None:
-        m = Menu('Mobile Types')
-        for mt in MobileType.all():
+    if unit_type_id is None:
+        m = Menu('Unit Types')
+        for mt in UnitType.all():
             if bt in mt.can_build:
                 checked = '*'
             else:
                 checked = ' '
             m.add_item(
                 f'{mt.get_name()} ({checked})', command_name, args=dict(
-                    building_type_id=bt.id, mobile_type_id=mt.id
+                    building_type_id=bt.id, unit_type_id=mt.id
                 )
             )
         m.add_item(
@@ -319,7 +319,7 @@ def edit_builders(con, command_name, building_type_id, mobile_type_id=None):
         )
         m.send(con)
     else:
-        mt = MobileType.get(mobile_type_id)
+        mt = UnitType.get(unit_type_id)
         if mt in bt.builders:
             bt.builders.remove(mt)
             action = 'no longer'
@@ -359,27 +359,27 @@ def delete_object(con, command_name, class_name, id=None, response=None):
 
 
 @command(admin=True)
-def add_recruit(con, command_name, building_type_id, mobile_type_id=None):
+def add_recruit(con, command_name, building_type_id, unit_type_id=None):
     """Add a recruit to the given building type."""
     bt = BuildingType.get(building_type_id)
-    if mobile_type_id is None:
-        m = Menu('Mobile Types')
-        for mt in MobileType.all():
+    if unit_type_id is None:
+        m = Menu('Unit Types')
+        for mt in UnitType.all():
             m.add_item(
                 mt.get_name(), command_name, args=dict(
-                    building_type_id=bt.id, mobile_type_id=mt.id
+                    building_type_id=bt.id, unit_type_id=mt.id
                 )
             )
         m.send(con)
     else:
-        mt = MobileType.get(mobile_type_id)
+        mt = UnitType.get(unit_type_id)
         bt.add_recruit(mt).save()
         con.call_command('edit_recruits', building_type_id=bt.id)
 
 
 @command(admin=True)
 def edit_recruits(
-    con, command_name, building_type_id, building_mobile_id=None,
+    con, command_name, building_type_id, building_unit_id=None,
     resource_name=None, text=None
 ):
     """Edit recruits for the given building type."""
@@ -387,24 +387,24 @@ def edit_recruits(
     resource_names = BuildingRecruit.resource_names()
     resource_names.append('pop_time')
     bt = BuildingType.get(building_type_id)
-    if building_mobile_id is None:
+    if building_unit_id is None:
         m = Menu('Recruits')
         m.add_item(
             'Add Recruit', 'add_recruit', args=dict(building_type_id=bt.id)
         )
         for bm in BuildingRecruit.all(building_type_id=bt.id):
-            mt = MobileType.get(bm.mobile_type_id)
+            mt = UnitType.get(bm.unit_type_id)
             m.add_item(
                 f'{mt.get_name()}: {bm.resources_string()}', command_name,
-                args=dict(building_type_id=bt.id, building_mobile_id=bm.id)
+                args=dict(building_type_id=bt.id, building_unit_id=bm.id)
             )
         m.add_item(
             'Done', 'edit_type', args=dict(class_name='BuildingType', id=bt.id)
         )
         m.send(con)
     else:
-        bm = BuildingRecruit.get(building_mobile_id)
-        kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
+        bm = BuildingRecruit.get(building_unit_id)
+        kwargs = dict(building_type_id=bt.id, building_unit_id=bm.id)
         if resource_name is not None:
             if text is None:
                 kwargs['resource_name'] = resource_name
@@ -433,7 +433,7 @@ def edit_recruits(
                         bm.save()
                     else:
                         con.message('Invalid resource name.')
-        kwargs = dict(building_type_id=bt.id, building_mobile_id=bm.id)
+        kwargs = dict(building_type_id=bt.id, building_unit_id=bm.id)
         m = Menu('Recruit Options')
         for name in resource_names:
             resource_kwargs = kwargs.copy()

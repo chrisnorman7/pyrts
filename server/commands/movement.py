@@ -4,7 +4,7 @@ from math import inf
 
 from .commands import command
 
-from ..db import Building, Feature, Mobile, Player
+from ..db import Building, Feature, Unit, Player
 from ..menus import Menu
 
 directions = {
@@ -80,7 +80,7 @@ def object_key(player, thing):
 def jump(con, player, location):
     """Move to a feature on the map."""
     objects = []
-    for cls in (Player, Building, Mobile, Feature):
+    for cls in (Player, Building, Unit, Feature):
         objects.extend(cls.query(location=location))
     objects.remove(player)
     if not objects:

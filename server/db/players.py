@@ -12,7 +12,7 @@ from .base import Base, NameMixin, LocationMixin, CoordinatesMixin
 from .buildings import Building, BuildingType
 from .entry_points import EntryPoint
 from .features import Feature
-from .mobiles import Mobile
+from .units import Unit
 
 from ..exc import InvalidUsername, InvalidPassword, NoSuchSound
 from ..options import options
@@ -200,7 +200,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         self.do_social('%1N leave%1s the map.')
         loc = self.location
         self.location = None
-        for cls in (Building, Mobile):
+        for cls in (Building, Unit):
             cls.query(location=loc, owner=self).update({cls.owner_id: None})
         if loc.finalised is None:
             if loc.players:
@@ -222,7 +222,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Return a list of those objects that this player can see."""
         results = []
         kwargs = self.same_coordinates()
-        for cls in (Player, Building, Feature, Mobile):
+        for cls in (Player, Building, Feature, Unit):
             if cls is Player:
                 args = [cls.id.isnot(self.id)]
             else:
@@ -258,17 +258,17 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         return f'{self.name} ({connected})'
 
     @property
-    def selected_mobiles(self):
-        return Mobile.query(owner=self, selected=True)
+    def selected_units(self):
+        return Unit.query(owner=self, selected=True)
 
     def same_coordinates(self):
         """Return a set of query-ready args representing this player's current
         location and coordinates."""
         return dict(location=self.location, x=self.x, y=self.y)
 
-    def deselect_mobiles(self):
-        """Deselect any selected mobiles."""
-        self.selected_mobiles.update({Mobile.selected: False})
+    def deselect_units(self):
+        """Deselect any selected units."""
+        self.selected_units.update({Unit.selected: False})
 
     def call_later(self, time, *args, **kwargs):
         """Use reactor.callLater to schedule something, telling the player how
