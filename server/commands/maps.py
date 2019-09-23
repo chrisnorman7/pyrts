@@ -851,3 +851,23 @@ def destroy(player, building_id):
         player.message(
             'You must select at least one unit at your current coordinates.'
         )
+
+
+@command()
+def attack(player, unit_id):
+    """Attack another unit."""
+    target = Unit.first(**player.same_coordinates(), id=unit_id)
+    if target is None:
+        return player.message('Yu cannot see that.')
+    q = player.selected_units.filter_by(**player.same_coordinates())
+    if q.count:
+        if target.owner not in (player, None):
+            target.owner.sound('static/sounds/attack.wav')
+            target.owner.message(f'Attack at {target.coordinates}.')
+        for u in q:
+            u.speak('OK')
+            u.attack(target)
+    else:
+        player.message(
+            'You must select at least one unit at your current coordinates.'
+        )

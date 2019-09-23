@@ -385,13 +385,19 @@ class Unit(
             if isinstance(x, Building):
                 self.sound('static/sounds/destroy.wav')
             else:
-                self.sound(self.attack_type.sound)
+                self.sound(self.type.attack_type.sound)
+                x.sound('static/sounds/ouch.wav')
             x.hp -= damage
             if x.hp < 0:
-                self.sound('static/sounds/collapse.wav')
-                self.sound('static/sounds/destroyed.wav')
-                if x.owner is not None:
-                    x.owner.message(f'{x.get_name()} has been destroyed.')
+                if isinstance(x, Building):
+                    self.sound('static/sounds/collapse.wav')
+                    self.sound('static/sounds/destroyed.wav')
+                    if x.owner is not None:
+                        x.owner.message(f'{x.get_name()} has been destroyed.')
+                else:
+                    if x.owner is not None:
+                        x.owner.message(f'{x.get_name()} has been killed.')
+                    x.sound('static/sounds/die.wav')
                 x.delete()
         else:
             return self.reset_action()  # No action.
