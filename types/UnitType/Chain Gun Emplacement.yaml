@@ -1,0 +1,16 @@
+attack: Chain Gun
+attack_type_id: 3
+buildings: []
+max_health: 150
+name: Chain Gun Emplacement
+recruits:
+- building: Castle
+  food: 100
+  gold: 1500
+  pop_time: 120
+  stone: 500
+  water: 150
+  wood: 1000
+resistance: 150
+speed: 15
+strength: 800

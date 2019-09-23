@@ -1,0 +1,19 @@
+attack: Bow
+attack_type_id: 11
+buildings:
+- Castle
+food: 1
+gold: 1
+name: Ranger
+recruits:
+- building: University
+  food: 50
+  gold: 75
+  pop_time: 40
+  water: 50
+  wood: 15
+resistance: 5
+speed: 4
+strength: 4
+water: 1
+wood: 1

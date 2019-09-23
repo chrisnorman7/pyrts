@@ -2,7 +2,7 @@ attack: Machine Gun
 attack_type_id: 5
 buildings: []
 max_health: 35
-name: Machine gun battery
+name: Machine Gun Battery
 recruits:
 - building: Garrison
   food: 5
