@@ -2,7 +2,7 @@
 
 import os.path
 from enum import Enum as _Enum
-from random import uniform, choice
+from random import uniform, choice, randint
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
@@ -29,6 +29,7 @@ class UnitActions(_Enum):
     travel = 4
     repair = 5
     guard = 6
+    attack = 7
 
 
 class BuildingBuilder(Base):
@@ -212,6 +213,12 @@ class Unit(
         self.action = UnitActions.patrol_out
         self.start_task()
 
+    def attack(self, thing):
+        """Attack the provided Mobile or Building instance."""
+        self.exploiting = thing
+        self.action = UnitActions.attack
+        self.start_task()
+
     def action_description(self):
         """Return a string describing what this unit is up to."""
         a = self.action
@@ -364,6 +371,28 @@ class Unit(
                     self.sound('static/sounds/repair.wav')
                     if b.health is None:
                         self.speak('Finished')
+        elif a is UnitActions.attack:
+            if self.type.attack_type is None:
+                return self.reset_task()
+            x = self.exploiting
+            if x is None or x.coordinates != self.coordinates:
+                return self.reset_action()
+            damage = max(
+                1, self.type.strength + self.type.attack_type.strength -
+                x.type.resistance
+            )
+            damage = randint(1, damage)
+            if isinstance(x, Building):
+                self.sound('static/sounds/destroy.wav')
+            else:
+                self.sound(self.attack_type.sound)
+            x.hp -= damage
+            if x.hp < 0:
+                self.sound('static/sounds/collapse.wav')
+                self.sound('static/sounds/destroyed.wav')
+                if x.owner is not None:
+                    x.owner.message(f'{x.get_name()} has been destroyed.')
+                x.delete()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.

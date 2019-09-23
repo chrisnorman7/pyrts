@@ -552,6 +552,10 @@ def activate(player, location, con):
                     m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
     m.add_label('General')
+    if isinstance(fo, Building):
+        m.add_item('Destroy', 'destroy', args=dict(building_id=fo.id))
+    if isinstance(fo, Unit):
+        m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
     m.add_item('Summon', 'summon')
     m.add_item('Patrol', 'patrol')
     m.add_item('guard', 'guard')
@@ -827,3 +831,23 @@ def patrol(player):
             player.message(f'{m.get_name()} begins to patrol.')
     else:
         player.message('You must select at least one unit.')
+
+
+@command()
+def destroy(player, building_id):
+    """Destroy a building."""
+    b = Building.first(id=building_id, **player.same_coordinates())
+    if b is None:
+        return player.message('Yu cannot see that.')
+    q = player.selected_units.filter_by(**player.same_coordinates())
+    if q.count:
+        if b.owner not in (player, None):
+            b.owner.sound('static/sounds/attack.wav')
+            b.owner.message(f'Attack at {b.coordinates}.')
+        for u in q:
+            u.speak('destroy')
+            u.attack(b)
+    else:
+        player.message(
+            'You must select at least one unit at your current coordinates.'
+        )
