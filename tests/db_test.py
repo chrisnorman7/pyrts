@@ -4,9 +4,9 @@ from datetime import datetime
 
 from server.db import (
     Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Mobile, Player, Base
+    Map, Unit, Player, Base
 )
-from server.db.mobiles import MobileActions
+from server.db.units import UnitActions
 from server.db.util import dump_object
 from server.exc import InvalidUsername, InvalidPassword, NoSuchSound
 
@@ -44,10 +44,10 @@ def test_building(player, farm, map):
     assert b in map.buildings
 
 
-def test_mobile(peasant, player, map):
-    m = map.add_mobile(peasant, x=1, y=2)
+def test_unit(peasant, player, map):
+    m = map.add_unit(peasant, x=1, y=2)
     assert m.type is peasant
-    assert isinstance(m, Mobile)
+    assert isinstance(m, Unit)
     assert m.x == 1
     assert m.y == 2
     assert m.gold == 0
@@ -61,7 +61,7 @@ def test_mobile(peasant, player, map):
     m.save()
     assert m.owner_id == player.id
     assert m.get_full_name() == f'{peasant.name} 1 [employed by {player.name}]'
-    assert m in map.mobiles
+    assert m in map.units
 
 
 def test_feature(map, mine):
@@ -144,7 +144,7 @@ def test_map_copy(farm, mine, peasant, map):
     b = map.add_building(farm, 0, 0)
     m = map.add_feature(mine, 1, 1)
     m.gold = 1234
-    p = map.add_mobile(peasant, 2, 2)
+    p = map.add_unit(peasant, 2, 2)
     p.home = b
     for thing in (b, m, p):
         thing.save()
@@ -159,9 +159,9 @@ def test_map_copy(farm, mine, peasant, map):
     assert m.features[0].id is not None
     assert m.features[0].type is mine
     assert m.features[0].gold == 1234
-    assert m.mobiles[0].id is not None
-    assert m.mobiles[0].type is peasant
-    assert m.mobiles[0].home is m.buildings[0]
+    assert m.units[0].id is not None
+    assert m.units[0].type is peasant
+    assert m.units[0].home is m.buildings[0]
 
 
 def test_building_recruits(farm, peasant):
@@ -237,7 +237,7 @@ def test_map_delete(map, player, farm, mine, peasant):
     b.save()
     m = map.add_feature(mine, 10, 10)
     m.save()
-    p = map.add_mobile(peasant, 15, 15)
+    p = map.add_unit(peasant, 15, 15)
     p.save()
     with raises(AssertionError):
         map.delete()
@@ -247,7 +247,7 @@ def test_map_delete(map, player, farm, mine, peasant):
     assert EntryPoint.first(id=e.id) is None
     assert Building.first(id=b.id) is None
     assert Feature.first(id=m.id) is None
-    assert Mobile.first(id=p.id) is None
+    assert Unit.first(id=p.id) is None
     assert Map.first(id=map.id) is None
 
 
@@ -261,7 +261,7 @@ def test_random_map(mine, quarry):
     assert m.id is not None
     assert len(m.features) == 15
     assert len(m.entry_points) == 4
-    assert len(m.mobiles) == 0
+    assert len(m.units) == 0
     resulting_features = {mine: 0, quarry: 0}
     for f in m.features:
         resulting_features[f.type] += 1
@@ -292,7 +292,7 @@ def test_player_delete(player, map, farm):
 
 
 def test_exploiting(map, mine, peasant, farm):
-    p = map.add_mobile(peasant, 0, 0)
+    p = map.add_unit(peasant, 0, 0)
     f = map.add_building(farm, 0, 0)
     p.exploiting = f
     assert p.exploiting_class == 'Building'
@@ -313,7 +313,7 @@ def test_coordinates(player):
 
 
 def test_target(map, peasant):
-    p = map.add_mobile(peasant, 0, 0)
+    p = map.add_unit(peasant, 0, 0)
     p.save()
     assert p.target == (0, 0)
     p.target = (4, 4)
@@ -322,7 +322,7 @@ def test_target(map, peasant):
 
 def test_exploit(player, map, peasant, mine, farm):
     f = map.add_building(farm, 0, 0)
-    p = map.add_mobile(peasant, 0, 0)
+    p = map.add_unit(peasant, 0, 0)
     p.owner = player
     p.home = f
     m = map.add_feature(mine, 2, 1)
@@ -338,35 +338,35 @@ def test_exploit(player, map, peasant, mine, farm):
     p.exploit(m, 'gold')
     check_peasant()
     assert p.coordinates == (0, 0)
-    assert p.action is MobileActions.exploit
+    assert p.action is UnitActions.exploit
     p.progress()
     check_peasant()
     assert p.coordinates == (1, 1)
-    assert p.action == MobileActions.exploit
+    assert p.action == UnitActions.exploit
     p.progress()
     check_peasant()
     assert p.coordinates == m.coordinates
-    assert p.action == MobileActions.exploit
+    assert p.action == UnitActions.exploit
     p.progress()
     check_peasant()
     assert m.gold == 4
-    assert p.action is MobileActions.drop
+    assert p.action is UnitActions.drop
     assert p.coordinates == m.coordinates
     p.progress()
     check_peasant()
     assert p.coordinates == (1, 0)
-    assert p.action is MobileActions.drop
+    assert p.action is UnitActions.drop
     p.progress()
     check_peasant()
     assert f.gold == 0
     assert p.coordinates == (0, 0)
     p.progress()
     check_peasant()
-    assert p.action is MobileActions.exploit
+    assert p.action is UnitActions.exploit
     assert f.gold == 1
     assert p.coordinates == f.coordinates
     p.progress()  # Do it all over again.
-    assert p.action is MobileActions.exploit
+    assert p.action is UnitActions.exploit
     check_peasant()
     assert p.coordinates == (1, 1)
 
@@ -387,7 +387,7 @@ def test_health(farm, map):
 def test_focussed_object(farm, peasant, mine, player, map):
     b = map.add_building(farm, 0, 0)
     m = map.add_feature(mine, 0, 0)
-    p = map.add_mobile(peasant, 0, 0)
+    p = map.add_unit(peasant, 0, 0)
     for thing in (b, m, p):
         thing.save()
     player.location = map
@@ -403,7 +403,7 @@ def test_focussed_object(farm, peasant, mine, player, map):
     assert player.focussed_id == m.id
     assert player.focussed_object is m
     player.focussed_object = p
-    assert player.focussed_class == 'Mobile'
+    assert player.focussed_class == 'Unit'
     assert player.focussed_id == p.id
     assert player.focussed_object is p
     player.focussed_object = None
@@ -419,7 +419,7 @@ def test_visible_objects(player, farm, mine, peasant, map):
     assert player.visible_objects == [b]
     m = map.add_feature(mine, *player.coordinates)
     assert player.visible_objects == [b, m]
-    p = map.add_mobile(peasant, *player.coordinates)
+    p = map.add_unit(peasant, *player.coordinates)
     assert player.visible_objects == [b, m, p]
     player.coordinates = (1, 1)
     assert player.visible_objects == []
@@ -431,7 +431,7 @@ def test_builder(peasant):
     bb = peasant.add_building(castle)
     assert isinstance(bb, BuildingBuilder)
     assert bb.building_type_id == castle.id
-    assert bb.mobile_type_id == peasant.id
+    assert bb.unit_type_id == peasant.id
     bb.save()
     assert peasant.get_building(castle) is bb
     assert castle in peasant.can_build
@@ -456,7 +456,7 @@ def test_resources_dict(map, farm):
 
 def test_distance_to(map, farm, peasant):
     b = map.add_building(farm, 0, 0)
-    p = map.add_mobile(peasant, 1, 1)
+    p = map.add_unit(peasant, 1, 1)
     assert b.distance_to(p) == 1
     p.coordinates = (3, 3)
     assert b.distance_to(p) == 3
@@ -466,7 +466,7 @@ def test_distance_to(map, farm, peasant):
 
 def test_directions_to(map, farm, peasant):
     b = map.add_building(farm, 0, 0)
-    p = map.add_mobile(peasant, 1, 1)
+    p = map.add_unit(peasant, 1, 1)
     assert b.directions_to(p) == '1 north, 1 east'
     p.coordinates = (0, 0)
     assert b.directions_to(p) == 'here'

@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from server.db import BuildingType, FeatureType, Map, MobileType, Player
+from server.db import BuildingType, FeatureType, Map, UnitType, Player
 from server.db.base import Base
 from server.options import options
 
@@ -21,7 +21,7 @@ quarry = 'Quarry'
 def create_stuff():
     Player.create('test', password, 'Test Player').save()
     BuildingType(name=farm, homely=True).save()
-    MobileType(name=peasant).save()
+    UnitType(name=peasant).save()
     FeatureType(name=field, food=1).save()
     FeatureType(name=stream, water=1).save()
     FeatureType(name=mine, gold=1).save()
@@ -55,8 +55,8 @@ def get_farm():
 
 @fixture(name='peasant')
 def get_peasant():
-    """Get the peasant mobile type."""
-    return MobileType.one(name=peasant)
+    """Get the peasant unit type."""
+    return UnitType.one(name=peasant)
 
 
 @fixture(name='mine')
