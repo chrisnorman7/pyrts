@@ -31,7 +31,7 @@ class BuildingType(
     """A type of building. Resources are used during construction."""
 
     __tablename__ = 'building_types'
-    homely = Column(Boolean, nullable=False, default=False)
+    homely = Column(Boolean, nullable=False, default=True)
     depends_id = Column(
         Integer, ForeignKey('building_types.id'), nullable=True
     )
