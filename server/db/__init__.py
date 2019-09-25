@@ -11,17 +11,15 @@ from .units import BuildingBuilder, Unit, UnitType
 from .options import Option
 from .players import connections, Player
 from .session import session
-from .util import bootstrap, dump, dump_object, load
+from .util import bootstrap, dump, dump_object, load, setup
 
 from ..options import options
 
 Base.metadata.create_all()
-options.set_defaults()
-bootstrap()
 
 __all__ = [
     'AttackType', 'Base', 'bootstrap', 'Building', 'BuildingBuilder',
     'BuildingRecruit', 'BuildingType', 'connections', 'dump', 'dump_object',
     'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Option',
-    'options', 'Unit', 'UnitType', 'Player', 'session'
+    'options', 'Unit', 'UnitType', 'Player', 'session', 'setup'
 ]

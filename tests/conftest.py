@@ -1,20 +1,20 @@
 from pytest import fixture
 
-from server.db import BuildingType, FeatureType, Map, UnitType, Player
+from server.db import (
+    BuildingType, FeatureType, Map, UnitType, Player, setup
+)
 
 password = 'TestsAreFun123'
 farm = 'Farm'
 peasant = 'Peasant'
-field = 'Field'
-stream = 'Stream'
 mine = 'Mine'
-forest = 'Forest'
 quarry = 'Quarry'
 
 
 @fixture(scope='session', autouse=True)
 def create_stuff():
     """Initialise the database and create stuff."""
+    setup()
     Player.create('test', password, 'Test Player').save()
 
 

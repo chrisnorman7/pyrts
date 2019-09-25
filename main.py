@@ -6,7 +6,7 @@ from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, bootstrap, load, dump, Unit
+from server.db import Base, load, dump, setup, Unit
 from server.options import options
 from server.util import pluralise
 from server.web import app, WebSocketProtocol
@@ -31,10 +31,9 @@ def main():
             logging.info('No tasks to resume.')
     except FileNotFoundError:
         logging.info('Starting with a blank database.')
-    options.set_defaults()
-    logging.info('Phase: Bootstrap.')
-    bootstrap()
-    logging.info('Phase: Listen.')
+    logging.info('Phase: Database setup.')
+    setup()
+    logging.info('Phase: Setup listeners.')
     site = Site(app.resource())
     port = reactor.listenTCP(
         options.http_port, site, interface=options.interface
