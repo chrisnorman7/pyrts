@@ -38,7 +38,6 @@ def build(con, location):
     """Add something to a map in edit mode."""
     if not location.template and location.finalised is None:
         return con.message('You cannot use that command here.')
-        return con.message('You cannot use that command here.')
     m = Menu('Build')
     if location.template:
         m.add_label('General')
@@ -52,7 +51,11 @@ def build(con, location):
     else:
         command = 'add_building'
     for t in BuildingType.alphabetized():
-        m.add_item(t.get_name(), command, args={'id': t.id})
+        if t.depends is None:
+            name = t.get_name()
+        else:
+            name = f'{t.get_name()} (requires {t.depends.get_name()})'
+        m.add_item(name, command, args={'id': t.id})
     m.send(con)
 
 
