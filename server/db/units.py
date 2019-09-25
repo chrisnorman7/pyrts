@@ -132,6 +132,12 @@ class Unit(
             owner = f'employed by {self.owner.name}'
         return f'{self.get_name()} [{owner}]'
 
+    def delete(self):
+        """Delete this object, removing its task along the way."""
+        if self.id in tasks:
+            self.kill_task()
+        return super().delete()
+
     def kill_task(self):
         """Get any task for this unit and kill it, to prevent duplicate
         tasks."""
@@ -148,7 +154,9 @@ class Unit(
     def start_task(self):
         """Start a task for this unit."""
         self.kill_task()
-        tasks[self.id] = reactor.callLater(self.random_speed(), self.progress)
+        tasks[self.id] = reactor.callLater(
+            self.random_speed(), self.progress, self.id
+        )
 
     def sound(self, path):
         """Make this object emit a sound."""
@@ -220,13 +228,13 @@ class Unit(
 
     def action_description(self):
         """Return a string describing what this unit is up to."""
+        x = self.exploiting
         a = self.action
         if a is None:
             return 'doing nothing'
         elif a is UnitActions.guard:
             return f'guarding {self.coordinates}'
         elif a is UnitActions.exploit:
-            x = self.exploiting
             if x is None:
                 return 'exploiting a non-existant resource'
             else:
@@ -245,13 +253,19 @@ class Unit(
                 h = 'nowhere'
             else:
                 h = h.coordinates
-            return f'patrolling between {self.target} and {h}'
+            return f'patrolling between {h} and {self.target}'
         elif a is UnitActions.repair:
-            if self.exploiting is None:
+            if x is None:
                 name = 'nothing'
             else:
                 name = self.exploiting.get_name()
             return f'repairing {name}'
+        elif a is UnitActions.attack:
+            if x is None:
+                name = self.exploiting.get_name()
+            else:
+                name = 'a memory'
+            return f'attacking {name}'
         else:
             return str(a)
 
@@ -277,8 +291,12 @@ class Unit(
         """This unit is homeless. Tell the world."""
         return self.speak('homeless')
 
-    def progress(self):
+    @classmethod
+    def progress(cls, id):
         """Progress this object through whatever task it is performing."""
+        self = cls.get(id)
+        if self is None:
+            return  # Destroyed.
         Building = Base._decl_class_registry['Building']
         a = self.action
         if self.owner is None:
@@ -372,7 +390,7 @@ class Unit(
                         self.speak('finished')
         elif a is UnitActions.attack:
             if self.type.attack_type is None:
-                return self.reset_task()
+                return self.reset_action()
             x = self.exploiting
             if x is None or x.coordinates != self.coordinates:
                 return self.reset_action()
@@ -386,6 +404,8 @@ class Unit(
             else:
                 self.sound(self.type.attack_type.sound)
                 x.sound('ouch.wav')
+                if x.action is not UnitActions.attack:
+                    x.attack(self)
             x.hp -= damage
             if x.hp < 0:
                 if isinstance(x, Building):

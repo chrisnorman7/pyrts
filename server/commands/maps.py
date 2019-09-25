@@ -507,6 +507,22 @@ def activate(player, location, con):
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
             elif isinstance(fo, Unit):
+                m.add_label('Building')
+                unit_type_ids = set([m.type_id for m in Unit.all(
+                    owner=player, location=location
+                )])
+                building_type_ids = set()
+                for bb in BuildingBuilder.query(
+                    BuildingBuilder.unit_type_id.in_(unit_type_ids)
+                ):
+                    building_type_ids.add(bb.building_type_id)
+                for id in building_type_ids:
+                    t = BuildingType.get(id)
+                    resources = t.resources_string('nothing')
+                    m.add_item(
+                        f'Build {t.name} (requires {resources}',
+                        'build_building', args=dict(id=t.id)
+                    )
                 m.add_item('Release', 'release')
             elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
                 m.add_item('Repair', 'repair', args=dict(id=fo.id))
@@ -538,29 +554,16 @@ def activate(player, location, con):
                 if fo.connected:
                     m.add_item('Disconnect', 'disconnect', args={'id': fo.id})
                 m.add_item('Delete', 'delete_player', args={'id': fo.id})
-    m.add_label('General')
-    if isinstance(fo, Building):
-        m.add_item('Destroy', 'destroy', args=dict(building_id=fo.id))
-    if isinstance(fo, Unit):
-        m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
-    m.add_item('Summon', 'summon')
-    m.add_item('Patrol', 'patrol')
-    m.add_item('guard', 'guard')
-    m.add_label('Building')
-    unit_type_ids = set([m.type_id for m in Unit.all(
-        owner=player, location=location
-    )])
-    building_type_ids = set()
-    for bb in BuildingBuilder.query(
-        BuildingBuilder.unit_type_id.in_(unit_type_ids)
-    ):
-        building_type_ids.add(bb.building_type_id)
-    for id in building_type_ids:
-        t = BuildingType.get(id)
-        m.add_item(
-            f'Build {t.name} (requires {t.resources_string("nothing")}',
-            'build_building', args=dict(id=t.id)
-        )
+    if player.selected_units.count():
+        m.add_label('Unit Orders')
+        if isinstance(fo, Building):
+            m.add_item('Destroy', 'destroy', args=dict(building_id=fo.id))
+        if isinstance(fo, Unit):
+            m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
+        m.add_item('Summon', 'summon')
+        m.add_item('Patrol', 'patrol')
+        m.add_item('guard', 'guard')
+    m.add_item('Move Entry Point', 'move_entry_point')
     m.send(con)
 
 
@@ -830,16 +833,31 @@ def attack(player, unit_id):
     """Attack another unit."""
     target = Unit.first(**player.same_coordinates(), id=unit_id)
     if target is None:
-        return player.message('Yu cannot see that.')
+        return player.message('You see no such thing.')
     q = player.selected_units.filter_by(**player.same_coordinates())
     if q.count:
         if target.owner not in (player, None):
             target.owner.sound('attack.wav')
             target.owner.message(f'Attack at {target.coordinates}.')
         for u in q:
-            u.speak('ok')
-            u.attack(target)
+            if u is target:
+                u.speak('no')
+            else:
+                u.speak('ok')
+                u.attack(target)
     else:
         player.message(
             'You must select at least one unit at your current coordinates.'
         )
+
+
+@command(location_type=LocationTypes.finalised)
+def move_entry_point(entry_point, player):
+    """Move your entry point, so the home key will return you to these
+    coordinates."""
+    if entry_point is None:
+        player.message('You do not have an entry point.')
+    else:
+        entry_point.coordinates = player.coordinates
+        entry_point.save()
+        player.message('Done.')
