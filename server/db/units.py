@@ -277,7 +277,7 @@ class Unit(
 
     def declair_homeless(self):
         """This unit is homeless. Tell the world."""
-        return self.speak('I am homeless')
+        return self.speak('homeless')
 
     def progress(self):
         """Progress this object through whatever task it is performing."""
@@ -311,12 +311,12 @@ class Unit(
                 x = self.exploiting
                 if x is None:
                     # Not exploiting anymore.
-                    self.speak('Nothing there')
+                    self.speak('nothing')
                     return self.reset_action()
                 value = getattr(x, name)
                 if not value:
                     # Empty resource.
-                    self.speak('Finished')
+                    self.speak('finished')
                     return self.reset_action()
                 self.sound(f'static/sounds/exploit/{name}.wav')
                 setattr(self, name, 1)
@@ -342,7 +342,7 @@ class Unit(
                 self.move_towards(*self.home.coordinates)
         elif a is UnitActions.travel:
             if self.coordinates == self.target:
-                self.speak('Here I am')
+                self.speak('here')
                 return self.reset_action()  # Done.
             else:
                 self.move_towards(*self.target)
@@ -357,7 +357,7 @@ class Unit(
                 self.sound('static/sounds/repair.wav')
                 x.save()
                 if x.health is None:
-                    self.speak('Finished')
+                    self.speak('finished')
             else:
                 self.move_towards(*x.coordinates)
         elif a is UnitActions.guard:
@@ -371,7 +371,7 @@ class Unit(
                     b.heal(self.type.repair_amount)
                     self.sound('static/sounds/repair.wav')
                     if b.health is None:
-                        self.speak('Finished')
+                        self.speak('finished')
         elif a is UnitActions.attack:
             if self.type.attack_type is None:
                 return self.reset_task()

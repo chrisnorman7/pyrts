@@ -33,6 +33,11 @@ class Options:
         except NoSuchOption:
             raise AttributeError(name)
 
+    def has_option(self, name):
+        """Return True if we have an option by the given name, False
+        otherwise."""
+        return bool(Option.count(name=name))
+
     def get_option(self, name):
         """Get an option row with the given name."""
         try:
@@ -51,12 +56,9 @@ class Options:
 
     def set_default(self, name, value):
         """Like dict.setdefault, but for options rows."""
-        try:
-            o = self.get_option(name)
-            o.value = value
-            o.save()
-        except NoSuchOption:
-            self.add_option(name, value)
+        if self.has_option(name):
+            return self.get_option(name)
+        return self.add_option(name, value)
 
     def add_option(self, name, value):
         """Create a new option."""

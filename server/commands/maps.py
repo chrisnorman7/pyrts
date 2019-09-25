@@ -514,18 +514,11 @@ def activate(player, location, con):
             for name in BuildingType.resource_names():
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
-            buildings = Building.all(
-                health=None, owner=player, location=location
-            )
-            for bm in BuildingRecruit.query(
-                BuildingRecruit.building_type_id.in_(
-                    [b.type_id for b in buildings]
-                )
-            ):
-                t = UnitType.get(bm.unit_type_id)
+            for br in BuildingRecruit.all(building_type_id=fo.type_id):
+                ut = UnitType.get(br.unit_type_id)
                 m.add_item(
-                    f'Recruit {t} (requires {bm.resources_string()}',
-                    'recruit', args=dict(building=fo.id, unit=t.id)
+                    f'Recruit {ut} (requires {br.resources_string()}',
+                    'recruit', args=dict(building_recruit_id=ut.id)
                 )
             m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
@@ -604,30 +597,23 @@ def _recruit(building_id, building_unit_id):
 
 
 @command(location_type=LocationTypes.finalised)
-def recruit(player, location, building, unit):
+def recruit(player, location, building_recruit_id):
     """Recruit a unit."""
-    b = player.focussed_object
-    m = UnitType.get(unit)
-    if not isinstance(b, Building):
+    fo = player.focussed_object
+    br = BuildingRecruit.get(building_recruit_id)
+    ut = UnitType.get(br.unit_type_id)
+    d = br.get_difference(fo)
+    if not isinstance(fo, Building):
         player.message('You must select a building.')
-    elif m is None:
-        player.message('Invalid recruitment.')
+    elif br.building_type_id != fo.type_id:
+        player.message(f'{fo} cannot recruit {ut}.')
+    elif fo.health is not None:
+        player.message(f'{fo.get_name()} is in no shape for recruitment.')
+    elif d:
+        player.message(f'You require {difference_string(d)}.')
     else:
-        types = []
-        for bm in BuildingRecruit.all(unit_type_id=m.id):
-            t = BuildingType.get(bm.building_type_id)
-            if Building.count(
-                health=None, owner=player, location=location, type=t
-            ):
-                break  # They can build.
-        else:
-            return player.message(f'Requires {english_list(types)}.')
-        d = bm.get_difference(b)
-        if d:
-            player.message(f'You require {difference_string(d)}.')
-        else:
-            b.take_requirements(bm)
-            player.call_later(bm.pop_time, _recruit, b.id, bm.id)
+        fo.take_requirements(br)
+        player.call_later(br.pop_time, _recruit, fo.id, br.id)
 
 
 @command(location_type=LocationTypes.finalised)
@@ -663,18 +649,16 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
                 item_args['resource'] = r
                 m.add_item(r.title(), command_name, args=item_args)
             return m.send(con)
-    q = player.selected_units.join(
-        Unit.type
-    ).filter(getattr(UnitType, resource) == 1)
+    q = player.selected_units
+    if isinstance(f, Feature):
+        q = q.join(Unit.type).filter(getattr(UnitType, resource) == 1)
     if not q.count():
         return player.message('You have no units capable of doing that.')
     for m in q:
         if m.home is None:
-            player.message(
-                f'{m.get_name()} has no home to bring resources back to.'
-            )
+            m.speak('homeless')
         else:
-            m.speak('Off I go')
+            m.speak('going')
             m.exploit(f, resource)
 
 
@@ -687,7 +671,7 @@ def summon(player):
         player.message('You have not selected any units.')
     else:
         for m in q:
-            m.speak('Coming')
+            m.speak('coming')
             m.travel(player.x, player.y)
 
 
@@ -715,36 +699,34 @@ def get_resources(player):
 @command(location_type=LocationTypes.finalised)
 def build_building(location, player, id):
     """Build a building on the current map, using the given id as the type."""
-    t = BuildingType.get(id)
-    if t.depends is not None and not Building.count(
-        owner=player, location=location, type=t.depends
+    bt = BuildingType.get(id)
+    fo = player.focussed_object
+    if not isinstance(fo, Unit):
+        player.message('You must first select a unit.')
+    elif bt.depends is not None and not Building.count(
+        owner=player, location=location, type=bt.depends
     ):
-        return player.message(f'{t.name} requires {t.depends.name}.')
-    for m in player.selected_units.filter_by(**player.same_coordinates()):
-        if m.type in t.builders:
-            obj = m
-            break
-    else:
-        unit_types = map(
-            UnitType.get, set(m.id for m in t.builders)
-        )
+        player.message(f'First build at least one {bt.depends.get_name()}.')
+    elif bt not in fo.type.can_build:
         el = english_list(
-            unit_types, key=lambda thing: thing.get_name(), and_='or '
+            bt.builders, key=lambda thing: thing.get_name(), and_=' or'
         )
-        return player.message(f'{t} can only be built by {el}.')
-    home = obj.home
-    if home is None:
-        return player.message(f'{obj.get_name()} has no home.')
-    d = t.get_difference(home)
-    if d:
-        return player.message(f'You require {difference_string(d)}.')
-    home.take_requirements(t)
-    obj.speak('OK')
-    b = location.add_building(t, *player.coordinates)
-    b.owner = player
-    b.hp = 0
-    b.save()
-    player.message(f'{b.get_name()} ready.')
+        player.message(f'{bt.get_name()} can only be built by {el}.')
+    elif fo.home is None:
+        fo.speak('homeless')
+    else:
+        home = fo.home
+        d = bt.get_difference(home)
+        if d:
+            player.message(f'You require {difference_string(d)}.')
+        else:
+            home.take_requirements(bt)
+            fo.speak('ok')
+            b = location.add_building(bt, *fo.coordinates)
+            b.owner = player
+            b.hp = 0
+            b.save()
+            player.message(f'{b.get_name()} ready.')
 
 
 @command(location_type=LocationTypes.finalised)
@@ -789,9 +771,9 @@ def repair(player, id):
     else:
         for m in player.selected_units:
             if m.coordinates == player.coordinates:
-                m.speak('OK')
+                m.speak('ok')
             else:
-                m.speak('Off I go')
+                m.speak('going')
             m.repair(b)
             m.save()
             player.message(f'Employing {m.get_name()}.')
@@ -805,7 +787,7 @@ def guard(player):
     if q.count():
         for m in q:
             m.guard()
-            m.speak('OK')
+            m.speak('ok')
     else:
         player.message('You must select at least one unit.')
 
@@ -855,7 +837,7 @@ def attack(player, unit_id):
             target.owner.sound('static/sounds/attack.wav')
             target.owner.message(f'Attack at {target.coordinates}.')
         for u in q:
-            u.speak('OK')
+            u.speak('ok')
             u.attack(target)
     else:
         player.message(

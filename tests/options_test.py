@@ -48,3 +48,9 @@ def test_remove_option():
 def test_object_option(mine):
     o = options.add_option('mine', mine)
     assert o.value is mine
+
+
+def test_has_option():
+    assert not options.has_option('not even there')
+    options.set_default('test', 'value')
+    assert options.has_option('test')
