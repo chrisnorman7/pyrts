@@ -141,11 +141,12 @@ def make_menu(con):
 
 
 @command(admin=True)
-def add_type(player, class_name):
+def add_type(con, class_name):
     """Add a new type."""
     cls = Base._decl_class_registry[class_name]
-    cls(name='Untitled').save()
-    player.message('Done.')
+    obj = cls(name='Untitled')
+    obj.save()
+    con.call_command('edit_type', class_name=class_name, id=obj.id)
 
 
 @command(admin=True)
