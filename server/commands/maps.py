@@ -823,8 +823,11 @@ def destroy(player, building_id):
             b.owner.sound('attack.wav')
             b.owner.message(f'Attack at {b.coordinates}.')
         for u in q:
-            u.speak('destroy')
-            u.attack(b)
+            if u.type.attack_type is None:
+                u.speak('dunno')
+            else:
+                u.speak('destroy')
+                u.attack(b)
     else:
         player.message(
             'You must select at least one unit at your current coordinates.'
@@ -845,6 +848,8 @@ def attack(player, unit_id):
         for u in q:
             if u is target:
                 u.speak('no')
+            elif u.type.attack_type is None:
+                u.speak('dunno')
             else:
                 u.speak('ok')
                 u.attack(target)
