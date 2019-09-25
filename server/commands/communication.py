@@ -12,6 +12,5 @@ def speak(player, location, con, command_name, text=None):
         con.text('Say something', command_name)
     else:
         player.do_social(
-            '%1N say%1s: "{text}"', sound='static/sounds/socials/say.wav',
-            text=text
+            '%1N say%1s: "{text}"', sound='socials/say.wav', text=text
         )

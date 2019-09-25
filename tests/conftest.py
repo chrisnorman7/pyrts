@@ -3,6 +3,7 @@ from pytest import fixture
 from server.db import (
     BuildingType, FeatureType, Map, UnitType, Player, setup
 )
+from server.options import options
 
 password = 'TestsAreFun123'
 farm = 'Farm'
@@ -15,6 +16,7 @@ quarry = 'Quarry'
 def create_stuff():
     """Initialise the database and create stuff."""
     setup()
+    assert options.start_building is not None
     Player.create('test', password, 'Test Player').save()
 
 

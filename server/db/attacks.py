@@ -10,4 +10,4 @@ class AttackType(Base, NameMixin, SoundMixin, StrengthMixin):
 
     @property
     def sound(self):
-        return f'static/sounds/attack/{self.name}.wav'
+        return f'attack/{self.name}.wav'

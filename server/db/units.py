@@ -1,6 +1,5 @@
 """Provides the UnitType and Unit classes."""
 
-import os.path
 from enum import Enum as _Enum
 from random import uniform, choice, randint
 
@@ -15,7 +14,6 @@ from .base import (
     HealthMixin, GetNameMixin, StrengthMixin
 )
 
-from ..exc import NoSuchSound
 from ..options import options
 
 tasks = {}
@@ -162,7 +160,7 @@ class Unit(
 
     def move(self, x, y):
         """Move this unit and make a sound."""
-        sound = f'static/sounds/move/{self.type.name}.wav'
+        sound = f'move/{self.type.name}.wav'
         self.sound(sound)
         self.coordinates = x, y
         self.save()
@@ -300,7 +298,7 @@ class Unit(
                     value = getattr(self, name)
                     setattr(self, name, 0)
                     setattr(self.home, name, getattr(self.home, name) + value)
-                self.sound('static/sounds/drop.wav')
+                self.sound('drop.wav')
                 self.action = UnitActions.exploit
             else:
                 self.move_towards(*self.home.coordinates)
@@ -318,7 +316,7 @@ class Unit(
                     # Empty resource.
                     self.speak('finished')
                     return self.reset_action()
-                self.sound(f'static/sounds/exploit/{name}.wav')
+                self.sound(f'exploit/{name}.wav')
                 setattr(self, name, 1)
                 value -= 1
                 setattr(x, name, value)
@@ -354,7 +352,7 @@ class Unit(
             elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
                 x.heal(self.type.repair_amount)
-                self.sound('static/sounds/repair.wav')
+                self.sound('repair.wav')
                 x.save()
                 if x.health is None:
                     self.speak('finished')
@@ -369,7 +367,7 @@ class Unit(
                 if len(q):
                     b = choice(q)
                     b.heal(self.type.repair_amount)
-                    self.sound('static/sounds/repair.wav')
+                    self.sound('repair.wav')
                     if b.health is None:
                         self.speak('finished')
         elif a is UnitActions.attack:
@@ -384,21 +382,21 @@ class Unit(
             )
             damage = randint(1, damage)
             if isinstance(x, Building):
-                self.sound('static/sounds/destroy.wav')
+                self.sound('destroy.wav')
             else:
                 self.sound(self.type.attack_type.sound)
-                x.sound('static/sounds/ouch.wav')
+                x.sound('ouch.wav')
             x.hp -= damage
             if x.hp < 0:
                 if isinstance(x, Building):
-                    self.sound('static/sounds/collapse.wav')
-                    self.sound('static/sounds/destroyed.wav')
+                    self.sound('collapse.wav')
+                    self.sound('destroyed.wav')
                     if x.owner is not None:
                         x.owner.message(f'{x.get_name()} has been destroyed.')
                 else:
                     if x.owner is not None:
                         x.owner.message(f'{x.get_name()} has been killed.')
-                    x.sound('static/sounds/die.wav')
+                    x.sound('die.wav')
                 x.delete()
         else:
             return self.reset_action()  # No action.
@@ -408,9 +406,7 @@ class Unit(
     def speak(self, text):
         """If text has a wave file associated with it, then play the sound.
         Otherwise use text."""
-        sound = f'static/sounds/speech/{text}.wav'
-        if not os.path.isfile(sound):
-            raise NoSuchSound(sound)
+        sound = f'speech/{text}.wav'
         if self.owner is None:
             owner_player = False
         elif self.owner.coordinates == self.coordinates:

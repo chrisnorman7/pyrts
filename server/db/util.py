@@ -136,7 +136,8 @@ def bootstrap():
         if name is not None:
             bt.depends = get_object_by_name(BuildingType, name)
             bt.save()
-    options.set_default('start_building', BuildingType.first())
+    if options.start_building is None:
+        options.start_building = BuildingType.first()
 
 
 def setup():

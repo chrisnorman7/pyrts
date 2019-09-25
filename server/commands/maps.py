@@ -814,7 +814,7 @@ def destroy(player, building_id):
     q = player.selected_units.filter_by(**player.same_coordinates())
     if q.count:
         if b.owner not in (player, None):
-            b.owner.sound('static/sounds/attack.wav')
+            b.owner.sound('attack.wav')
             b.owner.message(f'Attack at {b.coordinates}.')
         for u in q:
             u.speak('destroy')
@@ -834,7 +834,7 @@ def attack(player, unit_id):
     q = player.selected_units.filter_by(**player.same_coordinates())
     if q.count:
         if target.owner not in (player, None):
-            target.owner.sound('static/sounds/attack.wav')
+            target.owner.sound('attack.wav')
             target.owner.message(f'Attack at {target.coordinates}.')
         for u in q:
             u.speak('ok')

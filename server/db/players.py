@@ -235,12 +235,15 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def sound(self, path):
         """Tell the client to play a sound. The URL will have options.base_url
         prepended."""
-        if self.connection is not None:
-            if os.path.isfile(path):
-                path += f'?{os.path.getmtime(path)}'
-            self.connection.logger.debug('Playing sound %s.', path)
-            url = options.base_url + path
-            self.connection.send('sound', url)
+        if self.connection is None:
+            return
+        actual_path = os.path.join(options.sounds_path, path)
+        if not os.path.isfile(actual_path):
+            raise NoSuchSound(path)
+        path += f'?{os.path.getmtime(actual_path)}'
+        self.connection.logger.debug('Playing sound %s.', path)
+        url = options.sounds_url + path
+        self.connection.send('sound', url)
 
     def delete(self):
         """Delete this player, and disown all of its objects."""
