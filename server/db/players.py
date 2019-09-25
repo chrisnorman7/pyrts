@@ -184,7 +184,9 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         m.announce_waiting()
         b = Building.query(
             location=m, x=e.x, y=e.y, owner=None
-        ).join(Building.type).filter(BuildingType.homely.is_(True)).first()
+        ).join(Building.type).filter(
+            BuildingType.id == options.start_building.id
+        ).first()
         if b is None:
             self.message('You are homeless.')
         else:

@@ -193,8 +193,8 @@ def test_depends(farm):
 
 
 def test_builders(farm, peasant):
-    assert farm not in peasant.can_build
-    assert peasant not in farm.builders
+    assert farm in peasant.can_build
+    assert peasant in farm.builders
     farm.builders.append(peasant)
     assert peasant in farm.builders
     assert farm in peasant.can_build

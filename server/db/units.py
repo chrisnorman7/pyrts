@@ -16,6 +16,7 @@ from .base import (
 )
 
 from ..exc import NoSuchSound
+from ..options import options
 
 tasks = {}
 
@@ -272,7 +273,7 @@ class Unit(
             location=self.location, owner=self.owner
         ).join(
             Building.type
-        ).filter(BuildingType.homely.is_(True)).first()
+        ).filter(BuildingType.id == options.start_building.id).first()
 
     def declair_homeless(self):
         """This unit is homeless. Tell the world."""

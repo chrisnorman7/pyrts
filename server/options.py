@@ -88,6 +88,7 @@ class Options:
         )
         self.set_default('start_music', f'{self.sounds_url}music/start.wav')
         self.set_default('volume_adjust', 0.01)
+        self.set_default('start_building', None)
 
 
 options = Options()

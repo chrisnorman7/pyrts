@@ -7,6 +7,7 @@ from ..db import (
     Map, Unit, UnitType, Player, Base, BuildingBuilder
 )
 from ..menus import Menu, YesNoMenu
+from ..options import options
 from ..util import pluralise, is_are, english_list, difference_string
 
 
@@ -50,14 +51,8 @@ def build(con, location):
         command = 'build_building'
     else:
         command = 'add_building'
-    for t in BuildingType.query().order_by(
-        BuildingType.homely.desc(), BuildingType.name
-    ):
-        if t.homely:
-            name = f'{t.name} (*)'
-        else:
-            name = t.name
-        m.add_item(name, command, args={'id': t.id})
+    for t in BuildingType.alphabetized():
+        m.add_item(t.get_name(), command, args={'id': t.id})
     m.send(con)
 
 
@@ -342,7 +337,7 @@ def random_map(
         )
         m.save()
         for b in Building.query(location=m).join(Building.type).filter(
-            BuildingType.homely.is_(True)
+            BuildingType.id == options.start_building.id
         ):
             for name in b.resources:
                 setattr(b, name, 25)
@@ -519,21 +514,20 @@ def activate(player, location, con):
             for name in BuildingType.resource_names():
                 value = getattr(fo, name)
                 m.add_label(f'{name.title()}: {value}')
-            if fo.type.homely:
-                buildings = Building.all(
-                    health=None, owner=player, location=location
+            buildings = Building.all(
+                health=None, owner=player, location=location
+            )
+            for bm in BuildingRecruit.query(
+                BuildingRecruit.building_type_id.in_(
+                    [b.type_id for b in buildings]
                 )
-                for bm in BuildingRecruit.query(
-                    BuildingRecruit.building_type_id.in_(
-                        [b.type_id for b in buildings]
-                    )
-                ):
-                    t = UnitType.get(bm.unit_type_id)
-                    m.add_item(
-                        f'Recruit {t} (requires {bm.resources_string()}',
-                        'recruit', args=dict(building=fo.id, unit=t.id)
-                    )
-                m.add_item('Set Home', 'set_home', args={'id': fo.id})
+            ):
+                t = UnitType.get(bm.unit_type_id)
+                m.add_item(
+                    f'Recruit {t} (requires {bm.resources_string()}',
+                    'recruit', args=dict(building=fo.id, unit=t.id)
+                )
+            m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
             m.add_item(
                 'Exploit', 'exploit', args=dict(
@@ -616,8 +610,6 @@ def recruit(player, location, building, unit):
     m = UnitType.get(unit)
     if not isinstance(b, Building):
         player.message('You must select a building.')
-    elif not b.type.homely:
-        player.message('Only home buildings can be used for recruitment.')
     elif m is None:
         player.message('Invalid recruitment.')
     else:
@@ -645,8 +637,6 @@ def set_home(player, id):
     b = Building.get(id)
     if b is None or b.owner is not player:
         player.message('Invalid building.')
-    elif not b.type.homely:
-        player.message('That building cannot be used as a home.')
     else:
         c = q.update({Unit.home_id: id})
         player.message(f'Updated {c} {pluralise(c, "home")}.')

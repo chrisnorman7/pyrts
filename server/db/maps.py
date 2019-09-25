@@ -6,12 +6,13 @@ from random import randint
 from sqlalchemy import Column, Boolean, DateTime, Integer
 
 from .base import Base, NameMixin, OwnerMixin
-from .buildings import Building, BuildingType
+from .buildings import Building
 from .entry_points import EntryPoint
 from .features import Feature
 from .units import Unit
 from .util import dump_object
 
+from ..options import options
 from ..util import pluralise
 
 
@@ -138,7 +139,7 @@ class Map(Base, NameMixin, OwnerMixin):
         """
         self = cls(name=name, template=False)
         self.save()
-        t = BuildingType.first(homely=True)
+        t = options.start_building
         for x in range(players):
             e = self.add_entry_point(*self.random_coordinates())
             e.save()

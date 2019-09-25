@@ -1,11 +1,6 @@
 from pytest import fixture
 
 from server.db import BuildingType, FeatureType, Map, UnitType, Player
-from server.db.base import Base
-from server.options import options
-
-Base.metadata.create_all()
-options.set_defaults()
 
 password = 'TestsAreFun123'
 farm = 'Farm'
@@ -19,14 +14,8 @@ quarry = 'Quarry'
 
 @fixture(scope='session', autouse=True)
 def create_stuff():
+    """Initialise the database and create stuff."""
     Player.create('test', password, 'Test Player').save()
-    BuildingType(name=farm, homely=True).save()
-    UnitType(name=peasant).save()
-    FeatureType(name=field, food=1).save()
-    FeatureType(name=stream, water=1).save()
-    FeatureType(name=mine, gold=1).save()
-    FeatureType(name=forest, wood=1).save()
-    FeatureType(name=quarry, stone=1).save()
 
 
 @fixture(name='map')

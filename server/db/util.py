@@ -18,6 +18,7 @@ from .units import UnitType
 from .session import session
 
 from ..exc import InvalidName
+from ..options import options
 
 logger = logging.getLogger(__name__)
 _filename = 'db.yaml'
@@ -135,3 +136,5 @@ def bootstrap():
         if name is not None:
             bt.depends = get_object_by_name(BuildingType, name)
             bt.save()
+    if options.start_building is None:
+        options.start_building = BuildingType.first()

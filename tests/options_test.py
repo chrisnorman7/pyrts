@@ -9,6 +9,7 @@ def test_add_option():
     assert isinstance(o, Option)
     assert o.name == 'name'
     assert o.value == 'value'
+    assert o.id is not None
 
 
 def test_get():
@@ -36,9 +37,14 @@ def test_option():
     assert o.value == 1234
 
 
-def remove_option():
+def test_remove_option():
     options.add_option('works', 'value')
     assert options.works == 'value'
     options.remove_option('works')
     with raises(AttributeError):
         options.works
+
+
+def test_object_option(mine):
+    o = options.add_option('mine', mine)
+    assert o.value is mine
