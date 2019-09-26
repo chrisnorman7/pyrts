@@ -386,11 +386,10 @@ def select_units(index, player):
         q = Unit.query(owner=player)
     else:
         location = player.location
-        unit_type_ids = []
+        q = []
         for u in Unit.query(location=location, owner=player):
-            if u.type_id not in unit_type_ids:
-                unit_type_ids.append(u.type_id)
-        q = UnitType.all(UnitType.id.in_(unit_type_ids))
+            if u.type not in q:
+                q.append(u.type)
         try:
             ut = q[index - 1]
             group = ut.name
