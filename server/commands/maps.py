@@ -512,7 +512,7 @@ def activate(player, location, con):
             m.add_label(f'{fo.hp} / {fo.max_hp} health')
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
-            elif isinstance(fo, Unit):
+            elif isinstance(fo, Unit) and fo.owner is player:
                 q = BuildingBuilder.all(unit_type_id=fo.type_id)
                 if len(q):
                     m.add_label('Building')
@@ -715,6 +715,8 @@ def build_building(location, player, id):
     fo = player.focussed_object
     if not isinstance(fo, Unit):
         player.message('You must first select a unit.')
+    elif fo.owner is not player:
+        fo.speak('no')
     elif bt.depends is not None and not Building.count(
         owner=player, location=location, type=bt.depends
     ):
