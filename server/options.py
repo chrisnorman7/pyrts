@@ -14,6 +14,10 @@ Option = None
 class Options:
     """Reads and writes option rows from the database."""
 
+    def __init__(self):
+        """Add a defaults dictionary."""
+        self.defaults = {}
+
     def __dir__(self):
         return [x.name for x in Option.all()]
 
@@ -28,15 +32,19 @@ class Options:
 
     def __getattr__(self, name):
         """Get an option from the database."""
+        if Option is None:
+            return super().__getattribute__(name)
         try:
             return self.get_option(name).value
         except NoSuchOption:
-            raise AttributeError(name)
+            if name in self.defaults:
+                return self.defaults[name]
+            return super().__getattribute__(name)
 
     def has_option(self, name):
         """Return True if we have an option by the given name, False
         otherwise."""
-        return bool(Option.count(name=name))
+        return bool(Option.count(name=name)) or name in self.defaults
 
     def get_option(self, name):
         """Get an option row with the given name."""
@@ -47,24 +55,27 @@ class Options:
 
     def __setattr__(self, name, value):
         """Set an option's value."""
+        if Option is None:
+            return super().__setattr__(name, value)
         try:
             o = self.get_option(name)
         except NoSuchOption:
-            raise AttributeError(name)
+            if name in self.defaults:
+                o = self.add_option(name, value)
+            else:
+                return super().__setattr__(name, value)
         o.value = value
         o.save()
 
     def set_default(self, name, value):
-        """Like dict.setdefault, but for options rows."""
-        if self.has_option(name):
-            return self.get_option(name)
-        return self.add_option(name, value)
+        """Add a name / value pair to the self.defaults dictionary."""
+        self.defaults[name] = value
 
     def add_option(self, name, value):
         """Create a new option."""
         if Option.count(name=name):
             raise DuplicateOption(name)
-        o = Option(name=name, data='')
+        o = Option(name=name)
         o.value = value
         o.save()
         return o

@@ -15,9 +15,8 @@ def test_add_option():
 def test_get():
     options.add_option('port', 1234)
     assert options.port == 1234
-    with raises(AttributeError) as exc:
+    with raises(AttributeError):
         options.fails
-    assert exc.value.args == ('fails',)
 
 
 def test_set():
@@ -54,3 +53,20 @@ def test_has_option():
     assert not options.has_option('not even there')
     options.set_default('test', 'value')
     assert options.has_option('test')
+
+
+def test_getattr():
+    with raises(AttributeError):
+        options.hopefully_no_options_with_this_name
+
+
+def test_setattr():
+    options.test_setattr = 5
+    assert options.__dict__['test_setattr'] == 5
+
+
+def test_get_default():
+    options.set_default('asdfghjkl', 1024)
+    assert options.defaults['asdfghjkl'] == 1024
+    assert options.asdfghjkl == 1024
+    assert not Option.count(name='asdfghjkl')
