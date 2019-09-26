@@ -384,14 +384,15 @@ def select_units(index, player):
         q = Unit.query(owner=player)
     else:
         location = player.location
-        unit_type_ids = set([m.type_id for m in Unit.query(
-            location=location, owner=player
-        )])
+        unit_type_ids = []
+        for u in Unit.query(location=location, owner=player):
+            if u.type_id not in unit_type_ids:
+                unit_type_ids.append(u.type_id)
         q = UnitType.all(UnitType.id.in_(unit_type_ids))
         try:
-            t = q[index - 1]
-            group = t.name
-            q = Unit.query(owner=player, type=t)
+            ut = q[index - 1]
+            group = ut.name
+            q = Unit.query(owner=player, type=ut)
         except IndexError:
             c = len(q)
             if c:
