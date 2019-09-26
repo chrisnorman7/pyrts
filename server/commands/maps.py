@@ -851,17 +851,19 @@ def attack(player, unit_id):
         return player.message('You see no such thing.')
     q = player.selected_units.filter_by(**player.same_coordinates())
     if q.count:
-        if target.owner not in (player, None):
-            target.owner.sound('attack.wav')
-            target.owner.message(f'Attack at {target.coordinates}.')
+        attack = False
         for u in q:
             if u is target:
                 u.speak('no')
             elif u.type.attack_type is None:
                 u.speak('dunno')
             else:
+                attack = True
                 u.speak('ok')
                 u.attack(target)
+        if attack and target.owner not in (player, None):
+            target.owner.sound('attack.wav')
+            target.owner.message(f'Attack at {target.coordinates}.')
     else:
         player.message(
             'You must select at least one unit at your current coordinates.'
