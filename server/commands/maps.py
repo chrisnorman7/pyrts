@@ -789,7 +789,6 @@ def repair(player, id):
                 m.speak('going')
             m.repair(b)
             m.save()
-            player.message(f'Employing {m.get_name()}.')
 
 
 @command(location_type=LocationTypes.finalised)
