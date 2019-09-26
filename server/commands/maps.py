@@ -511,22 +511,16 @@ def activate(player, location, con):
             if fo.owner is None:
                 m.add_item('Acquire', 'acquire', args={'id': fo.id})
             elif isinstance(fo, Unit):
-                m.add_label('Building')
-                unit_type_ids = set([m.type_id for m in Unit.all(
-                    owner=player, location=location
-                )])
-                building_type_ids = set()
-                for bb in BuildingBuilder.query(
-                    BuildingBuilder.unit_type_id.in_(unit_type_ids)
-                ):
-                    building_type_ids.add(bb.building_type_id)
-                for id in building_type_ids:
-                    t = BuildingType.get(id)
-                    resources = t.resources_string('nothing')
-                    m.add_item(
-                        f'Build {t.name} (requires {resources}',
-                        'build_building', args=dict(id=t.id)
-                    )
+                q = BuildingBuilder.all(unit_type_id=fo.type_id)
+                if len(q):
+                    m.add_label('Building')
+                    for bb in q:
+                        t = BuildingType.get(bb.building_type_id)
+                        resources = t.resources_string('nothing')
+                        m.add_item(
+                            f'Build {t.name} (requires {resources}',
+                            'build_building', args=dict(id=t.id)
+                        )
                 m.add_item('Release', 'release')
             elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
                 m.add_item('Repair', 'repair', args=dict(id=fo.id))
