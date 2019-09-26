@@ -1,0 +1,16 @@
+agility: 4
+auto_heal: true
+buildings: []
+food: 1
+heal_amount: 1
+name: Nurse
+recruits:
+- building: Hospital
+  food: 3
+  gold: 2
+  pop_time: 5
+  stone: 1
+  water: 5
+  wood: 1
+speed: 2
+water: 1

@@ -1,5 +1,5 @@
 attack: Bow
-attack_type_id: 11
+attack_type_id: 2
 buildings:
 - Castle
 food: 1

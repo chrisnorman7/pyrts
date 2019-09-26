@@ -1,8 +1,9 @@
 attack: Kick
-attack_type_id: 4
+attack_type_id: 5
 auto_repair: true
 buildings:
 - Garrison
+- Hospital
 name: Engineer
 recruits:
 - building: University

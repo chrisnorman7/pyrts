@@ -1,0 +1,7 @@
+depends: University
+gold: 25
+max_health: 25
+name: Hospital
+stone: 5
+water: 1
+wood: 15

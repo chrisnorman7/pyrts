@@ -2,5 +2,6 @@ depends: Farm
 gold: 30
 max_health: 30
 name: University
+resistance: 6
 stone: 15
 wood: 30
