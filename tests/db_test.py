@@ -4,7 +4,7 @@ from datetime import datetime
 
 from server.db import (
     Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Unit, Unit, Player, Base
+    Map, Unit, Player, Base
 )
 from server.db.units import UnitActions
 from server.db.util import dump_object

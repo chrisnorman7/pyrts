@@ -2,14 +2,27 @@
 
 import logging
 
+from time import time
+
 from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.web.server import Site
 
 from server.db import Base, load, dump, setup, Unit
 from server.options import options
+from server.tasks import task
 from server.util import pluralise
 from server.web import app, WebSocketProtocol
+
+dump_logger = logging.getLogger('Database Dump')
+
+
+def dump_task():
+    """Dump the database every half an hour."""
+    started = time()
+    dump_logger.info('Starting dump...')
+    dump('world.dump')
+    dump_logger.info('Dump completed in %.2f seconds.', time() - started)
 
 
 def main():
@@ -33,6 +46,8 @@ def main():
         logging.info('Starting with a blank database.')
     logging.info('Phase: Database setup.')
     setup()
+    logging.info('Phase: Add dump schedule.')
+    task(3600, now=False)(dump_task)
     logging.info('Phase: Setup listeners.')
     site = Site(app.resource())
     port = reactor.listenTCP(
