@@ -415,10 +415,10 @@ def select_unit_list(index, player):
         kwargs = {}
     else:
         location = player.location
-        unit_type_ids = set([m.type_id for m in Unit.query(
-            location=location, owner=player
-        )])
-        types = [UnitType.get(id) for id in unit_type_ids]
+        types = []
+        for u in Unit.query(location=location, owner=player):
+            if u.type not in types:
+                types.append(u.type)
         try:
             type = types[index - 1]
             kwargs = dict(type=type)
