@@ -399,16 +399,23 @@ class Unit(
             else:
                 self.move_towards(*x.coordinates)
         elif a is UnitActions.guard:
-            if self.type.auto_repair:
-                q = Building.all(
-                    Building.health.isnot(None),
-                    **self.owner.same_coordinates()
+            if any([self.type.auto_repair, self.type.auto_heal]):
+                if self.type.auto_repair:
+                    cls = Building
+                    amount = self.type.repair_amount
+                    sound = 'repair'
+                else:
+                    cls = Unit
+                    amount = self.type.heal_amount
+                    sound = 'heal'
+                q = cls.all(
+                    cls.health.isnot(None), **self.owner.same_coordinates()
                 )
                 if len(q):
-                    b = choice(q)
-                    b.heal(self.type.repair_amount)
-                    self.sound('repair.wav')
-                    if b.health is None:
+                    thing = choice(q)
+                    thing.heal(amount)
+                    self.sound(f'{sound}.wav')
+                    if thing.health is None:
                         self.speak('finished')
         elif a is UnitActions.attack:
             if self.type.attack_type is None:
