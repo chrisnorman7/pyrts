@@ -418,7 +418,7 @@ def select_unit_list(index, player):
         unit_type_ids = set([m.type_id for m in Unit.query(
             location=location, owner=player
         )])
-        types = UnitType.all(UnitType.id.in_(unit_type_ids))
+        types = [UnitType.get(id) for id in unit_type_ids]
         try:
             type = types[index - 1]
             kwargs = dict(type=type)
