@@ -1,5 +1,7 @@
 """Provides map-related commands."""
 
+from random import random, choice
+
 from .commands import command, LocationTypes
 
 from ..db import (
@@ -560,6 +562,7 @@ def activate(player, location, con):
             m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
             if fo.health is not None:
                 m.add_item('Heal', 'heal', args=dict(unit_id=fo.id))
+            m.add_item('Steal', 'steal')
         m.add_item('Summon', 'summon')
         m.add_item('Patrol', 'patrol')
         m.add_item('guard', 'guard')
@@ -811,7 +814,7 @@ def patrol(player):
         player.message('You must select at least one unit.')
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def destroy(player, building_id):
     """Destroy a building."""
     b = Building.first(id=building_id, **player.same_coordinates())
@@ -834,7 +837,7 @@ def destroy(player, building_id):
         )
 
 
-@command()
+@command(location_type=LocationTypes.finalised)
 def attack(player, unit_id):
     """Attack another unit."""
     target = Unit.first(**player.same_coordinates(), id=unit_id)
@@ -891,3 +894,58 @@ def heal(player, unit_id):
             player.message(
                 'You must select at least one unit capable of healing.'
             )
+
+
+@command(location_type=LocationTypes.finalised)
+def steal(
+    player, con, command_name, location, target_class_name=None, target_id=None
+):
+    """Instruct a unit to steal from another unit or building."""
+    fo = player.focussed_object
+    if not isinstance(fo, Unit):
+        player.message('You must first select a unit.')
+    elif target_id is None:
+        results = []
+        for cls in (Unit, Building):
+            results.extend(
+                cls.all(
+                    cls.owner_id.isnot(player.id), **player.same_coordinates()
+                )
+            )
+        if results:
+            m = Menu('Possible Targets')
+            for r in results:
+                cls = type(r)
+                class_name = cls.__name__
+                m.add_item(
+                    r.get_name(), command_name, args=dict(
+                        target_class_name=class_name, target_id=r.id
+                    )
+                )
+            m.send(con)
+        else:
+            player.message('There is nothing here you can steal from.')
+    else:
+        cls = Base._decl_class_registry[target_class_name]
+        target = cls.first(**player.same_coordinates(), id=target_id)
+        if target is None:
+            player.message('You cannot see that here.')
+        else:
+            a = fo.type.agility
+            r = target.type.resistance
+            percentage = ((100 / r) * a) / 100
+            if random() > percentage:
+                fo.speak('woops')
+                for u in Unit.query(
+                    Unit.owner_id.isnot(fo.owner_id), x=fo.x, y=fo.y,
+                    location=location
+                ).join(Unit.type).filter(UnitType.attack_type_id.isnot(None)):
+                    u.attack(fo)
+            else:
+                resource_name = choice(target.resources)
+                value = getattr(target, resource_name)
+                if value:
+                    setattr(target, resource_name, value - 1)
+                    current = getattr(fo, resource_name)
+                    setattr(fo, resource_name, current + 1)
+                    fo.speak('ok')
