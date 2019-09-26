@@ -61,6 +61,7 @@ class UnitType(
     repair_amount = Column(Integer, nullable=False, default=1)
     auto_heal = Column(Boolean, nullable=False, default=False)
     heal_amount = Column(Integer, nullable=True)
+    agility = Column(Integer, nullable=False, default=2)
     attack_type_id = Column(
         Integer, ForeignKey('attack_types.id'), nullable=True
     )
