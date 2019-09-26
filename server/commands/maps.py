@@ -679,9 +679,13 @@ def summon(player):
     if not c:
         player.message('You have not selected any units.')
     else:
-        for m in q:
-            m.speak('coming')
-            m.travel(player.x, player.y)
+        for u in q:
+            if u.coordinates == player.coordinates:
+                u.speak('no')
+                u.reset_action()
+            else:
+                u.speak('coming')
+                u.travel(player.x, player.y)
 
 
 @command(hotkey='h')
