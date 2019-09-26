@@ -563,6 +563,8 @@ def activate(player, location, con):
             m.add_item('Destroy', 'destroy', args=dict(building_id=fo.id))
         if isinstance(fo, Unit):
             m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
+            if fo.health is not None:
+                m.add_item('Heal', 'heal', args=dict(unit_id=fo.id))
         m.add_item('Summon', 'summon')
         m.add_item('Patrol', 'patrol')
         m.add_item('guard', 'guard')
@@ -869,3 +871,25 @@ def move_entry_point(entry_point, player):
         entry_point.coordinates = player.coordinates
         entry_point.save()
         player.message('Done.')
+
+
+@command(location_type=LocationTypes.finalised)
+def heal(player, unit_id):
+    """Heal another unit."""
+    target = Unit.first(**player.same_coordinates(), id=unit_id)
+    if target is None:
+        player.message('You canot see that here.')
+    elif target.health is None:
+        player.message(f'{target.get_name()} does not need healing.')
+    else:
+        q = player.selected_units.join(
+            Unit.type
+        ).filter(UnitType.heal_amount.isnot(None))
+        if q.count():
+            for u in q:
+                u.speak('ok')
+                u.heal_unit(target)
+        else:
+            player.message(
+                'You must select at least one unit capable of healing.'
+            )

@@ -29,6 +29,7 @@ class UnitActions(_Enum):
     repair = 5
     guard = 6
     attack = 7
+    heal = 8
 
 
 class BuildingBuilder(Base):
@@ -58,6 +59,8 @@ class UnitType(
     speed = Column(Integer, nullable=False, default=8)
     auto_repair = Column(Boolean, nullable=False, default=False)
     repair_amount = Column(Integer, nullable=False, default=1)
+    auto_heal = Column(Boolean, nullable=False, default=False)
+    heal_amount = Column(Integer, nullable=True)
     attack_type_id = Column(
         Integer, ForeignKey('attack_types.id'), nullable=True
     )
@@ -202,6 +205,13 @@ class Unit(
         self.exploiting = building
         self.start_task()
 
+    def heal_unit(self, unit):
+        """Heal the given unit. The reference will be stored on
+        self.exploiting."""
+        self.action = UnitActions.heal
+        self.exploiting = unit
+        self.start_task()
+
     def travel(self, x, y):
         """Start this unit travelling."""
         self.target = x, y
@@ -266,6 +276,12 @@ class Unit(
             else:
                 name = 'a memory'
             return f'attacking {name}'
+        elif a is UnitActions.heal:
+            if x is None:
+                name = 'nobody'
+            else:
+                name = x.get_name()
+            return f'healing {name}'
         else:
             return str(a)
 
@@ -362,15 +378,21 @@ class Unit(
                 return self.reset_action()  # Done.
             else:
                 self.move_towards(*self.target)
-        elif a is UnitActions.repair:
+        elif a in (UnitActions.heal, UnitActions.repair):
             x = self.exploiting
             if x is None or x.health is None:
                 # We are done.
                 return self.reset_action()
             elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
-                x.heal(self.type.repair_amount)
-                self.sound('repair.wav')
+                if a is UnitActions.heal:
+                    amount = self.type.heal_amount
+                    sound = 'heal.wav'
+                else:
+                    amount = self.type.repair_amount
+                    sound = 'repair.wav'
+                x.heal(amount)
+                self.sound(sound)
                 x.save()
                 if x.health is None:
                     self.speak('finished')
