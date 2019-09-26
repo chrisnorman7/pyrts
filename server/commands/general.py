@@ -79,7 +79,10 @@ def help(con):
         (x for x in commands.values() if x.hotkey is not None),
         key=lambda command: command.hotkey
     ):
-        con.message(f'{cmd.hotkey}:')
+        h = cmd.hotkey
+        if h == ' ':
+            h = 'space'
+        con.message(f'{h}:')
         con.message(cmd.description)
 
 
