@@ -658,6 +658,8 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
     q = player.selected_units
     if isinstance(f, Feature):
         q = q.join(Unit.type).filter(getattr(UnitType, resource) == 1)
+    elif isinstance(f, Building) and f.owner is not player:
+        return player.message('You can only exploit your own buildings.')
     if not q.count():
         return player.message('You have no units capable of doing that.')
     for m in q:
