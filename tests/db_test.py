@@ -4,7 +4,7 @@ from datetime import datetime
 
 from server.db import (
     Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Unit, Player, Base
+    Map, Unit, Unit, Player, Base
 )
 from server.db.units import UnitActions
 from server.db.util import dump_object
@@ -339,33 +339,33 @@ def test_exploit(player, map, peasant, mine, farm):
     check_peasant()
     assert p.coordinates == (0, 0)
     assert p.action is UnitActions.exploit
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert p.coordinates == (1, 1)
     assert p.action == UnitActions.exploit
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert p.coordinates == m.coordinates
     assert p.action == UnitActions.exploit
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert m.gold == 4
     assert p.action is UnitActions.drop
     assert p.coordinates == m.coordinates
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert p.coordinates == (1, 0)
     assert p.action is UnitActions.drop
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert f.gold == 0
     assert p.coordinates == (0, 0)
-    p.progress()
+    Unit.progress(p.id)
     check_peasant()
     assert p.action is UnitActions.exploit
     assert f.gold == 1
     assert p.coordinates == f.coordinates
-    p.progress()  # Do it all over again.
+    Unit.progress(p.id)
     assert p.action is UnitActions.exploit
     check_peasant()
     assert p.coordinates == (1, 1)
