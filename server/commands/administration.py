@@ -45,7 +45,7 @@ class Console(InteractiveConsole):
         return res
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def disconnect(con, command_name, player, args, id, response=None):
     """Disconnect another player."""
     p = Player.get(id)
@@ -67,7 +67,7 @@ def disconnect(con, command_name, player, args, id, response=None):
         con.message('Cancelled.')
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def delete_player(con, command_name, player, args, id, response=None):
     """Delete another player."""
     p = Player.get(id)
@@ -87,7 +87,7 @@ def delete_player(con, command_name, player, args, id, response=None):
         player.message('Cancelled.')
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def make_admin(player, id):
     """Make another player an administrator."""
     p = Player.get(id)
@@ -98,7 +98,7 @@ def make_admin(player, id):
         player.message(f'{p} is now an admin.')
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def revoke_admin(player, id):
     """Revoke admin privileges for another player."""
     p = Player.get(id)
@@ -139,7 +139,7 @@ def make_menu(con):
     m.send(con)
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def add_type(con, class_name):
     """Add a new type."""
     cls = Base._decl_class_registry[class_name]
@@ -148,7 +148,7 @@ def add_type(con, class_name):
     con.call_command('edit_type', class_name=class_name, id=obj.id)
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def remove_type(con, command_name, class_name, id=None, response=None):
     """Remove a type."""
     cls = Base._decl_class_registry[class_name]
@@ -176,7 +176,7 @@ def remove_type(con, command_name, class_name, id=None, response=None):
             con.message('Cancelled.')
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def edit_type(con, command_name, class_name, id=None, column=None, text=None):
     """Edit a type."""
     cls = Base._decl_class_registry[class_name]
@@ -298,7 +298,7 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
         m.send(con)
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def edit_builders(con, command_name, building_type_id, unit_type_id=None):
     """Add and remove unit types that can build buildings."""
     bt = BuildingType.get(building_type_id)
@@ -330,7 +330,7 @@ def edit_builders(con, command_name, building_type_id, unit_type_id=None):
         con.call_command(command_name, building_type_id=bt.id)
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def delete_object(con, command_name, class_name, id=None, response=None):
     """Delete the given object."""
     cls = Base._decl_class_registry[class_name]
@@ -358,7 +358,7 @@ def delete_object(con, command_name, class_name, id=None, response=None):
         con.message('Cancelled.')
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def add_recruit(con, command_name, building_type_id, unit_type_id=None):
     """Add a recruit to the given building type."""
     bt = BuildingType.get(building_type_id)
@@ -377,7 +377,7 @@ def add_recruit(con, command_name, building_type_id, unit_type_id=None):
         con.call_command('edit_recruits', building_type_id=bt.id)
 
 
-@command(admin=True)
+@command(location_type=LocationTypes.any, admin=True)
 def edit_recruits(
     con, command_name, building_type_id, building_unit_id=None,
     resource_name=None, text=None
