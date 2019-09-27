@@ -290,3 +290,10 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
             return False
         self.connection.send('title', f'{options.server_name} | {n}')
         return True
+
+    @classmethod
+    def message_admins(cls, string, sound='admin.wav'):
+        """Send all connected admins the provided string."""
+        for p in cls.all(admin=True, connected=True):
+            p.sound(sound)
+            p.message(string)

@@ -58,3 +58,12 @@ def get_mine():
 @fixture(name='quarry')
 def get_quarry():
     return FeatureType.one(name=quarry)
+
+
+@fixture(name='transport')
+def get_transport(map, peasant, farm):
+    u = map.add_unit(peasant, 0, 0)
+    b = map.add_building(farm, 10, 10)
+    t = u.set_transport(b)
+    t.save()
+    return t

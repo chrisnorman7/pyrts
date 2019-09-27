@@ -525,6 +525,11 @@ def activate(player, location, con):
                             f'Build {t.name} (requires {resources}',
                             'build_building', args=dict(id=t.id)
                         )
+                if fo.type.transport_capacity is not None:
+                    m.add_item('Embark', 'embark')
+                    m.add_item('Disembark', 'disembark')
+                    m.add_item('Launch', 'launch')
+                    m.add_item('File Flight Plan', 'set_destination')
                 m.add_item('Release', 'release')
             elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
                 m.add_item('Repair', 'repair', args=dict(id=fo.id))
@@ -959,3 +964,98 @@ def steal(
                     current = getattr(fo, resource_name)
                     setattr(fo, resource_name, current + 1)
                     fo.speak('ok')
+
+
+@command(location_type=LocationTypes.finalised)
+def embark(player):
+    """Make a unit embark a transport."""
+    fo = player.focussed_object
+    if fo is None or fo.coordinates != player.coordinates or not isinstance(
+        fo, Unit
+    ) or fo.type.transport_capacity is None:
+        player.message('Yu must first select a transport.')
+    elif fo.transport is None:
+        player.message('Yu must first file a flight plan.')
+    elif len(fo.transport.passengers) >= fo.type.transport_capacity:
+        player.message('That transport is already full.')
+    else:
+        for u in player.selected_units.filter_by(**player.same_coordinates):
+            fo.transport.add_passenger(u)
+            if len(fo.transport.passengers) >= fo.type.transport_capacity:
+                player.message(f'{fo.get_name()} is now full.')
+                break
+        else:
+            player.message('Embarkation complete.')
+
+
+@command(location_type=LocationTypes.finalised)
+def disembark(con, command_name, player, unit_id=None):
+    """Instruct a unit to disembark from the currently-focussed transport."""
+    fo = player.focussed_object
+    if fo is None or fo.coordinates != player.coordinates or not isinstance(
+        fo, Unit
+    ) or fo.type.transport_capacity is None:
+        player.message('Yu must first select a transport.')
+    elif fo.transport is None or not fo.transport.passengers:
+        player.message(f'{fo.get_name()} has no passengers on board.')
+    elif unit_id is None:
+        m = Menu('Passengers')
+        for p in fo.transport.passengers:
+            m.add_item(p.get_name(), command_name, args=dict(unit_id=p.id))
+        m.send(con)
+    else:
+        u = Unit.first(id=unit_id, onboard=fo.transport)
+        if u is None:
+            player.message('Invalid passenger.')
+        else:
+            fo.transport.remove_passenger(u)
+
+
+@command(location_type=LocationTypes.finalised)
+def launch(player):
+    """Launch the currently-selected transport."""
+    fo = player.focussed_object
+    if fo is None or fo.coordinates != player.coordinates or not isinstance(
+        fo, Unit
+    ) or fo.type.transport_capacity is None:
+        player.message('Yu must first select a transport.')
+    elif fo.transport is None:
+        player.message('You must first file a flight plan.')
+    elif fo.coordinates == fo.transport.destination.coordinates:
+        fo.speak('no')
+    else:
+        fo.transport.launch()
+        player.focussed_object is None
+
+
+@command(location_type=LocationTypes.finalised)
+def set_destination(con, command_name, location, player, building_id=None):
+    """Set the destination for the currently-focussed transport."""
+    q = Building.query(location=location).join(Building.type).filter(
+        BuildingType.landing_field.is_(True)
+    )
+    fo = player.focussed_object
+    if fo is None or fo.coordinates != player.coordinates or not isinstance(
+        fo, Unit
+    ) or fo.type.transport_capacity is None:
+        player.message('Yu must first select a transport.')
+    elif building_id is None:
+        if not q.count():
+            player.message('You must first build a landing site.')
+        else:
+            m = Menu('Landing Sites')
+            for b in q:
+                m.add_item(
+                    b.get_name(), command_name, args=dict(building_id=b.id)
+                )
+            m.send(con)
+    else:
+        b = q.get(building_id)
+        if b is None:
+            player.message('Invalid landing site.')
+        elif fo.transport is None:
+            fo.set_transport(b).save()
+        else:
+            fo.transport.destination = b
+            fo.transport.save()
+        player.message(f'Flight plan to {b.get_name()} filed.')

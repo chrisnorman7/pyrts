@@ -1,6 +1,6 @@
 """Provides the BuildingType and Building classes."""
 
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from .base import (
@@ -41,6 +41,7 @@ class BuildingType(
     recruits = relationship(
         'UnitType', backref='recruiters', secondary=BuildingRecruit.__table__
     )
+    landing_field = Column(Boolean, nullable=False, default=False)
 
     def get_pop_time(self, unit_type):
         """Get the pop time for the given UnitType instance."""
