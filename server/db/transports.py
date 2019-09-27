@@ -57,5 +57,5 @@ class Transport(Base, LocationMixin):
         if self is None:
             return  # Destroyed.
         self.unit.location = self.location
-        self.unit.move(*self.destination.coordinates)
+        self.unit.coordinates = self.destination.coordinates
         self.unit.sound('land.wav')
