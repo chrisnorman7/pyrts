@@ -1049,7 +1049,7 @@ def set_destination(con, command_name, location, player, building_id=None):
                 )
             m.send(con)
     else:
-        b = q.get(building_id)
+        b = q.filter_by(id=building_id).first()
         if b is None:
             player.message('Invalid landing site.')
         elif fo.transport is None:
