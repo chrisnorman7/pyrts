@@ -2,13 +2,12 @@
 
 from code import InteractiveConsole
 from contextlib import redirect_stdout, redirect_stderr
-from inspect import getdoc, _empty
+from inspect import getdoc, isclass, _empty
 
 from sqlalchemy import Boolean, inspect
 
 from .commands import command, LocationTypes
 
-from .. import db
 from ..db import (
     Player, BuildingType, UnitType, AttackType, FeatureType, Base,
     BuildingRecruit
@@ -25,9 +24,9 @@ class Console(InteractiveConsole):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name in dir(db):
-            if not name.startswith('_'):
-                self.locals[name] = getattr(db, name)
+        for name, cls in Base._decl_class_registry.items():
+            if isclass(cls):
+                self.locals[name] = cls
         self.locals['options'] = options
 
     def write(self, string):
