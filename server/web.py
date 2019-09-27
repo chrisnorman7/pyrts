@@ -57,6 +57,8 @@ class WebSocketProtocol(WebSocketServerProtocol):
         self.player_id = None
         self.set_logger()
         self.logger.info('Connected.')
+        peer = self.transport.getPeer()
+        Player.message_admins(f'Incoming connection from {peer.host}.')
 
     def connectionLost(self, reason):
         super().connectionLost(reason)
@@ -64,6 +66,10 @@ class WebSocketProtocol(WebSocketServerProtocol):
         if self.player is not None:
             self.player.connected = False
             self.player.connection = None
+            player_name = self.player.get_name()
+        else:
+            player_name = self.transport.getPeer().host
+        Player.message_admins(f'{player_name} has disconnected.')
 
     def onOpen(self):
         """Send a welcome message."""
@@ -221,6 +227,8 @@ class WebSocketProtocol(WebSocketServerProtocol):
         self.send("authenticated")
         self.set_logger(player=player)
         self.logger.info('Authenticated.')
+        for p in Player.all(admin=True):
+            p.message(f'{player.get_name()} has connected.')
 
     @property
     def player(self):
