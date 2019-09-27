@@ -978,7 +978,7 @@ def embark(player):
     elif len(fo.transport.passengers) >= fo.type.transport_capacity:
         player.message('That transport is already full.')
     else:
-        for u in player.selected_units.filter_by(**player.same_coordinates):
+        for u in player.selected_units.filter_by(**player.same_coordinates()):
             fo.transport.add_passenger(u)
             if len(fo.transport.passengers) >= fo.type.transport_capacity:
                 player.message(f'{fo.get_name()} is now full.')
