@@ -669,18 +669,22 @@ def exploit(con, args, command_name, player, class_name, id, resource=None):
         return player.message('You can only exploit your own buildings.')
     if not q.count():
         return player.message('You have no units capable of doing that.')
-    for m in q:
-        if m.home is None:
-            m.speak('homeless')
+    for u in q:
+        if u.home is None:
+            u.speak('homeless')
+        elif u.type.transport_capacity is not None:
+            u.speak('no')
         else:
-            m.speak('going')
-            m.exploit(f, resource)
+            u.speak('going')
+            u.exploit(f, resource)
 
 
 @command(location_type=LocationTypes.finalised)
 def summon(player):
     """Summon all selected objects."""
-    q = player.selected_units
+    q = player.selected_units.join(Unit.type).filter(
+        UnitType.transport_capacity.is_(None)
+    )
     c = q.count()
     if not c:
         player.message('You have not selected any units.')
@@ -781,33 +785,36 @@ def release(player):
 def repair(player, id):
     """Repair the building with the given ID."""
     b = Building.first(id=id, **player.same_coordinates())
+    q = player.selected_units.join(Unit.type).filter(
+        UnitType.transport_capacity.is_(None)
+    )
     if b is None:
         player.message('No such building here.')
     elif b.hp >= b.max_hp:
         player.message(f'{b.get_name()} does not need repairing.')
-    elif not player.selected_units.count():
-        player.message(
-            'You must select at least one unit to perform the repairs.'
-        )
+    elif not q.count():
+        player.message('You must select at least one unit capable of repairs.')
     else:
-        for m in player.selected_units:
-            if m.coordinates == player.coordinates:
-                m.speak('ok')
+        for u in q:
+            if u.coordinates == player.coordinates:
+                u.speak('ok')
             else:
-                m.speak('going')
-            m.repair(b)
-            m.save()
+                u.speak('going')
+            u.repair(b)
+            u.save()
 
 
 @command(location_type=LocationTypes.finalised)
 def guard(player):
     """Set the currently-selected group of units to guard their current
     location."""
-    q = player.selected_units
+    q = player.selected_units.join(Unit.type).filter(
+        UnitType.transport_capacity.is_(None)
+    )
     if q.count():
-        for m in q:
-            m.guard()
-            m.speak('ok')
+        for u in q:
+            u.speak('ok')
+            u.guard()
     else:
         player.message('You must select at least one unit.')
 
@@ -816,61 +823,48 @@ def guard(player):
 def patrol(player):
     """Set the currently-selected group of units to patrolling between their
     home, and the current coordinates."""
-    q = player.selected_units
+    q = player.selected_units.join(Unit.type).filter(
+        UnitType.transport_capacity.is_(None)
+    )
     if q.count():
-        for m in q:
-            m.patrol(*player.coordinates)
-            player.message(f'{m.get_name()} begins to patrol.')
+        for u in q:
+            u.speak('ok')
+            u.patrol(*player.coordinates)
     else:
         player.message('You must select at least one unit.')
 
 
 @command(location_type=LocationTypes.finalised)
-def destroy(player, building_id):
+def attack(player, class_name, object_id):
     """Destroy a building."""
-    b = Building.first(id=building_id, **player.same_coordinates())
-    if b is None:
-        return player.message('Yu cannot see that.')
-    q = player.selected_units.filter_by(**player.same_coordinates())
+    cls = Base._decl_class_registry[class_name]
+    target = cls.first(id=object_id, **player.same_coordinates())
+    if target is None:
+        return player.message('Yu cannot see that here.')
+    q = player.selected_units.filter_by(**player.same_coordinates()).join(
+        Unit.type
+    ).filter(UnitType.transport_capacity.is_(None))
     if q.count:
         attack = False
         for u in q:
             if u.type.attack_type is None:
                 u.speak('dunno')
-            else:
-                attack = True
-                u.speak('destroy')
-                u.attack(b)
-        if attack and b.owner not in (player, None):
-            b.owner.sound('attack.wav')
-            b.owner.message(f'Attack at {b.coordinates}.')
-    else:
-        player.message(
-            'You must select at least one unit at your current coordinates.'
-        )
-
-
-@command(location_type=LocationTypes.finalised)
-def attack(player, unit_id):
-    """Attack another unit."""
-    target = Unit.first(**player.same_coordinates(), id=unit_id)
-    if target is None:
-        return player.message('You see no such thing.')
-    q = player.selected_units.filter_by(**player.same_coordinates())
-    if q.count:
-        attack = False
-        for u in q:
-            if u is target:
+            elif u is target:
                 u.speak('no')
-            elif u.type.attack_type is None:
-                u.speak('dunno')
             else:
                 attack = True
-                u.speak('ok')
+                if cls is Building:
+                    u.speak('destroy')
+                elif cls is Unit:
+                    u.speak('attack')
+                else:
+                    return player.message('Invalid class name.')
                 u.attack(target)
         if attack and target.owner not in (player, None):
             target.owner.sound('attack.wav')
-            target.owner.message(f'Attack at {target.coordinates}.')
+            target.owner.message(
+                f'Attack on {target.get_name()} at {target.coordinates}.'
+            )
     else:
         player.message(
             'You must select at least one unit at your current coordinates.'
@@ -900,7 +894,10 @@ def heal(player, unit_id):
     else:
         q = player.selected_units.join(
             Unit.type
-        ).filter(UnitType.heal_amount.isnot(None))
+        ).filter(
+            UnitType.transport_capacity.is_(None),
+            UnitType.heal_amount.isnot(None)
+        )
         if q.count():
             for u in q:
                 u.speak('ok')
@@ -919,6 +916,8 @@ def steal(
     fo = player.focussed_object
     if not isinstance(fo, Unit):
         player.message('You must first select a unit.')
+    elif fo.type.transport_capacity is not None:
+        player.message(f'You cannot use {fo.get_name()} for stealing.')
     elif target_id is None:
         results = []
         for cls in (Unit, Building):
