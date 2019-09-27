@@ -31,8 +31,12 @@ def main():
     logging.info('Starting server...')
     logging.info('Phase: Load database.')
     try:
+        started = time()
         load()
-        logging.info('Number of objects loaded: %d.', Base.number_of_objects())
+        logging.info(
+            'Number of objects loaded: %d (%.2f seconds).',
+            Base.number_of_objects(), time() - started
+        )
         logging.info('Phase: Start tasks.')
         q = Unit.query(Unit.action.isnot(None),)
         c = q.count()
