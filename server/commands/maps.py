@@ -564,9 +564,9 @@ def activate(player, location, con):
     if player.selected_units.count():
         m.add_label('Unit Orders')
         if isinstance(fo, Building):
-            m.add_item('Destroy', 'destroy', args=dict(building_id=fo.id))
+            m.add_item('Destroy', 'attack')
         if isinstance(fo, Unit):
-            m.add_item('Attack', 'attack', args=dict(unit_id=fo.id))
+            m.add_item('Attack', 'attack')
             if fo.health is not None:
                 m.add_item('Heal', 'heal', args=dict(unit_id=fo.id))
             m.add_item('Steal', 'steal')
@@ -835,11 +835,10 @@ def patrol(player):
 
 
 @command(location_type=LocationTypes.finalised)
-def attack(player, class_name, object_id):
+def attack(player):
     """Destroy a building."""
-    cls = Base._decl_class_registry[class_name]
-    target = cls.first(id=object_id, **player.same_coordinates())
-    if target is None:
+    target = player.focussed_object
+    if target is None or target.coordinates != player.coordinates:
         return player.message('Yu cannot see that here.')
     q = player.selected_units.filter_by(**player.same_coordinates()).join(
         Unit.type
@@ -853,12 +852,12 @@ def attack(player, class_name, object_id):
                 u.speak('no')
             else:
                 attack = True
-                if cls is Building:
+                if isinstance(target, Building):
                     u.speak('destroy')
-                elif cls is Unit:
+                elif isinstance(target, Unit):
                     u.speak('attack')
                 else:
-                    return player.message('Invalid class name.')
+                    return player.message('Invalid object.')
                 u.attack(target)
         if attack and target.owner not in (player, None):
             target.owner.sound('attack.wav')
