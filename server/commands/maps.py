@@ -1039,22 +1039,23 @@ def set_destination(con, command_name, location, player, building_id=None):
     ) or fo.type.transport_capacity is None:
         player.message('Yu must first select a transport.')
     elif building_id is None:
-        if not q.count():
-            player.message('You must first build a landing site.')
-        else:
+        if q.count():
             m = Menu('Landing Sites')
             for b in q:
                 m.add_item(
                     b.get_name(), command_name, args=dict(building_id=b.id)
                 )
             m.send(con)
+        else:
+            player.message('You must first build a landing site.')
     else:
         b = q.filter_by(id=building_id).first()
         if b is None:
             player.message('Invalid landing site.')
-        elif fo.transport is None:
-            fo.set_transport(b).save()
         else:
-            fo.transport.destination = b
-            fo.transport.save()
-        player.message(f'Flight plan to {b.get_name()} filed.')
+            if fo.transport is None:
+                fo.set_transport(b).save()
+            else:
+                fo.transport.destination = b
+                fo.transport.save()
+            player.message(f'Flight plan to {b.get_name()} filed.')
