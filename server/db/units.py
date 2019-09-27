@@ -13,6 +13,7 @@ from .base import (
     OwnerMixin, TypeMixin, SoundMixin, ResourcesMixin, MaxHealthMixin,
     HealthMixin, GetNameMixin, StrengthMixin
 )
+from .transports import Transport
 
 from ..options import options
 
@@ -61,6 +62,7 @@ class UnitType(
     repair_amount = Column(Integer, nullable=False, default=1)
     auto_heal = Column(Boolean, nullable=False, default=False)
     heal_amount = Column(Integer, nullable=True)
+    transport_capacity = Column(Integer, nullable=True)
     agility = Column(Integer, nullable=False, default=2)
     attack_type_id = Column(
         Integer, ForeignKey('attack_types.id'), nullable=True
@@ -101,6 +103,11 @@ class Unit(
     action = Column(Enum(UnitActions), nullable=True)
     target_x = Column(Integer, nullable=False, default=0)
     target_y = Column(Integer, nullable=False, default=0)
+    onboard_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
+    onboard = relationship(
+        'Transport', backref='passengers', foreign_keys=[onboard_id],
+        remote_side='Transport.id'
+    )
 
     @property
     def exploiting(self):
@@ -466,3 +473,10 @@ class Unit(
         if owner_player:
             self.owner.sound(sound)
         return self.sound(sound)
+
+    def set_transport(self, building):
+        """Set self.transport, with building as the destination."""
+        assert self.transport is None
+        return Transport(
+            unit=self, location=self.location, destination=building
+        )
