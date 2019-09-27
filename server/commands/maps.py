@@ -294,12 +294,15 @@ def random_map(
                 con.message('Invalid type.')
             elif value is None:
                 return con.text(
-                    'How many of that feature type do you want?', command_name,
-                    argument_name='value', args=args
+                    'How many of that feature type do you want? (max 100)',
+                    command_name, argument_name='value', args=args
                 )
             else:
                 try:
                     value = int(value)
+                    if value > 100:
+                        value = 100
+                        con.message('Maximum 100.')
                     features[type] = value
                 except ValueError:
                     con.message('Invalid value.')
