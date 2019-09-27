@@ -1,6 +1,7 @@
 attack: Pistol
-attack_type_id: 7
-buildings: []
+attack_type_id: 10
+buildings:
+- Landing Field
 max_health: 55
 name: Light Infantry
 recruits:

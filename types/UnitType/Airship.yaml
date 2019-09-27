@@ -1,0 +1,10 @@
+buildings: []
+name: Airship
+recruits:
+- building: Landing Field
+  food: 5
+  gold: 100000
+  pop_time: 45
+  water: 15
+  wood: 55
+transport_capacity: 5

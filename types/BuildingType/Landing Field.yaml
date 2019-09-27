@@ -1,0 +1,7 @@
+depends: Keep
+gold: 50000
+landing_field: true
+name: Landing Field
+stone: 250
+water: 100
+wood: 200

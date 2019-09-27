@@ -1,0 +1,15 @@
+attack: Blaster
+attack_type_id: 9
+buildings: []
+max_health: 80
+name: Aeroplane
+recruits:
+- building: Castle
+  gold: 1000000
+  pop_time: 300
+  water: 18
+  wood: 800
+resistance: 80
+speed: 1
+strength: 100
+transport_capacity: 25

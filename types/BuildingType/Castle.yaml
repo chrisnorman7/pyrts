@@ -1,6 +1,7 @@
 depends: Garrison
 food: 1500
 gold: 15000
+landing_field: true
 max_health: 1000
 name: Castle
 resistance: 1000

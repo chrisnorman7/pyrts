@@ -1,5 +1,5 @@
 attack: Kick
-attack_type_id: 5
+attack_type_id: 2
 auto_repair: true
 buildings:
 - Garrison

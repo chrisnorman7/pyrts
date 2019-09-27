@@ -1,5 +1,5 @@
 attack: Shotgun
-attack_type_id: 10
+attack_type_id: 1
 buildings:
 - Farm
 - University
