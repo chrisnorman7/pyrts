@@ -1049,7 +1049,7 @@ def set_destination(con, command_name, location, player, building_id=None):
         else:
             player.message('You must first build a landing site.')
     else:
-        b = q.filter_by(id=building_id).first()
+        b = q.filter(Building.id == building_id).first()
         if b is None:
             player.message('Invalid landing site.')
         else:
