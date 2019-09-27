@@ -71,8 +71,12 @@ def main():
     logging.info('Phase: Main loop.')
     reactor.run()
     logging.info('Phase: Dump database.')
+    started = time()
     dump()
-    logging.info('Objects dumped: %d.', Base.number_of_objects())
+    logging.info(
+        'Objects dumped: %d (%.2f seconds).', Base.number_of_objects(),
+        time() - started
+    )
 
 
 if __name__ == '__main__':
