@@ -125,7 +125,7 @@ def python(command_name, con, player, location, entry_point, text=None):
             consoles[player.id] = c
 
 
-@command(hotkey='m', admin=True)
+@command(location_type=LocationTypes.any, hotkey='m', admin=True)
 def make_menu(con):
     """Add / remove types."""
     m = Menu('Add / Remove Types')
