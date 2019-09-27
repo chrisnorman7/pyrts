@@ -278,6 +278,20 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                 f'Unit types this building can recruit: {el}',
                 'edit_recruits', args=kwargs
             )
+            if any([obj.depends, obj.dependencies]):
+                m.add_label('Depedencies')
+                if obj.depends is not None:
+                    m.add_item(
+                        f'Depends: {obj.depends.get_name()}', command_name,
+                        args=dict(class_name=class_name, id=obj.depends_id)
+                    )
+                if obj.dependencies:
+                    m.add_label('Dependencies')
+                    for d in obj.dependencies:
+                        m.add_item(
+                            d.get_name(), command_name,
+                            args=dict(class_name=class_name, id=d.id)
+                        )
         elif cls is UnitType:
             m.add_label('Buildings which can be built by units of this type')
             for bt in obj.can_build:
