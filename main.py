@@ -47,7 +47,7 @@ def main():
         else:
             logging.info('No tasks to resume.')
         logging.info('Phase: Check for airborn transports.')
-        for t in Transport.all(Transport.land_time > time()):
+        for t in Transport.all(Transport.land_time < time()):
             logging.info('Landing %s.', t.unit.get_name())
             Transport.land(t.id)
     except FileNotFoundError:
