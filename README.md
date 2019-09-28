@@ -62,7 +62,7 @@ There are lots of keyboard shortcuts which can be used to play the game (61 at t
 * Select entire groups of units with the qwerty keys (q, w, e, r, t, y, u, i, o, and p). Add shift to select individual units from a menu. The A key acts on all units you control.
 * Access the main menu with the f1 key.
 
-#### Doing stuff.
+### Doing stuff.
 Let's imagine you start a game. You've got one town hall and nothing else. What to do?
 
 First you want to recruit a peasant. You focus the town hall with the number 1 key, and you hit space to bring up the menu.
