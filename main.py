@@ -27,6 +27,7 @@ def dump_task():
 
 def main():
     """Run the server."""
+    loading_started = time()
     logging.basicConfig(level='INFO')
     logging.info('Starting server...')
     logging.info('Phase: Load database.')
@@ -71,6 +72,9 @@ def main():
     port = listenWS(factory, interface=options.interface)
     logging.info(
         'Listening for websockets on %s:%d.', port.interface, port.port
+    )
+    logging.info(
+        'Initialisation completed in %.2f seconds.', time() - loading_started
     )
     logging.info('Phase: Main loop.')
     reactor.run()
