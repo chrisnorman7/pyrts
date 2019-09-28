@@ -147,6 +147,8 @@ class Unit(
         """Delete this object, removing its task along the way."""
         if self.id in tasks:
             self.kill_task()
+        if self.transport is not None:
+            self.transport.delete()
         return super().delete()
 
     def kill_task(self):

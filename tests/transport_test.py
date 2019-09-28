@@ -53,3 +53,17 @@ def test_remove_passenger(peasant, map, transport):
     assert u.location is map
     assert u.onboard is None
     assert u.coordinates == c
+
+
+def test_delete(peasant, map, transport):
+    u = transport.unit
+    p1 = map.add_unit(peasant, 0, 0)
+    p2 = map.add_unit(peasant, 0, 0)
+    for obj in (p1, p2):
+        transport.add_passenger(obj)
+        obj.save()
+    u.delete()
+    assert Unit.get(u.id) is None
+    assert Unit.get(p1.id) is None
+    assert Unit.get(p2.id) is None
+    assert Transport.get(transport.id) is None

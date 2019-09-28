@@ -59,3 +59,9 @@ class Transport(Base, LocationMixin):
         self.unit.location = self.location
         self.unit.coordinates = self.destination.coordinates
         self.unit.sound('land.wav')
+
+    def delete(self):
+        """Delete all passengers."""
+        for p in self.passengers:
+            p.delete()
+        return super().delete()
