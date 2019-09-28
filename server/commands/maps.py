@@ -2,11 +2,12 @@
 
 from random import random, choice
 
+from sqlalchemy import func
 from .commands import command, LocationTypes
 
 from ..db import (
     Building, BuildingRecruit, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Unit, UnitType, Player, Base, BuildingBuilder
+    Map, Unit, UnitType, Player, Base, BuildingBuilder, session
 )
 from ..menus import Menu, YesNoMenu
 from ..options import options
@@ -182,14 +183,12 @@ def set_resource(con, player, location, command_name, name=None, value=None):
 @command(hotkey='s')
 def stats(player, location):
     """Show resources for this map."""
-    d = {}
-    for f in location.features:
-        for name in f.type.resources:
-            if name not in d:
-                d[name] = 0
-            d[name] += getattr(f, name)
-    for name in sorted(d):
-        player.message(f'{name.title()}: {d[name]}')
+    for name in sorted(FeatureType.resource_names()):
+        col = getattr(Feature, name)
+        value = session.query(func.sum(col)).filter_by(
+            location=location
+        ).first()[0]
+        player.message(f'{name.title()}: {value}.')
 
 
 @command(location_type=LocationTypes.not_map)
