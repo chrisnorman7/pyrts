@@ -301,8 +301,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def has_lost(self):
         """Return True if this player has lost the game. False otherwise."""
         if self.owned_buildings or self.owned_units:
-            return True
-        return False
+            return False
+        return True
 
     def has_won(self):
         """Return True if this player has won."""
