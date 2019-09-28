@@ -478,3 +478,31 @@ def test_directions_to(map, farm, peasant):
 def test_class_from_table():
     assert Base.get_class_from_table(FeatureType.__table__) is FeatureType
     assert Base.get_class_from_table(Player.__table__) is Player
+
+
+def test_exploit_multiple(map, player, farm, mine, peasant, quarry):
+    b = map.add_building(farm, 0, 0)
+    b.owner = player
+    m = map.add_feature(mine, 0, 0)
+    m.gold = 100
+    q = map.add_feature(quarry, 0, 0)
+    q.stone = 100
+
+    u = map.add_unit(peasant, 0, 0)
+    u.owner = player
+    u.home = b
+    for thing in (b, m, q, u):
+        thing.save()
+    u.exploit(m, 'gold')
+    Unit.progress(u.id)
+    assert u.gold == 1
+    u.exploit(q, 'stone')
+    assert u.gold == 1
+    Unit.progress(u.id)
+    assert u.gold == 1
+    assert u.stone == 1
+    Unit.progress(u.id)
+    assert b.gold == 1
+    assert b.stone == 1
+    assert u.gold == 0
+    assert u.stone == 0
