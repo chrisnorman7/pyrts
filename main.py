@@ -32,8 +32,8 @@ def check_loosers():
     for p in Player.query(
         Player.location_id.isnot(None),
         and_(
-            func.length(Player.buildings) == 1,
-            func.length(Player.units) == 1
+            func.length(Player.owned_buildings) == 1,
+            func.length(Player.owned_units) == 1
         )
     ).join(Player.location).filter(
         Map.finalised.isnot(None)
