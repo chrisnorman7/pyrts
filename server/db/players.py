@@ -201,7 +201,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def leave_map(self):
         """Leave the current map, relinquishing all assets."""
         self.entry_point = None
-        self.do_social('%1N leave%1s the map.')
+        self.do_social('%1N leave%1s the map.', sound='leave.wav')
         loc = self.location
         self.location = None
         for cls in (Building, Unit):
