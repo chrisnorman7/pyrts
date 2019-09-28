@@ -577,7 +577,7 @@ def activate(player, location, con):
 
 
 @command(location_type=LocationTypes.finalised)
-def acquire(player, id):
+def acquire(player):
     """Acquire the currently-focussed object."""
     fo = player.focussed_object
     if fo is None:
@@ -586,10 +586,14 @@ def acquire(player, id):
         player.message(
             'You can only acquire objects at your current coordinates.'
         )
+    elif not isinstance(fo, (Unit, Building)):
+        player.message('You can only acquire units and buildings.')
     elif fo.owner is not None:
         player.message('That object has already been acquired.')
     else:
         fo.owner = player
+        if isinstance(fo, Unit):
+            fo.speak('ready')
         player.message('Done.')
 
 
@@ -600,12 +604,13 @@ def _recruit(building_id, building_unit_id):
         return  # It has since been destroyed.
     bm = BuildingRecruit.get(building_unit_id)
     t = UnitType.get(bm.unit_type_id)
-    m = b.location.add_unit(t, *b.coordinates)
+    u = b.location.add_unit(t, *b.coordinates)
     player = b.owner
-    m.owner = player
-    m.home = b
-    m.save()
-    player.message(f'{m.get_name()} ready.')
+    u.owner = player
+    u.home = b
+    u.speak('ready')
+    u.save()
+    player.message(f'{u.get_name()} ready.')
 
 
 @command(location_type=LocationTypes.finalised)
