@@ -28,7 +28,9 @@ class Map(Base, NameMixin, OwnerMixin):
     def finalise(self):
         """Mark this map as finalised."""
         self.finalised = datetime.utcnow()
-        self.broadcast('All players are present. The game begins.')
+        self.broadcast(
+            'All players are present. The game begins.', sound='start.wav'
+        )
 
     def add_entry_point(self, x, y):
         """Add an entry point to this map at the given coordinates."""
@@ -55,10 +57,12 @@ class Map(Base, NameMixin, OwnerMixin):
             setattr(m, name, 0)
         return m
 
-    def broadcast(self, text):
+    def broadcast(self, text, sound=None):
         """Broadcast a message to all players on this map."""
         for player in self.players:
             player.message(text)
+            if sound is not None:
+                player.sound(sound)
 
     def copy(self):
         """Return a duplicated version of this map."""
@@ -94,7 +98,8 @@ class Map(Base, NameMixin, OwnerMixin):
         c = EntryPoint.query(location=self, occupant=None).count()
         if c:
             self.broadcast(
-                f'You are waiting for {c} {pluralise(c, "player")}.'
+                f'You are waiting for {c} {pluralise(c, "player")}.',
+                sound='join.wav'
             )
         else:
             self.finalise()
