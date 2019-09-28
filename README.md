@@ -95,7 +95,7 @@ Finally, your helpful little peasant tells you that they have completed the repa
 
 As before, you press space (because your farm is still selected), and find the "Recruit Farmer" option. It does almost nothing, apart from to tell you about the resources you don't have, because this is a new farm, and your peasant is a lazy sort, and hasn't included them in the base design.
 
-Because your farm is still selected, you press the z key, which tells you what resources something contains. The z key tells you that the server is not in point of fact troling you, and the farm is truly resource free.
+Because your farm is still selected, you press the z key, which tells you what resources something contains. The z key tells you that the server is not in point of fact trolling you, and the farm is truly resource free.
 
 Time to do some exploiting!
 
