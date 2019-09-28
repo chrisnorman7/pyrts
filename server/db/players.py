@@ -35,6 +35,8 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     focussed_id = Column(Integer, nullable=True)
     volume = Column(Float, nullable=False, default=0.05)
     code = Column(String(1000), nullable=True)
+    wins = Column(Integer, nullable=False, default=0)
+    losses = Column(Integer, nullable=False, default=0)
 
     @classmethod
     def create(cls, username, password, name):

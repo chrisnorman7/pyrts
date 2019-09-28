@@ -456,7 +456,33 @@ class Unit(
                     if x.owner is not None:
                         x.owner.message(f'{x.get_name()} has been killed.')
                     x.sound('die.wav')
+                adversary = x.owner
                 x.delete()
+                player = self.owner
+                if adversary is not None:
+                    if adversary.has_lost():
+                        for p in self.location.players:
+                            if p is player:
+                                p.sound('beat.wav')
+                                p.message(f'You beat {adversary.get_name()}.')
+                            elif p is adversary:
+                                p.sound('lose.wav')
+                                p.message(
+                                    f'You are beaten by {self.get_name()}.'
+                                )
+                                p.leave_map()
+                                p.losses += 1
+                                p.save()
+                            else:
+                                p.message(
+                                    f'{self.name()} beats '
+                                    f'{adversary.get_name()}.'
+                                )
+                        if player.has_won():
+                            player.message('You have won!')
+                            player.sound('win.wav')
+                            player.wins += 1
+                            player.save()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
