@@ -781,6 +781,7 @@ def release(player):
             setattr(fo.home, name, value)
         fo.owner = None
         fo.home = None
+        fo.speak('bye')
         fo.save()
         player.message(f'You release {fo.get_name()} from your employ.')
 
