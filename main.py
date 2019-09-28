@@ -5,6 +5,7 @@ import logging
 from time import time
 
 from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
+from sqlalchemy import and_, func
 from twisted.internet import reactor
 from twisted.web.server import Site
 
@@ -28,16 +29,21 @@ def dump_task():
 @task(10, now=False)
 def check_loosers():
     """Check for players who have no buildings and no units."""
-    for p in Player.all(Player.location_is.isnot(None)):
-        if not p.owned_buildings and not p.owned_units:
-            for obj in p.location.players:
-                if obj is p:
-                    obj.sound('lose.wav')
-                    obj.message('Bad luck, you lose.')
-                    obj.leave_map()
-                else:
-                    obj.sound('leave.wav')
-                    obj.message(f'{p.get_name()} has lost.')
+    for p in Player.all(
+        Player.location_id.isnot(None),
+        and_(
+            func.length(Player.buildings) == 1,
+            func.length(Player.units) == 1
+        )
+    ):
+        for obj in p.location.players:
+            if obj is p:
+                obj.sound('lose.wav')
+                obj.message('Bad luck, you lose.')
+                obj.leave_map()
+            else:
+                obj.sound('leave.wav')
+                obj.message(f'{p.get_name()} has lost.')
 
 
 def main():
