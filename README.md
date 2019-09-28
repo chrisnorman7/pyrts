@@ -26,7 +26,7 @@ There are a few different ways of moving around the map.
 There are 3 types of units you will interract with in a game. Each has its different uses.
 
 #### Features
-Features - or land features - are feature of the land. By default, mines, quarries, lakes, forests, and fields are all present.
+Features are feature of the land that you might look at in real life. By default, mines, quarries, lakes, forests, and fields are all present.
 
 Each object contains a certain resource, which can be exploited (harvested) by units, and stored in buildings.
 
@@ -57,7 +57,7 @@ There are lots of keyboard shortcuts which can be used to play the game (61 at t
 * Get help with shift + slash (/). That's like typing a question mark on most keyboards.
 * Show the menu (activate) the thing you just selected with the space key.
 * Switch back and forth between objects at your current coordinates with comma (,) and full stop (.).
-* Select objects at your current coordinates by number with the number keys 1 to 9 on the top row. The 0 key reminds yu of the currently-selected unit.
+* Select objects at your current coordinates by number with the number keys 1 to 9 on the top row. The 0 key reminds yu of the currently-selected object.
 * Select and deselect units with the x key. Deselect all units with shift + x (more useful than you might think).
 * Select entire groups of units with the qwerty keys (q, w, e, r, t, y, u, i, o, and p). Add shift to select individual units from a menu. The A key acts on all units you control.
 * Access the main menu with the f1 key.
