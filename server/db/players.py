@@ -297,3 +297,16 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         for p in cls.all(admin=True, connected=True):
             p.sound(sound)
             p.message(string)
+
+    def has_lost(self):
+        """Return True if this player has lost the game. False otherwise."""
+        if self.owned_buildings or self.owned_units:
+            return True
+        return False
+
+    def has_won(self):
+        """Return True if this player has won."""
+        if not Building.count(Building.owner_id.isnot(self.id)) or \
+           Unit.count(Unit.owner_id.isnot(self.id)):
+            return True
+        return False
