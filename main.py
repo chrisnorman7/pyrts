@@ -5,11 +5,10 @@ import logging
 from time import time
 
 from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
-from sqlalchemy import and_, func
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, load, dump, setup, Unit, Transport, Player, Map
+from server.db import Base, load, dump, setup, Unit, Transport
 from server.options import options
 from server.tasks import task
 from server.util import pluralise
@@ -24,28 +23,6 @@ def dump_task():
     dump_logger.info('Starting dump...')
     dump('world.dump')
     dump_logger.info('Dump completed in %.2f seconds.', time() - started)
-
-
-@task(10, now=False)
-def check_loosers():
-    """Check for players who have no buildings and no units."""
-    for p in Player.query(
-        Player.location_id.isnot(None),
-        and_(
-            func.length(Player.owned_buildings) == 1,
-            func.length(Player.owned_units) == 1
-        )
-    ).join(Player.location).filter(
-        Map.finalised.isnot(None)
-    ):
-        for obj in p.location.players:
-            if obj is p:
-                obj.sound('lose.wav')
-                obj.message('Bad luck, you lose.')
-                obj.leave_map()
-            else:
-                obj.sound('leave.wav')
-                obj.message(f'{p.get_name()} has lost.')
 
 
 def main():
