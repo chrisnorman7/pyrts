@@ -8,7 +8,7 @@ from autobahn.twisted.websocket import listenWS, WebSocketServerFactory
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, load, dump, setup, Unit, Transport
+from server.db import Base, load, dump, setup, Unit, Transport, Player
 from server.options import options
 from server.tasks import task
 from server.util import pluralise
@@ -23,6 +23,21 @@ def dump_task():
     dump_logger.info('Starting dump...')
     dump('world.dump')
     dump_logger.info('Dump completed in %.2f seconds.', time() - started)
+
+
+@task(10, now=False)
+def check_loosers():
+    """Check for players who have no buildings and no units."""
+    for p in Player.all(Player.location_is.isnot(None)):
+        if not p.owned_buildings and not p.owned_units:
+            for obj in p.location.players:
+                if obj is p:
+                    obj.sound('lose.wav')
+                    obj.message('Bad luck, you lose.')
+                    obj.leave_map()
+                else:
+                    obj.sound('leave.wav')
+                    obj.message(f'{p.get_name()} has lost.')
 
 
 def main():
