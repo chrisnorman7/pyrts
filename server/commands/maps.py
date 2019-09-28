@@ -1057,3 +1057,13 @@ def set_destination(con, command_name, location, player, building_id=None):
                 fo.transport.destination = b
                 fo.transport.save()
             player.message(f'Flight plan to {b.get_name()} filed.')
+
+
+@command(hotkey='v')
+def view_objects(player):
+    """View the objects at your current coordinates."""
+    el = english_list(
+        player.visible_objects, key=lambda obj: obj.get_name(),
+        empty='nothing'
+    )
+    player.message(f'You can see: {el}.')
