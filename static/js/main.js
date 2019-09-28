@@ -3,7 +3,6 @@
 
 let debug = false
 let hotkeys = null
-let startMusicURL = null
 let authenticationSuccessful = false
 let disconnecting = false
 let reconnecting = false
@@ -60,11 +59,6 @@ for (let char of "abcdefghijklmnopqrstuvwxyz1234567890 -='#/\\`[],.") {
     menuKeys[char] = searchMenu
 }
 
-function playMusic() {
-    let s = new Sound(startMusicURL)
-    s.play()
-}
-
 const commands = {
     title: args => {
         document.title = args[0]
@@ -75,7 +69,6 @@ const commands = {
     hotkeys: args => {
         hotkeys = args[0]
     },
-    start_music: (args) => startMusicURL = args[0],
     message: args => {
         writeMessage(args[0])
     },
@@ -155,7 +148,6 @@ const commands = {
         authenticationSuccessful = true
         loginForm.hidden = true
         keyboard.focus()
-        playMusic()
     },
     text: (args) => {
         let [label, command, argName, value, commandArgs] = args

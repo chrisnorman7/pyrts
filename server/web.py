@@ -74,7 +74,6 @@ class WebSocketProtocol(WebSocketServerProtocol):
     def onOpen(self):
         """Send a welcome message."""
         self.message('Welcome. Please login or create a character.')
-        self.send('start_music', options.start_music)
         hotkeys = {}
         for command in commands.values():
             if command.hotkey is not None:
@@ -221,6 +220,7 @@ class WebSocketProtocol(WebSocketServerProtocol):
     def authenticated(self, player):
         """This connection has successfully logged in as the given Player
         instance."""
+        player.sound('authenticated.wav')
         self.player_id = player.id
         self.message('Welcome, %s.' % player.name)
         player.send_title()
