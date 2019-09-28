@@ -134,13 +134,13 @@ def switch_object(player, direction):
     player.message(msg)
 
 
-@command(hotkey='[')
+@command(hotkey=',')
 def previous_object(player):
     """Select the previous object."""
     switch_object(player, -1)
 
 
-@command(hotkey=']')
+@command(hotkey='.')
 def next_object(player):
     """Select the next object."""
     switch_object(player, 1)
