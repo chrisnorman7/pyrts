@@ -457,6 +457,9 @@ class Unit(
                         x.owner.message(f'{x.get_name()} has been killed.')
                     x.sound('die.wav')
                 adversary = x.owner
+                for name in x.resources:
+                    value = getattr(x, name)
+                    setattr(self, name, getattr(self, name) + 1)
                 x.delete()
                 player = self.owner
                 if adversary is not None:
