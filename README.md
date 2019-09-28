@@ -99,7 +99,7 @@ Because your farm is still selected, you press the z key, which tells you what r
 
 Time to do some exploiting!
 
-You're pretty sure the town hall has some resources left over from your very frugal recruitment drive earlier, and just to check, you hit the 1 key (because the town hall is a building, and furthermore it's the first building you were given, so it's the first object to appear on this square. The z key tells you there'sbuckets of stuff left over, and you reckon it would be pretty sweet if you could just move stuff around, like you can in the real world!
+You're pretty sure the town hall has some resources left over from your very frugal recruitment drive earlier, and just to check, you hit the 1 key (because the town hall is a building, and furthermore it's the first building you were given, so it's the first object to appear on this square. The z key tells you there's buckets of stuff left over, and you reckon it would be pretty sweet if you could just move stuff around, like you can in the real world!
 
 How astute! You can do just that. Like land features, buildings contain resources, namely the ones yours (or someone else's) units put there. The only difference is that any unit can exploit any resources from a building. If the unit and the building are not owned by the same player, units must resort to stealing. That's a whole different matter, and one you can experiment with on your devious little own.
 
