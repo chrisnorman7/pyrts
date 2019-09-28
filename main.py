@@ -9,7 +9,7 @@ from sqlalchemy import and_, func
 from twisted.internet import reactor
 from twisted.web.server import Site
 
-from server.db import Base, load, dump, setup, Unit, Transport, Player
+from server.db import Base, load, dump, setup, Unit, Transport, Player, Map
 from server.options import options
 from server.tasks import task
 from server.util import pluralise
@@ -29,12 +29,14 @@ def dump_task():
 @task(10, now=False)
 def check_loosers():
     """Check for players who have no buildings and no units."""
-    for p in Player.all(
+    for p in Player.query(
         Player.location_id.isnot(None),
         and_(
             func.length(Player.buildings) == 1,
             func.length(Player.units) == 1
         )
+    ).join(Player.location).filter(
+        Map.finalised.isnot(None)
     ):
         for obj in p.location.players:
             if obj is p:
