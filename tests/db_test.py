@@ -37,7 +37,7 @@ def test_building(player, farm, map):
     assert b.x == 0
     assert b.y == 0
     assert b.get_full_name() == f'{b.get_name()} (Unclaimed)'
-    b.owner = player
+    b.set_owner(player)
     b.save()
     assert b.owner_id == player.id
     assert b.get_full_name() == f"{b.type.name} 1 ({player.name})"
@@ -57,7 +57,7 @@ def test_unit(peasant, player, map):
     assert m.stone == 0
     assert m.owner is None
     assert m.get_full_name() == f'{m.get_name()} [Unemployed]'
-    m.owner = player
+    m.set_owner(player)
     m.save()
     assert m.owner_id == player.id
     assert m.get_full_name() == f'{peasant.name} 1 [employed by {player.name}]'
@@ -282,7 +282,7 @@ def test_sound(mine):
 
 def test_player_delete(player, map, farm):
     f = map.add_building(farm, 0, 0)
-    f.owner = player
+    f.set_owner(player)
     map.location = map
     f.location = map
     for thing in (map, player, f):
@@ -323,7 +323,7 @@ def test_target(map, peasant):
 def test_exploit(player, map, peasant, mine, farm):
     f = map.add_building(farm, 0, 0)
     p = map.add_unit(peasant, 0, 0)
-    p.owner = player
+    p.set_owner(player)
     p.home = f
     m = map.add_feature(mine, 2, 1)
     m.gold = 5
@@ -482,14 +482,14 @@ def test_class_from_table():
 
 def test_exploit_multiple(map, player, farm, mine, peasant, quarry):
     b = map.add_building(farm, 0, 0)
-    b.owner = player
+    b.set_owner(player)
     m = map.add_feature(mine, 0, 0)
     m.gold = 100
     q = map.add_feature(quarry, 0, 0)
     q.stone = 100
 
     u = map.add_unit(peasant, 0, 0)
-    u.owner = player
+    u.set_owner(player)
     u.home = b
     for thing in (b, m, q, u):
         thing.save()
@@ -516,19 +516,19 @@ def test_owned_units_order(player, map, peasant, farmer):
     f = map.add_unit(farmer, 0, 0)
     p2 = map.add_unit(peasant, 0, 0)
     for thing in (p1, f, p2):
-        thing.owner = player
+        thing.set_owner(player)
         thing.save()
     q = Unit.query(
         owner=player
-    ).order_by(Unit.updated).all()
+    ).order_by(Unit.owned_since).all()
     assert player.owned_units == q
     assert player.owned_units == [p1, f, p2]
-    p1.owner = None
+    p1.set_owner(None)
     p1.save()
-    p1.owner = player
+    p1.set_owner(player)
     p1.save()  # Trigger p1.updated to be modified.
     q = Unit.query(owner=player).order_by(
-        Unit.updated
+        Unit.owned_since
     ).all()
     assert q == [f, p2, p1]
     assert player.owned_units == [f, p2, p1]
@@ -544,19 +544,32 @@ def test_unit_types(map, player, peasant, farmer):
     p = map.add_unit(peasant, 0, 0)
     f = map.add_unit(farmer, 0, 0)
     for thing in (p, f):
-        thing.owner = player
+        thing.set_owner(player)
         thing.save()
     assert player.owned_units == [p, f]
     assert player.unit_types == [peasant, farmer]
-    p.owner = None
+    p.set_owner(None)
     p.save()
     assert player.unit_types == [farmer]
-    p.owner = player
+    p.set_owner(player)
     p.save()
     assert player.owned_units == [f, p]
     assert player.unit_types == [farmer, peasant]
     f2 = map.add_unit(farmer, 0, 0)
-    f2.owner = player
+    f2.set_owner(player)
     f2.save()
     assert player.owned_units == [f, p, f2]
     assert player.unit_types == [farmer, peasant]
+
+
+def test_set_owner(player, map, peasant):
+    p = map.add_unit(peasant, 0, 0)
+    p.save()
+    assert p.owner is None
+    assert p.owned_since is None
+    p.set_owner(player)
+    assert p.owner is player
+    assert isinstance(p.owned_since, datetime)
+    p.set_owner(None)
+    assert p.owner is None
+    assert p.owned_since is None

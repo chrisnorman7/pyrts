@@ -198,10 +198,7 @@ class LocationMixin:
 
 
 class OwnerMixin:
-    updated = Column(
-        DateTime(timezone=True), nullable=True, onupdate=datetime.utcnow,
-        default=datetime.utcnow
-    )
+    owned_since = Column(DateTime(timezone=True), nullable=True)
 
     @declared_attr
     def owner_id(cls):
@@ -211,9 +208,18 @@ class OwnerMixin:
     def owner(cls):
         return relationship(
             'Player', backref=backref(
-                f'owned_{cls.__tablename__}', order_by=cls.updated
-            ), foreign_keys=[cls.owner_id], remote_side='Player.id'
+                f'owned_{cls.__tablename__}', order_by=cls.owned_since
+            ),
+            foreign_keys=[cls.owner_id], remote_side='Player.id'
         )
+
+    def set_owner(self, value):
+        """Set self.owner, and update self.owned_since."""
+        self.owner = value
+        if value is None:
+            self.owned_since = None
+        else:
+            self.owned_since = datetime.utcnow()
 
 
 class ResistanceMixin:

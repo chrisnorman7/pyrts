@@ -192,7 +192,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         if b is None:
             self.message('You are homeless.')
         else:
-            b.owner = self
+            b.set_owner(self)
             b.save()
         self.move(e.x, e.y)
         self.send_title()
@@ -273,7 +273,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         """Returns a list of unit types, in the order they have been recruited
         by this player."""
         types = []
-        for u in Unit.query(owner=self).order_by(Unit.updated):
+        for u in Unit.query(owner=self).order_by(Unit.owned_since):
             if u.type not in types:
                 types.append(u.type)
         return types

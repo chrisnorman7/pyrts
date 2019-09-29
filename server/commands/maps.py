@@ -626,7 +626,7 @@ def acquire(player):
     elif fo.owner is not None:
         player.message('That object has already been acquired.')
     else:
-        fo.owner = player
+        fo.set_owner(player)
         if isinstance(fo, Unit):
             fo.speak('ready')
         player.message('Done.')
@@ -641,7 +641,7 @@ def _recruit(building_id, building_unit_id):
     t = UnitType.get(bm.unit_type_id)
     u = b.location.add_unit(t, *b.coordinates)
     player = b.owner
-    u.owner = player
+    u.set_owner(player)
     u.home = b
     u.speak('ready')
     u.save()
@@ -787,7 +787,7 @@ def build_building(location, player, id):
             home.take_requirements(bt)
             fo.speak('ok')
             b = location.add_building(bt, *fo.coordinates)
-            b.owner = player
+            b.set_owner(player)
             b.hp = 0
             b.save()
             player.message(f'{b.get_name()} ready.')
@@ -814,7 +814,7 @@ def release(player):
             value = getattr(fo.home, name)
             value += getattr(bm, name)
             setattr(fo.home, name, value)
-        fo.owner = None
+        fo.set_owner(None)
         fo.home = None
         fo.speak('bye')
         fo.save()
