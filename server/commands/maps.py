@@ -446,9 +446,29 @@ def select_unit_list(index, player):
         player.message('No units to show.')
 
 
-def focus_unit(hotkey, player):
+def focus_unit(index, player):
     """Focus a unit from a list."""
-    player.message(f'You pressed {hotkey}.')
+    q = Unit.query(**player.same_coordinates())
+    types = player.unit_types
+    c = len(types)
+    if not index:
+        name = 'All'
+    elif index > c:
+        return player.message(
+            f'There {is_are(c)} only {c} {pluralise(c, "type")} of unit.'
+        )
+    else:
+        ut = types[index - 1]
+        q = q.filter_by(type=ut)
+        name = f'{ut.get_name()} units'
+    if not q.count():
+        return player.message('You see no units here.')
+    m = Menu(name)
+    for u in q:
+        m.add_item(
+            u.get_name(), 'focus_thing', args=dict(class_name='Unit', id=u.id)
+        )
+    m.send(player.connection)
 
 
 for x, hotkey in enumerate('aqwertyuiop'):
@@ -469,10 +489,10 @@ for x, hotkey in enumerate('aqwertyuiop'):
         lambda player, index=x: select_unit_list(index, player)
     )
     command(
-        name=f'focus_unit_{hotkey}', hotkey=f'alt+ctrl+{hotkey}',
+        name=f'focus_unit_{x}', hotkey=f'alt+ctrl+{hotkey}',
         description='Focus a specific unit from a list'
     )(
-        lambda player, hotkey=hotkey: focus_unit(hotkey, player)
+        lambda player, index=x: focus_unit(index, player)
     )
 
 
