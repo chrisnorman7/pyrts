@@ -500,7 +500,7 @@ for x, hotkey in enumerate('aqwertyuiop'):
 def focus_thing(player, class_name, id):
     """Focus anything on the map, with a class name and an id."""
     cls = Base._decl_class_registry[class_name]
-    obj = cls.first(**player.samecoordinates(), id=id)
+    obj = cls.first(**player.same_coordinates(), id=id)
     if obj is None:
         player.message('You see nothing like that here.')
     else:
