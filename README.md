@@ -1,6 +1,9 @@
 # PyRTS
 A web-based realtime strategy game.
 
+## Trying the game
+There's probably a running instance of the game at [this link](http://mindspace.site:7873).
+
 ## Running the server
 * Install Python (version 3.7.4 or later is bound to work).
 * Install the requirements from requirements.txt.
