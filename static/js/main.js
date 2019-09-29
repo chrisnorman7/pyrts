@@ -338,7 +338,7 @@ keyboard.onkeydown = (e) => {
         }
     }
     if (e.key == "é") {
-        key = ["alt", "ctrl", "e"]
+        keys = ["alt", "ctrl", "e"]
     } else {
         keys.push(e.key)
     }
