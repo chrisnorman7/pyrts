@@ -2,12 +2,13 @@
 
 import os.path
 
+from datetime import datetime
 from inspect import isclass
 from urllib.parse import quote
 
-from sqlalchemy import Column, Integer, String, ForeignKey, inspect
+from sqlalchemy import Column, Integer, String, ForeignKey, inspect, DateTime
 from sqlalchemy.exc import DatabaseError
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 from .engine import engine
@@ -197,6 +198,11 @@ class LocationMixin:
 
 
 class OwnerMixin:
+    updated = Column(
+        DateTime(timezone=True), nullable=True, onupdate=datetime.utcnow,
+        default=datetime.utcnow
+    )
+
     @declared_attr
     def owner_id(cls):
         return Column(Integer, ForeignKey('players.id'), nullable=True)
@@ -204,8 +210,9 @@ class OwnerMixin:
     @declared_attr
     def owner(cls):
         return relationship(
-            'Player', backref=f'owned_{cls.__tablename__}',
-            foreign_keys=[cls.owner_id], remote_side='Player.id'
+            'Player', backref=backref(
+                f'owned_{cls.__tablename__}', order_by=cls.updated
+            ), foreign_keys=[cls.owner_id], remote_side='Player.id'
         )
 
 

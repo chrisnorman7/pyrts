@@ -506,3 +506,57 @@ def test_exploit_multiple(map, player, farm, mine, peasant, quarry):
     assert b.stone == 1
     assert u.gold == 0
     assert u.stone == 0
+
+
+def test_owned_units_order(player, map, peasant, farmer):
+    player.location = map
+    for cls in (Unit, Building):
+        cls.query(cls.owner_id.isnot(None)).update({cls.owner_id: None})
+    p1 = map.add_unit(peasant, 0, 0)
+    f = map.add_unit(farmer, 0, 0)
+    p2 = map.add_unit(peasant, 0, 0)
+    for thing in (p1, f, p2):
+        thing.owner = player
+        thing.save()
+    q = Unit.query(
+        owner=player
+    ).order_by(Unit.updated).all()
+    assert player.owned_units == q
+    assert player.owned_units == [p1, f, p2]
+    p1.owner = None
+    p1.save()
+    p1.owner = player
+    p1.save()  # Trigger p1.updated to be modified.
+    q = Unit.query(owner=player).order_by(
+        Unit.updated
+    ).all()
+    assert q == [f, p2, p1]
+    assert player.owned_units == [f, p2, p1]
+
+
+def test_unit_types(map, player, peasant, farmer):
+    player.location = map
+    player.save()
+    for cls in (Unit, Building):
+        cls.query(cls.owner_id.isnot(None)).update({cls.owner_id: None})
+    assert not player.owned_buildings
+    assert not player.owned_units
+    p = map.add_unit(peasant, 0, 0)
+    f = map.add_unit(farmer, 0, 0)
+    for thing in (p, f):
+        thing.owner = player
+        thing.save()
+    assert player.owned_units == [p, f]
+    assert player.unit_types == [peasant, farmer]
+    p.owner = None
+    p.save()
+    assert player.unit_types == [farmer]
+    p.owner = player
+    p.save()
+    assert player.owned_units == [f, p]
+    assert player.unit_types == [farmer, peasant]
+    f2 = map.add_unit(farmer, 0, 0)
+    f2.owner = player
+    f2.save()
+    assert player.owned_units == [f, p, f2]
+    assert player.unit_types == [farmer, peasant]

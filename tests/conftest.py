@@ -8,6 +8,7 @@ from server.options import options
 password = 'TestsAreFun123'
 farm = 'Farm'
 peasant = 'Peasant'
+farmer = 'Farmer'
 mine = 'Mine'
 quarry = 'Quarry'
 
@@ -48,6 +49,11 @@ def get_farm():
 def get_peasant():
     """Get the peasant unit type."""
     return UnitType.one(name=peasant)
+
+
+@fixture(name='farmer')
+def get_farmer():
+    return UnitType.one(name=farmer)
 
 
 @fixture(name='mine')

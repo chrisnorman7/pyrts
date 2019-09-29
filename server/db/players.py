@@ -268,6 +268,16 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
     def selected_units(self):
         return Unit.query(owner=self, selected=True)
 
+    @property
+    def unit_types(self):
+        """Returns a list of unit types, in the order they have been recruited
+        by this player."""
+        types = []
+        for u in Unit.query(owner=self).order_by(Unit.updated):
+            if u.type not in types:
+                types.append(u.type)
+        return types
+
     def same_coordinates(self):
         """Return a set of query-ready args representing this player's current
         location and coordinates."""
