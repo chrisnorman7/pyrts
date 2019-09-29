@@ -337,7 +337,11 @@ keyboard.onkeydown = (e) => {
             keys.push(possibleModifiers[name])
         }
     }
-    keys.push(e.key)
+    if (e.key == "é") {
+        key = ["alt", "ctrl", "e"]
+    } else {
+        keys.push(e.key)
+    }
     let key = keys.join("+").toLowerCase()
     let command = hotkeys[key]
     if (command) {
