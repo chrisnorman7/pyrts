@@ -472,7 +472,7 @@ for x, hotkey in enumerate('aqwertyuiop'):
         name=f'focus_unit_{hotkey}', hotkey=f'ctrl+shift+{hotkey}',
         description='Focus a specific unit from a list'
     )(
-        lambda player, index=x: focus_unit(index, player)
+        lambda player, hotkey=hotkey: focus_unit(hotkey, player)
     )
 
 
