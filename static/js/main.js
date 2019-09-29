@@ -327,20 +327,30 @@ const possibleModifiers = {
     shiftKey: "shift"
 }
 
+const accents = {
+    225: "a", // á
+    233: "e", // é
+    237: "i", // í
+    243: "o", // ó
+    250: "u", // ú
+    8364: "4", // €
+}
+
 keyboard.onkeydown = (e) => {
     if (!connected) {
         return
     }
-    let keys = []
-    for (let name in possibleModifiers) {
-        if (e[name]) {
-            keys.push(possibleModifiers[name])
+    let keys = accents[e.key.charCodeAt()]
+    if (keys === undefined) {
+        keys = []
+        for (let name in possibleModifiers) {
+            if (e[name]) {
+                keys.push(possibleModifiers[name])
+            }
         }
-    }
-    if (e.key == "é") {
-        keys = ["alt", "ctrl", "e"]
-    } else {
         keys.push(e.key)
+    } else {
+        keys = ["alt", "ctrl", keys]
     }
     let key = keys.join("+").toLowerCase()
     let command = hotkeys[key]
