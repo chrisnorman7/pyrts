@@ -446,9 +446,9 @@ def select_unit_list(index, player):
         player.message('No units to show.')
 
 
-def focus_unit(index, player):
+def focus_unit(hotkey, player):
     """Focus a unit from a list."""
-    player.message(index)
+    player.message(hotkey)
 
 
 for x, hotkey in enumerate('aqwertyuiop'):
