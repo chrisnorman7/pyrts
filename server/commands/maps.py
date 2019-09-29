@@ -387,24 +387,20 @@ def select_units(index, player):
         group = 'All'
         q = Unit.query(owner=player)
     else:
-        location = player.location
-        q = []
-        for u in Unit.query(location=location, owner=player):
-            if u.type not in q:
-                q.append(u.type)
+        types = player.unit_types
         try:
-            ut = q[index - 1]
+            ut = types[index - 1]
             group = ut.name
             q = Unit.query(owner=player, type=ut)
         except IndexError:
-            c = len(q)
-            if c:
+            c = len(types)
+            if types:
                 player.message(
                     f'There {is_are(c)} only {c} {pluralise(c, "type")} of '
                     'unit.'
                 )
             else:
-                player.message('There is nothing here.')
+                player.message('There are no units here.')
             return
     c = q.update({Unit.selected: True})
     player.message(f'{group}: {c} {pluralise(c, "unit")} selected.')
@@ -416,11 +412,7 @@ def select_unit_list(index, player):
         name = 'All Units'
         kwargs = {}
     else:
-        location = player.location
-        types = []
-        for u in Unit.query(location=location, owner=player):
-            if u.type not in types:
-                types.append(u.type)
+        types = player.unit_types
         try:
             type = types[index - 1]
             kwargs = dict(type=type)
