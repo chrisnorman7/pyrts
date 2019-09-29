@@ -446,6 +446,11 @@ def select_unit_list(index, player):
         player.message('No units to show.')
 
 
+def focus_unit(index, player):
+    """Focus a unit from a list."""
+    player.message(index)
+
+
 for x, hotkey in enumerate('aqwertyuiop'):
     if hotkey == 'a':
         description = 'Select all your units.'
@@ -463,6 +468,24 @@ for x, hotkey in enumerate('aqwertyuiop'):
     )(
         lambda player, index=x: select_unit_list(index, player)
     )
+    command(
+        name=f'focus_unit_{x}', hotkey=f'control+shift+{x}',
+        description='Focus a specific unit from a list'
+    )(
+        lambda player, index=x: focus_unit(index, player)
+    )
+
+
+@command()
+def focus_thing(player, class_name, id):
+    """Focus anything on the map, with a class name and an id."""
+    cls = Base._decl_class_registry[class_name]
+    obj = cls.first(**player.samecoordinates(), id=id)
+    if obj is None:
+        player.message('You see nothing like that here.')
+    else:
+        player.focussed_object = obj
+        switch_object(player, 0)
 
 
 @command(location_type=LocationTypes.finalised)
