@@ -4,11 +4,12 @@ import os.path
 from yaml import dump
 
 from server.db import (
-    load, UnitType, FeatureType, BuildingType, dump_object, AttackType
+    load, UnitType, FeatureType, BuildingType, dump_object, AttackType, setup
 )
 from server.options import options
 
 load()
+setup()
 
 for cls in (UnitType, BuildingType, FeatureType, AttackType):
     path = os.path.join('types', cls.__name__)
