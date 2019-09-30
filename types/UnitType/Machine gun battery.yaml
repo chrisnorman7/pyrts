@@ -1,5 +1,5 @@
 attack: Machine Gun
-attack_type_id: 7
+attack_type_id: 6
 buildings: []
 max_health: 35
 name: Machine Gun Battery
