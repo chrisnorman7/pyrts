@@ -3,7 +3,7 @@ from pytest import fixture
 from server.db import (
     BuildingType, FeatureType, Map, UnitType, Player, setup
 )
-from server.events import events
+from server.events import register, unregister, events, on_exploit
 from server.options import options
 
 password = 'TestsAreFun123'
@@ -19,6 +19,8 @@ def create_stuff():
     """Initialise the database and create stuff."""
     events.clear()
     setup()
+    ut = UnitType.first(name=peasant)
+    ut.stone = 1
     assert options.start_building is not None
     Player.create('test', password, 'Test Player').save()
 
@@ -75,3 +77,10 @@ def get_transport(map, peasant, farm):
     t = u.set_transport(b)
     t.save()
     return t
+
+
+@fixture(name='on_exploit')
+def get_on_exploit():
+    register(on_exploit)
+    yield on_exploit
+    unregister(on_exploit)
