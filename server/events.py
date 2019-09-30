@@ -97,3 +97,6 @@ def fire(name, *args, **kwargs):
         if func(*args, **kwargs) is EVENT_STOP:
             break
     return n
+
+
+on_attack = register('on_attack')

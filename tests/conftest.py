@@ -3,6 +3,7 @@ from pytest import fixture
 from server.db import (
     BuildingType, FeatureType, Map, UnitType, Player, setup
 )
+from server.events import events
 from server.options import options
 
 password = 'TestsAreFun123'
@@ -16,6 +17,7 @@ quarry = 'Quarry'
 @fixture(scope='session', autouse=True)
 def create_stuff():
     """Initialise the database and create stuff."""
+    events.clear()
     setup()
     assert options.start_building is not None
     Player.create('test', password, 'Test Player').save()

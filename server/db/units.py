@@ -15,6 +15,8 @@ from .base import (
 )
 from .transports import Transport
 
+from ..combat import CombatAction
+from ..events import fire, on_attack
 from ..options import options
 
 tasks = {}
@@ -438,54 +440,9 @@ class Unit(
                 x.type.resistance
             )
             damage = randint(1, damage)
-            if isinstance(x, Building):
-                self.sound('destroy.wav')
-            else:
-                self.sound(self.type.attack_type.sound)
-                x.sound('ouch.wav')
-                if x.action is not UnitActions.attack:
-                    x.attack(self)
-            x.hp -= damage
-            if x.hp < 0:
-                if isinstance(x, Building):
-                    self.sound('collapse.wav')
-                    self.sound('destroyed.wav')
-                    if x.owner is not None:
-                        x.owner.message(f'{x.get_name()} has been destroyed.')
-                else:
-                    if x.owner is not None:
-                        x.owner.message(f'{x.get_name()} has been killed.')
-                    x.sound('die.wav')
-                adversary = x.owner
-                for name in x.resources:
-                    value = getattr(x, name)
-                    setattr(self, name, getattr(self, name) + 1)
-                x.delete()
-                player = self.owner
-                if adversary is not None:
-                    if adversary.has_lost():
-                        for p in self.location.players:
-                            if p is player:
-                                p.sound('beat.wav')
-                                p.message(f'You beat {adversary.get_name()}.')
-                            elif p is adversary:
-                                p.sound('lose.wav')
-                                p.message(
-                                    f'You are beaten by {self.get_name()}.'
-                                )
-                                p.leave_map()
-                                p.losses += 1
-                                p.save()
-                            else:
-                                p.message(
-                                    f'{self.name()} beats '
-                                    f'{adversary.get_name()}.'
-                                )
-                        if player.has_won():
-                            player.message('You have won!')
-                            player.sound('win.wav')
-                            player.wins += 1
-                            player.save()
+            action = CombatAction(self, x, damage)
+            fire(on_attack, action)
+            action.enact()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
