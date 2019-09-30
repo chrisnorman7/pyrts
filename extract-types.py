@@ -6,6 +6,7 @@ from yaml import dump
 from server.db import (
     load, UnitType, FeatureType, BuildingType, dump_object, AttackType
 )
+from server.options import options
 
 load()
 
@@ -16,6 +17,8 @@ for cls in (UnitType, BuildingType, FeatureType, AttackType):
         print(f'Created directory {path}.')
     for obj in cls.all():
         d = dump_object(obj)
+        if obj is options.start_building:
+            d['start_building'] = True
         del d['id']
         if isinstance(obj, BuildingType) and obj.depends is not None:
             del d['depends_id']

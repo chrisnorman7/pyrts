@@ -102,11 +102,14 @@ def bootstrap():
                 _recruits = d.pop('recruits', [])
             elif cls is BuildingType:
                 _depends = d.pop('depends', None)
+                start_building = d.pop('start_building', False)
             if 'id' in d:
                 del d['id']
             if not cls.count(name=d['name']):
                 obj = cls(**d)
                 obj.save()
+                if cls is BuildingType and start_building:
+                    options.set_default('start_building', obj)
                 logger.info('Created %s (#%d).', obj, obj.id)
             else:
                 logger.info('Skipping %s.', d['name'])
