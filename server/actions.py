@@ -3,6 +3,7 @@
 from attr import attrs, attrib
 
 from .db import Building
+from .events import fire, on_attack, on_drop, on_exploit, on_heal, on_repair
 
 
 @attrs
@@ -25,6 +26,7 @@ class CombatAction(BaseAction):
 
     def enact(self):
         """Carry out this action."""
+        fire(on_attack)
         unit = self.unit
         player = unit.owner
         target = self.target
@@ -85,6 +87,7 @@ class ExploitAction(CombatAction):
 
     def enact(self):
         """Take the resources."""
+        fire(on_exploit, self)
         unit = self.unit
         target = self.target
         name = self.resource_name
@@ -108,6 +111,7 @@ class DropAction(BaseAction):
 
     def enact(self):
         """Drop the goods."""
+        fire(on_drop, self)
         unit = self.unit
         for name in unit.resources:
             value = getattr(unit, name)
@@ -115,3 +119,41 @@ class DropAction(BaseAction):
             setattr(unit.home, name, getattr(unit.home, name) + value)
         unit.sound('drop.wav')
         unit.action = unit.UnitActions.exploit
+
+
+@attrs
+class HealRepairAction(BaseAction):
+    """Used when healing other units or repairing buildings. When coding for
+    units, use HealAction and RepairAction instead."""
+
+    target = attrib()
+
+    def get_particulars(self):
+        raise NotImplementedError
+
+    def enact(self):
+        """Perform the healing."""
+        amount, sound, event_name = self.get_particulars()
+        fire(event_name, self)
+        unit = self.unit
+        target = self.target
+        target.heal(amount)
+        target.save()
+        unit.sound(sound)
+        if unit.health is None:
+            unit.speak('finished')
+
+
+class HealAction(HealRepairAction):
+    """Used hwen heading other units."""
+
+    def get_particulars(self):
+        return (self.unit.type.heal_amount, 'heal.wav', on_heal)
+
+
+@attrs
+class RepairAction(HealRepairAction):
+    """Used when repairing buildings."""
+
+    def get_particulars(self):
+        return (self.unit.type.repair_amount, 'repair.wav', on_repair)

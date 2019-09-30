@@ -15,8 +15,9 @@ from .base import (
 )
 from .transports import Transport
 
-from ..actions import CombatAction, ExploitAction, DropAction
-from ..events import fire, on_attack, on_drop, on_exploit
+from ..actions import (
+    CombatAction, ExploitAction, DropAction, HealAction, RepairAction
+)
 
 tasks = {}
 
@@ -327,9 +328,7 @@ class Unit(
                 return self.declare_homeless()
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
-                action = DropAction(self)
-                fire(on_drop, action)
-                action.enact()
+                DropAction(self).enact()
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is UnitActions.exploit:
@@ -343,11 +342,9 @@ class Unit(
             else:
                 # We are in place.
                 name = self.exploiting_material
-                action = ExploitAction(
+                ExploitAction(
                     self, self.exploiting, getattr(self.type, name), name
-                )
-                fire(on_exploit, action)
-                action.enact()
+                ).enact()
         elif a is UnitActions.patrol_out:
             if self.coordinates == self.target:
                 self.action = UnitActions.patrol_back
@@ -375,37 +372,26 @@ class Unit(
             elif self.coordinates == x.coordinates:
                 # We are here, do the repair.
                 if a is UnitActions.heal:
-                    amount = self.type.heal_amount
-                    sound = 'heal.wav'
+                    cls = HealAction
                 else:
-                    amount = self.type.repair_amount
-                    sound = 'repair.wav'
-                x.heal(amount)
-                self.sound(sound)
-                x.save()
-                if x.health is None:
-                    self.speak('finished')
+                    cls = RepairAction
+                cls(self, x).enact()
             else:
                 self.move_towards(*x.coordinates)
         elif a is UnitActions.guard:
             if any([self.type.auto_repair, self.type.auto_heal]):
                 if self.type.auto_repair:
                     cls = Building
-                    amount = self.type.repair_amount
-                    sound = 'repair'
+                    action_class = RepairAction
                 else:
                     cls = Unit
-                    amount = self.type.heal_amount
-                    sound = 'heal'
+                    action_class = HealAction
                 q = cls.all(
                     cls.health.isnot(None), **self.owner.same_coordinates()
                 )
                 if len(q):
                     thing = choice(q)
-                    thing.heal(amount)
-                    self.sound(f'{sound}.wav')
-                    if thing.health is None:
-                        self.speak('finished')
+                    action_class(self, thing).enact()
         elif a is UnitActions.attack:
             if self.type.attack_type is None:
                 return self.reset_action()
@@ -417,9 +403,7 @@ class Unit(
                 x.type.resistance
             )
             damage = randint(1, damage)
-            action = CombatAction(self, x, damage)
-            fire(on_attack, action)
-            action.enact()
+            CombatAction(self, x, damage).enact()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
