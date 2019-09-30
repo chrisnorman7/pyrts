@@ -51,3 +51,19 @@ class NoSuchOption(OptionsError):
 
 class DuplicateOption(OptionsError):
     """Tried to create a duplicate option."""
+
+
+class EventException(Error):
+    """An event error."""
+
+
+class DuplicateName(EventException):
+    """There is already an event with that name."""
+
+
+class NoSuchEvent(EventException):
+    """There is no event with that name."""
+
+
+class NoSuchListener(EventException):
+    """That listener does not exist."""
