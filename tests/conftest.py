@@ -1,7 +1,8 @@
 from pytest import fixture
 
 from server.db import (
-    BuildingType, FeatureType, Map, UnitType, Player, setup
+    Building, BuildingType, Feature, FeatureType, Map, Unit, UnitType, Player,
+    setup, Transport
 )
 from server.events import register, unregister, events, on_exploit, on_drop
 from server.options import options
@@ -22,7 +23,6 @@ def create_stuff():
     ut = UnitType.first(name=peasant)
     ut.stone = 1
     assert options.start_building is not None
-    Player.create('test', password, 'Test Player').save()
 
 
 @fixture(name='map')
@@ -40,7 +40,9 @@ def get_password():
 
 @fixture(name='player')
 def new_player(password):
-    return Player.first()
+    p = Player.create('test', password, 'Test Player')
+    p.save()
+    return p
 
 
 @fixture(name='farm')
@@ -86,3 +88,10 @@ def get_on_exploit():
     yield
     for name in (on_drop, on_exploit):
         unregister(name)
+
+
+@fixture(autouse=True)
+def delete_all():
+    """Delete all database objects before a new test runs."""
+    for cls in (Building, Feature, Player, Unit, Map, Transport):
+        cls.query().delete()
