@@ -17,7 +17,6 @@ from .transports import Transport
 
 from ..actions import CombatAction, ExploitAction
 from ..events import fire, on_attack, on_exploit
-from ..options import options
 
 tasks = {}
 
@@ -305,17 +304,6 @@ class Unit(
         self.exploiting_material = None
         self.target = self.coordinates
 
-    def rehome(self):
-        """In the event that self.home becomes None, try and find a new
-        home."""
-        Building = Base._decl_class_registry['Building']
-        BuildingType = Base._decl_class_registry['BuildingType']
-        self.home = Building.query(
-            location=self.location, owner=self.owner
-        ).join(
-            Building.type
-        ).filter(BuildingType.id == options.start_building.id).first()
-
     def declair_homeless(self):
         """This unit is homeless. Tell the world."""
         return self.speak('homeless')
@@ -333,12 +321,9 @@ class Unit(
             return self.reset_action()
         elif a is UnitActions.drop:
             if self.home is None:
-                # Homeless now. Try and reroute.
-                self.rehome()
-                if self.home is None:
-                    # They have no buildings left, we are probably unemployed.
-                    self.declair_homeless()
-                    return self.reset_action()
+                # Homeless.
+                self.declair_homeless()
+                return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
                 for name in self.resources:
@@ -372,10 +357,8 @@ class Unit(
                 self.move_towards(*self.target)
         elif a is UnitActions.patrol_back:
             if self.home is None:
-                self. rehome()
-                if self.home is None:
-                    self.declair_homeless()
-                    return self.reset_action()
+                self.declair_homeless()
+                return self.reset_action()
             elif self.coordinates == self.home.coordinates:
                 self.action = UnitActions.patrol_out
             else:
