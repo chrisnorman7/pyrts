@@ -3,7 +3,7 @@ from pytest import fixture
 from server.db import (
     BuildingType, FeatureType, Map, UnitType, Player, setup
 )
-from server.events import register, unregister, events, on_exploit
+from server.events import register, unregister, events, on_exploit, on_drop
 from server.options import options
 
 password = 'TestsAreFun123'
@@ -81,6 +81,8 @@ def get_transport(map, peasant, farm):
 
 @fixture(name='on_exploit')
 def get_on_exploit():
-    register(on_exploit)
-    yield on_exploit
-    unregister(on_exploit)
+    for name in (on_drop, on_exploit):
+        register(name)
+    yield
+    for name in (on_drop, on_exploit):
+        unregister(name)

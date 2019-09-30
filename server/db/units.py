@@ -15,8 +15,8 @@ from .base import (
 )
 from .transports import Transport
 
-from ..actions import CombatAction, ExploitAction
-from ..events import fire, on_attack, on_exploit
+from ..actions import CombatAction, ExploitAction, DropAction
+from ..events import fire, on_attack, on_drop, on_exploit
 
 tasks = {}
 
@@ -304,9 +304,11 @@ class Unit(
         self.exploiting_material = None
         self.target = self.coordinates
 
-    def declair_homeless(self):
+    def declare_homeless(self):
         """This unit is homeless. Tell the world."""
-        return self.speak('homeless')
+        self.speak('homeless')
+        self.reset_action()
+        self.save()
 
     @classmethod
     def progress(cls, id):
@@ -322,16 +324,12 @@ class Unit(
         elif a is UnitActions.drop:
             if self.home is None:
                 # Homeless.
-                self.declair_homeless()
-                return self.reset_action()
+                return self.declare_homeless()
             elif self.coordinates == self.home.coordinates:
                 # We are home, drop off some exploited material.
-                for name in self.resources:
-                    value = getattr(self, name)
-                    setattr(self, name, 0)
-                    setattr(self.home, name, getattr(self.home, name) + value)
-                self.sound('drop.wav')
-                self.action = UnitActions.exploit
+                action = DropAction(self)
+                fire(on_drop, action)
+                action.enact()
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is UnitActions.exploit:
@@ -357,8 +355,8 @@ class Unit(
                 self.move_towards(*self.target)
         elif a is UnitActions.patrol_back:
             if self.home is None:
-                self.declair_homeless()
-                return self.reset_action()
+                self.declare_homeless()
+                return self.guard()
             elif self.coordinates == self.home.coordinates:
                 self.action = UnitActions.patrol_out
             else:

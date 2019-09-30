@@ -6,10 +6,20 @@ from .db import Building
 
 
 @attrs
-class CombatAction:
-    """An action in combat."""
+class BaseAction:
+    """The base for all other actions. Simply holds a reference to the unit
+    that initiated a given action."""
 
     unit = attrib()
+
+    def enact(self):
+        raise NotImplementedError
+
+
+@attrs
+class CombatAction(BaseAction):
+    """An action in combat."""
+
     target = attrib()
     amount = attrib()
 
@@ -83,7 +93,6 @@ class ExploitAction(CombatAction):
         if not value:
             # Empty resource.
             unit.speak('finished')
-            return unit.reset_action()
         unit.sound(f'exploit/{name}.wav')
         amount = min(amount, value)
         setattr(unit, name, amount)
@@ -91,4 +100,18 @@ class ExploitAction(CombatAction):
         setattr(target, name, value)
         target.save()
         unit.action = unit.UnitActions.drop
-        unit.save()
+
+
+@attrs
+class DropAction(BaseAction):
+    """Drop off resources at self.unit.home."""
+
+    def enact(self):
+        """Drop the goods."""
+        unit = self.unit
+        for name in unit.resources:
+            value = getattr(unit, name)
+            setattr(unit, name, 0)
+            setattr(unit.home, name, getattr(unit.home, name) + value)
+        unit.sound('drop.wav')
+        unit.action = unit.UnitActions.exploit
