@@ -5,12 +5,13 @@ def check_unit(
     unit, home, exploiting, material, target_coordinates, current_coordinates,
     action
 ):
+    assert isinstance(unit, Unit)
     assert unit.home is home
     assert unit.exploiting is exploiting
-    assert unit.target == target_coordinates
     assert unit.exploiting_material == material
-    assert unit.coordinates == current_coordinates
     assert unit.action is action
+    assert unit.coordinates == current_coordinates
+    assert unit.target == target_coordinates
 
 
 def test_exploit(on_exploit, player, map, peasant, mine, farm):
@@ -80,6 +81,26 @@ def test_exploit_multiple(
 def test_patrol(player, peasant, map, farm):
     p = map.add_unit(peasant, 0, 0)
     player.location = map
-    f = map.add_building(farm, 2, 2)
+    f = map.add_building(farm, 0, 0)
     p.home = f
-    p.target = p.coordinates
+    p.owner = player
+    p.save()
+    tc = (2, 2)
+    args = (p, p.home, None, None)
+    p.patrol(*tc)
+    check_unit(*args, tc, (0, 0), UnitActions.patrol_out)
+    Unit.progress(p.id)
+    check_unit(*args, tc, (1, 1), UnitActions.patrol_out)
+    Unit.progress(p.id)
+    check_unit(*args, tc, tc, UnitActions.patrol_out)
+    Unit.progress(p.id)
+    check_unit(*args, tc, (2, 2), UnitActions.patrol_back)
+    Unit.progress(p.id)
+    check_unit(*args, tc, (1, 1), UnitActions.patrol_back)
+    Unit.progress(p.id)
+    check_unit(*args, tc, (0, 0), UnitActions.patrol_back)
+    Unit.progress(p.id)
+    check_unit(*args, tc, (0, 0), UnitActions.patrol_out)
+    # Let's check they head out again.
+    Unit.progress(p.id)
+    check_unit(*args, tc, (1, 1), UnitActions.patrol_out)
