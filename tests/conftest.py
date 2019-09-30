@@ -4,7 +4,9 @@ from server.db import (
     Building, BuildingType, Feature, FeatureType, Map, Unit, UnitType, Player,
     setup, Transport
 )
-from server.events import register, unregister, events, on_exploit, on_drop
+from server.events import (
+    register, unregister, events, on_drop, on_exploit, on_heal
+)
 from server.options import options
 
 password = 'TestsAreFun123'
@@ -22,6 +24,7 @@ def create_stuff():
     setup()
     ut = UnitType.first(name=peasant)
     ut.stone = 1
+    ut.heal_amount = 1
     assert options.start_building is not None
 
 
@@ -82,7 +85,7 @@ def get_transport(map, peasant, farm):
 
 
 @fixture(name='on_exploit')
-def get_on_exploit():
+def set_on_exploit():
     for name in (on_drop, on_exploit):
         register(name)
     yield
@@ -95,3 +98,10 @@ def delete_all():
     """Delete all database objects before a new test runs."""
     for cls in (Building, Feature, Player, Unit, Map, Transport):
         cls.query().delete()
+
+
+@fixture(name='on_heal')
+def set_on_heal():
+    register(on_heal)
+    yield
+    unregister(on_heal)

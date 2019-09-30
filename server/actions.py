@@ -1,9 +1,15 @@
 """Provides the various action classes that are used by Unit.progress."""
 
-from attr import attrs, attrib
+from random import randint
+
+from attr import attrs, attrib, Factory
 
 from .db import Building
-from .events import fire, on_attack, on_drop, on_exploit, on_heal, on_repair
+from .events import (
+    fire, on_attack, on_drop, on_exhaust, on_exploit, on_heal, on_repair
+)
+
+NoneType = type(None)
 
 
 @attrs
@@ -21,13 +27,15 @@ class BaseAction:
 class CombatAction(BaseAction):
     """An action in combat."""
 
-    target = attrib()
-    amount = attrib()
+    amount = attrib(default=Factory(int), init=False)
 
     def enact(self):
         """Carry out this action."""
-        fire(on_attack)
         unit = self.unit
+        t = unit.type
+        damage = max(1, t.strength + t.attack_type.strength - t.resistance)
+        self.damage = randint(1, damage)
+        fire(on_attack)
         player = unit.owner
         target = self.target
         adversary = target.owner
@@ -36,7 +44,7 @@ class CombatAction(BaseAction):
         else:
             unit.sound(unit.type.attack_type.sound)
             target.sound('ouch.wav')
-            if target.type.action is not None:
+            if target.action is None:
                 target.attack(unit)
         target.hp -= self.amount
         if target.hp < 0:
@@ -80,28 +88,37 @@ class CombatAction(BaseAction):
 
 
 @attrs
-class ExploitAction(CombatAction):
+class ExploitAction(BaseAction):
     """The action used when exploiting buildings or features."""
 
-    resource_name = attrib()
+    amount = attrib(default=Factory(NoneType))
+    resource_name = attrib(default=Factory(NoneType))
 
     def enact(self):
         """Take the resources."""
         fire(on_exploit, self)
         unit = self.unit
-        target = self.target
+        t = unit.type
+        target = unit.exploiting
         name = self.resource_name
+        if name is None:
+            name = unit.exploiting_material
         amount = self.amount
+        if amount is None:
+            amount = getattr(t, name)
         value = getattr(target, name)
         if not value:
             # Empty resource.
             unit.speak('finished')
+            return unit.reset_action()
         unit.sound(f'exploit/{name}.wav')
         amount = min(amount, value)
         setattr(unit, name, amount)
         value -= amount
         setattr(target, name, value)
         target.save()
+        if not value:
+            fire(on_exhaust, unit, target, name)
         unit.action = unit.UnitActions.drop
 
 
@@ -126,22 +143,30 @@ class HealRepairAction(BaseAction):
     """Used when healing other units or repairing buildings. When coding for
     units, use HealAction and RepairAction instead."""
 
-    target = attrib()
+    target = attrib(default=Factory(NoneType), init=False)
+    amount = attrib(default=Factory(int), init=False)
+    sound = attrib(default=Factory(NoneType), init=False)
 
     def get_particulars(self):
         raise NotImplementedError
 
     def enact(self):
         """Perform the healing."""
-        amount, sound, event_name = self.get_particulars()
+        amount, self.sound, event_name = self.get_particulars()
+        self.amount = randint(1, amount)
         fire(event_name, self)
         unit = self.unit
+        amount = self.amount
+        sound = self.sound
         target = self.target
+        if target is None:
+            target = unit.exploiting
         target.heal(amount)
         target.save()
         unit.sound(sound)
-        if unit.health is None:
+        if target.health is None:
             unit.speak('finished')
+            unit.reset_action()
 
 
 class HealAction(HealRepairAction):

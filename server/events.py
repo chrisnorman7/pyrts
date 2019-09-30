@@ -105,3 +105,4 @@ on_drop = register('on_drop')
 
 on_heal = register('on_heal')
 on_repair = register('on_repair')
+on_exhaust = register('on_exhaust')

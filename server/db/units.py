@@ -1,7 +1,7 @@
 """Provides the UnitType and Unit classes."""
 
 from enum import Enum as _Enum
-from random import uniform, choice, randint
+from random import uniform, choice
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
 from sqlalchemy.orm import relationship
@@ -223,6 +223,7 @@ class Unit(
         self.exploiting."""
         self.action = UnitActions.heal
         self.exploiting = unit
+        self.target = unit.coordinates
         self.start_task()
 
     def travel(self, x, y):
@@ -332,19 +333,15 @@ class Unit(
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is UnitActions.exploit:
-            x = self.exploiting
             if self.coordinates != self.target:
                 self.move_towards(*self.target)
-            elif x is None:
+            elif self.exploiting is None:
                 # Not exploiting anymore.
                 self.speak('nothing')
                 return self.reset_action()
             else:
                 # We are in place.
-                name = self.exploiting_material
-                ExploitAction(
-                    self, self.exploiting, getattr(self.type, name), name
-                ).enact()
+                ExploitAction(self).enact()
         elif a is UnitActions.patrol_out:
             if self.coordinates == self.target:
                 self.action = UnitActions.patrol_back
@@ -369,13 +366,17 @@ class Unit(
             if x is None or x.health is None:
                 # We are done.
                 return self.reset_action()
-            elif self.coordinates == x.coordinates:
+            elif self.coordinates == self.target:
                 # We are here, do the repair.
+                if x.coordinates != self.coordinates:
+                    # The thing to be healed / repaired is not here.
+                    self.speak('nothing')
+                    return self.reset_action()
                 if a is UnitActions.heal:
                     cls = HealAction
                 else:
                     cls = RepairAction
-                cls(self, x).enact()
+                cls(self).enact()
             else:
                 self.move_towards(*x.coordinates)
         elif a is UnitActions.guard:
@@ -398,12 +399,7 @@ class Unit(
             x = self.exploiting
             if x is None or x.coordinates != self.coordinates:
                 return self.reset_action()
-            damage = max(
-                1, self.type.strength + self.type.attack_type.strength -
-                x.type.resistance
-            )
-            damage = randint(1, damage)
-            CombatAction(self, x, damage).enact()
+            CombatAction(self, x).enact()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
