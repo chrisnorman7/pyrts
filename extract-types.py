@@ -1,6 +1,8 @@
 import os
 import os.path
 
+from shutil import rmtree
+
 from yaml import dump
 
 from server.db import (
@@ -11,6 +13,9 @@ from server.options import options
 load()
 setup()
 
+if os.path.isdir('types'):
+    rmtree('types')
+    print('Deleted types directory.')
 for cls in (UnitType, BuildingType, FeatureType, AttackType):
     path = os.path.join('types', cls.__name__)
     if not os.path.isdir(path):
