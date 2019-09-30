@@ -49,6 +49,8 @@ def dump_object(obj):
 
 
 def dump_objects():
+    """Return all objects as dictionaries, suitable for dumping with
+    db_dumper."""
     return db_dump(all_objects(), dump_object)
 
 
@@ -109,7 +111,7 @@ def bootstrap():
                 obj = cls(**d)
                 obj.save()
                 if cls is BuildingType and start_building:
-                    options.set_default('start_building', obj)
+                    options.start_building = obj
                 logger.info('Created %s (#%d).', obj, obj.id)
             else:
                 logger.info('Skipping %s.', d['name'])

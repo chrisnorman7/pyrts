@@ -3,11 +3,13 @@ attack_type_id: 8
 buildings: []
 name: Guard
 recruits:
-- building: Guard House
-  food: 25
-  gold: 50
-  pop_time: 10
-  water: 25
+- building: Castle
+  food: 8
+  gold: 8
+  pop_time: 12
+  stone: 5
+  water: 8
+  wood: 5
 repair_amount: 2
 resistance: 5
 speed: 7

@@ -1,0 +1,9 @@
+depends: Keep
+food: 15
+gold: 400
+max_health: 1000
+name: Bank
+resistance: 10000
+stone: 450
+water: 40
+wood: 80

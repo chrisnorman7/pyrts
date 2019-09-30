@@ -7,11 +7,11 @@ buildings:
 food: 1
 name: Farmer
 recruits:
-- building: Farm
-  food: 2
-  gold: 4
-  pop_time: 6
-  water: 2
+- building: Castle
+  food: 3
+  gold: 3
+  pop_time: 5
+  water: 3
 resistance: 2
 speed: 10
 strength: 3

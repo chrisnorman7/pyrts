@@ -6,11 +6,13 @@ buildings:
 - Hospital
 name: Engineer
 recruits:
-- building: University
-  food: 10
-  gold: 15
-  pop_time: 10
-  water: 10
+- building: Castle
+  food: 4
+  gold: 4
+  pop_time: 7
+  stone: 2
+  water: 4
+  wood: 2
 repair_amount: 3
 resistance: 3
 speed: 7

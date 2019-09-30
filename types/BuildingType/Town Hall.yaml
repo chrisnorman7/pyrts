@@ -1,5 +1,6 @@
 depends: Keep
 gold: 15
 name: Town Hall
+start_building: true
 stone: 10
 wood: 30

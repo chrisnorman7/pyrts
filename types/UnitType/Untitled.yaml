@@ -1,0 +1,8 @@
+buildings: []
+name: Untitled
+recruits:
+- building: Castle
+  gold: 1000000
+  pop_time: 300
+  water: 18
+  wood: 800

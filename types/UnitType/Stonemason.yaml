@@ -6,10 +6,12 @@ buildings:
 max_health: 25
 name: Stonemason
 recruits:
-- building: University
-  food: 20
-  gold: 20
-  water: 20
-  wood: 15
+- building: Castle
+  food: 5
+  gold: 5
+  pop_time: 10
+  stone: 4
+  water: 5
+  wood: 4
 speed: 18
 stone: 1

@@ -1,13 +1,14 @@
 buildings:
 - Town Hall
 - Farm
+- Bank
 gold: 1
 max_health: 15
 name: Peasant
 recruits:
-- building: Town Hall
-  food: 1
-  gold: 3
-  water: 1
+- building: Castle
+  food: 2
+  gold: 2
+  water: 2
 speed: 12
 wood: 1
