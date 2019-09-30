@@ -15,8 +15,8 @@ from .base import (
 )
 from .transports import Transport
 
-from ..combat import CombatAction
-from ..events import fire, on_attack
+from ..actions import CombatAction, ExploitAction
+from ..events import fire, on_attack, on_exploit
 from ..options import options
 
 tasks = {}
@@ -92,6 +92,7 @@ class Unit(
 ):
     """A unit on a map. Resources are used for storage (carrying)."""
 
+    UnitActions = UnitActions
     __tablename__ = 'units'
     __type_class__ = UnitType
     home_id = Column(Integer, ForeignKey('buildings.id'), nullable=True)
@@ -349,26 +350,21 @@ class Unit(
             else:
                 self.move_towards(*self.home.coordinates)
         elif a is UnitActions.exploit:
-            if self.coordinates == self.target:
+            x = self.exploiting
+            if self.coordinates != self.target:
+                self.move_towards(*self.target)
+            elif x is None:
+                # Not exploiting anymore.
+                self.speak('nothing')
+                return self.reset_action()
+            else:
                 # We are in place.
                 name = self.exploiting_material
-                x = self.exploiting
-                if x is None:
-                    # Not exploiting anymore.
-                    self.speak('nothing')
-                    return self.reset_action()
-                value = getattr(x, name)
-                if not value:
-                    # Empty resource.
-                    self.speak('finished')
-                    return self.reset_action()
-                self.sound(f'exploit/{name}.wav')
-                setattr(self, name, 1)
-                value -= 1
-                setattr(x, name, value)
-                self.action = UnitActions.drop
-            else:
-                self.move_towards(*self.target)
+                action = ExploitAction(
+                    self, self.exploiting, getattr(self.type, name), name
+                )
+                fire(on_exploit, action)
+                action.enact()
         elif a is UnitActions.patrol_out:
             if self.coordinates == self.target:
                 self.action = UnitActions.patrol_back

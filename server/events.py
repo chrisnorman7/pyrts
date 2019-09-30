@@ -100,3 +100,4 @@ def fire(name, *args, **kwargs):
 
 
 on_attack = register('on_attack')
+on_exploit = register('on_exploit')

@@ -4,10 +4,8 @@ from datetime import datetime
 
 from server.db import (
     Building, BuildingBuilder, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Unit, Player, Base
+    Map, Unit, Player, Base, UnitActions, dump_object
 )
-from server.db.units import UnitActions
-from server.db.util import dump_object
 from server.exc import InvalidUsername, InvalidPassword, NoSuchSound
 
 
@@ -320,7 +318,7 @@ def test_target(map, peasant):
     assert p.target == (4, 4)
 
 
-def test_exploit(player, map, peasant, mine, farm):
+def test_exploit(on_exploit, player, map, peasant, mine, farm):
     f = map.add_building(farm, 0, 0)
     p = map.add_unit(peasant, 0, 0)
     p.set_owner(player)
@@ -330,45 +328,36 @@ def test_exploit(player, map, peasant, mine, farm):
     for thing in (f, m, p):
         thing.save()
 
-    def check_peasant():
+    def check_peasant(coordinates, action):
         assert p.home is f
         assert p.exploiting is m
         assert p.target == m.coordinates
+        assert p.exploiting_material == 'gold'
+        assert p.coordinates == coordinates
+        assert p.action is action
 
     p.exploit(m, 'gold')
-    check_peasant()
-    assert p.coordinates == (0, 0)
-    assert p.action is UnitActions.exploit
+    check_peasant((0, 0), UnitActions.exploit)
     Unit.progress(p.id)
-    check_peasant()
-    assert p.coordinates == (1, 1)
-    assert p.action == UnitActions.exploit
+    check_peasant((1, 1), UnitActions.exploit)
     Unit.progress(p.id)
-    check_peasant()
-    assert p.coordinates == m.coordinates
-    assert p.action == UnitActions.exploit
+    check_peasant(m.coordinates, UnitActions.exploit)
+    # It has reached the mine, let's make sure it exploits properly.
     Unit.progress(p.id)
-    check_peasant()
+    check_peasant(m.coordinates, UnitActions.drop)
+    assert p.type.gold == 1
+    assert p.gold == 1
     assert m.gold == 4
-    assert p.action is UnitActions.drop
-    assert p.coordinates == m.coordinates
     Unit.progress(p.id)
-    check_peasant()
-    assert p.coordinates == (1, 0)
-    assert p.action is UnitActions.drop
+    check_peasant((1, 0), UnitActions.drop)
     Unit.progress(p.id)
-    check_peasant()
+    check_peasant((0, 0), UnitActions.drop)
     assert f.gold == 0
-    assert p.coordinates == (0, 0)
     Unit.progress(p.id)
-    check_peasant()
-    assert p.action is UnitActions.exploit
+    check_peasant(f.coordinates, UnitActions.exploit)
     assert f.gold == 1
-    assert p.coordinates == f.coordinates
     Unit.progress(p.id)
-    assert p.action is UnitActions.exploit
-    check_peasant()
-    assert p.coordinates == (1, 1)
+    check_peasant((1, 1), UnitActions.exploit)
 
 
 def test_health(farm, map):
@@ -480,7 +469,9 @@ def test_class_from_table():
     assert Base.get_class_from_table(Player.__table__) is Player
 
 
-def test_exploit_multiple(map, player, farm, mine, peasant, quarry):
+def test_exploit_multiple(
+    on_exploit, map, player, farm, mine, peasant, quarry
+):
     b = map.add_building(farm, 0, 0)
     b.set_owner(player)
     m = map.add_feature(mine, 0, 0)

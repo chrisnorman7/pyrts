@@ -1,4 +1,4 @@
-"""Provides the CombatAction class."""
+"""Provides the various action classes that are used by Unit.progress."""
 
 from attr import attrs, attrib
 
@@ -9,13 +9,13 @@ from .db import Building
 class CombatAction:
     """An action in combat."""
 
-    attacker = attrib()
+    unit = attrib()
     target = attrib()
-    damage = attrib()
+    amount = attrib()
 
     def enact(self):
         """Carry out this action."""
-        unit = self.attacker
+        unit = self.unit
         player = unit.owner
         target = self.target
         adversary = target.owner
@@ -26,7 +26,7 @@ class CombatAction:
             target.sound('ouch.wav')
             if target.type.action is not None:
                 target.attack(unit)
-        target.hp -= self.damage
+        target.hp -= self.amount
         if target.hp < 0:
             if isinstance(target, Building):
                 target.sound('collapse.wav')
@@ -65,3 +65,30 @@ class CombatAction:
                         player.sound('win.wav')
                         player.wins += 1
                         player.save()
+
+
+@attrs
+class ExploitAction(CombatAction):
+    """The action used when exploiting buildings or features."""
+
+    resource_name = attrib()
+
+    def enact(self):
+        """Take the resources."""
+        unit = self.unit
+        target = self.target
+        name = self.resource_name
+        amount = self.amount
+        value = getattr(target, name)
+        if not value:
+            # Empty resource.
+            unit.speak('finished')
+            return unit.reset_action()
+        unit.sound(f'exploit/{name}.wav')
+        amount = min(amount, value)
+        setattr(unit, name, amount)
+        value -= amount
+        setattr(target, name, value)
+        target.save()
+        unit.action = unit.UnitActions.drop
+        unit.save()
