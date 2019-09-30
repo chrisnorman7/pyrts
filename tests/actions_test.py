@@ -104,3 +104,22 @@ def test_patrol(player, peasant, map, farm):
     # Let's check they head out again.
     Unit.progress(p.id)
     check_unit(*args, tc, (1, 1), UnitActions.patrol_out)
+
+
+def test_travel(player, peasant, map, farm):
+    p = map.add_unit(peasant, 0, 0)
+    player.location = map
+    f = map.add_building(farm, 0, 0)
+    p.home = f
+    p.owner = player
+    p.save()
+    tc = (2, 2)
+    args = (p, p.home, None, None, tc)
+    p.travel(*tc)
+    check_unit(*args, (0, 0), UnitActions.travel)
+    Unit.progress(p.id)
+    check_unit(*args, (1, 1), UnitActions.travel)
+    Unit.progress(p.id)
+    check_unit(*args, tc, UnitActions.travel)
+    Unit.progress(p.id)
+    check_unit(*args, tc, None)
