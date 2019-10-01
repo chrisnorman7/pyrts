@@ -83,7 +83,7 @@ def test_patrol(player, peasant, map, farm):
     player.location = map
     f = map.add_building(farm, 0, 0)
     p.home = f
-    p.owner = player
+    p.set_owner(player)
     p.save()
     tc = (2, 2)
     args = (p, p.home, None, None)
@@ -111,7 +111,7 @@ def test_travel(player, peasant, map, farm):
     player.location = map
     f = map.add_building(farm, 0, 0)
     p.home = f
-    p.owner = player
+    p.set_owner(player)
     p.save()
     tc = (2, 2)
     args = (p, p.home, None, None, tc)
@@ -129,8 +129,8 @@ def test_heal(on_heal, player, peasant, map):
     p1 = map.add_unit(peasant, 0, 0)
     p2 = map.add_unit(peasant, 0, 0)
     player.location = map
-    p1.owner = player
-    p2.owner = player
+    p1.set_owner(player)
+    p2.set_owner(player)
     p2.health = 0
     player.save()  # Saves all related objects.
     args = (p1, p1.home, p2, None, p1.coordinates, p1.coordinates)
