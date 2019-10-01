@@ -20,6 +20,8 @@ from ..util import english_list
 
 
 class _Base:
+    """Create a primary key and some useful methods."""
+
     id = Column(Integer, primary_key=True)
 
     def save(self):
