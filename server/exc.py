@@ -67,3 +67,11 @@ class NoSuchEvent(EventException):
 
 class NoSuchListener(EventException):
     """That listener does not exist."""
+
+
+class UnitError(Error):
+    """An error with units."""
+
+
+class NoActionRequired(UnitError):
+    """No action is required."""

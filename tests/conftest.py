@@ -5,7 +5,7 @@ from server.db import (
     setup, Transport
 )
 from server.events import (
-    register, unregister, events, on_drop, on_exploit, on_heal
+    register, unregister, events, on_drop, on_exploit, on_heal, on_repair
 )
 from server.options import options
 
@@ -25,6 +25,10 @@ def create_stuff():
     ut = UnitType.first(name=peasant)
     ut.stone = 1
     ut.heal_amount = 1
+    ut.repair_amount = 1
+    ut.auto_heal = True
+    ut.auto_repair = True
+    ut.save()
     assert options.start_building is not None
 
 
@@ -105,3 +109,10 @@ def set_on_heal():
     register(on_heal)
     yield
     unregister(on_heal)
+
+
+@fixture(name='on_repair')
+def set_on_repair():
+    register(on_repair)
+    yield
+    unregister(on_repair)

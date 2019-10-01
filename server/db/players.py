@@ -278,11 +278,6 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
                 types.append(u.type)
         return types
 
-    def same_coordinates(self):
-        """Return a set of query-ready args representing this player's current
-        location and coordinates."""
-        return dict(location=self.location, x=self.x, y=self.y)
-
     def deselect_units(self):
         """Deselect any selected units."""
         self.selected_units.update({Unit.selected: False})

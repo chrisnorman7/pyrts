@@ -196,6 +196,11 @@ class LocationMixin:
             remote_side='Map.id'
         )
 
+    def same_coordinates(self):
+        """Return a set of query-ready args representing this player's current
+        location and coordinates."""
+        return dict(location=self.location, x=self.x, y=self.y)
+
 
 class OwnerMixin:
     owned_since = Column(DateTime(timezone=True), nullable=True)

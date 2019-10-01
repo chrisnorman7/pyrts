@@ -18,6 +18,7 @@ from .transports import Transport
 from ..actions import (
     CombatAction, ExploitAction, DropAction, HealAction, RepairAction
 )
+from ..exc import NoActionRequired
 
 tasks = {}
 
@@ -312,13 +313,51 @@ class Unit(
         self.reset_action()
         self.save()
 
+    def guard_repair(self):
+        """Repair something while guarding."""
+        self._repair_or_heal(
+            self.type.auto_repair, Base._decl_class_registry['Building'],
+            RepairAction
+        )
+
+    def guard_heal(self):
+        """Heal something while guarding."""
+        self._repair_or_heal(self.type.auto_heal, Unit, HealAction)
+
+    def _repair_or_heal(self, value, cls, action_class):
+        """Used by guard_repair and guard_heal."""
+        if not value:
+            raise NoActionRequired
+        q = cls.all(
+            cls.health.isnot(None), owner_id=self.owner_id,
+            **self.same_coordinates()
+        )
+        if len(q):
+            thing = choice(q)
+            self.exploiting = thing
+            action_class(self).enact()
+            self.exploiting = None
+            self.guard()
+        else:
+            raise NoActionRequired
+
+    def guard_attack(self):
+        """Attack something while guarding."""
+        q = Unit.query(
+            Unit.owner_id.isnot(self.owner_id),
+            **self.same_coordinates()
+        )
+        if q.count():
+            self.attack(choice(q))
+        else:
+            raise NoActionRequired
+
     @classmethod
     def progress(cls, id):
         """Progress this object through whatever task it is performing."""
         self = cls.get(id)
         if self is None:
             return  # Destroyed.
-        Building = Base._decl_class_registry['Building']
         a = self.action
         if self.owner is None:
             # Stop what we are doing while unemployed.
@@ -380,19 +419,14 @@ class Unit(
             else:
                 self.move_towards(*x.coordinates)
         elif a is UnitActions.guard:
-            if any([self.type.auto_repair, self.type.auto_heal]):
-                if self.type.auto_repair:
-                    cls = Building
-                    action_class = RepairAction
-                else:
-                    cls = Unit
-                    action_class = HealAction
-                q = cls.all(
-                    cls.health.isnot(None), **self.owner.same_coordinates()
-                )
-                if len(q):
-                    thing = choice(q)
-                    action_class(self, thing).enact()
+            for func in (
+                self.guard_attack, self.guard_heal, self.guard_repair
+            ):
+                try:
+                    func()
+                    break
+                except NoActionRequired:
+                    pass  # Nothing to do.
         elif a is UnitActions.attack:
             if self.type.attack_type is None:
                 return self.reset_action()

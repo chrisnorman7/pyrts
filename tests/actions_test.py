@@ -149,3 +149,49 @@ def test_heal(on_heal, player, peasant, map):
     Unit.progress(p1.id)
     assert p2.health is None
     check_unit(p1, None, None, None, p1.coordinates, p1.coordinates, None)
+
+
+def test_guard_heal(on_heal, peasant, map, player):
+    player.location = map
+    p1 = map.add_unit(peasant, 0, 0)
+    p2 = map.add_unit(peasant, 0, 0)
+    p2.health = 0
+    for thing in (p1, p2):
+        thing.set_owner(player)
+    for thing in (p1, p2, player):
+        thing.save()
+    args = (
+        p1, None, None, None, p1.coordinates, p1.coordinates, UnitActions.guard
+    )
+    p1.guard()
+    check_unit(*args)
+    Unit.progress(p1.id)
+    check_unit(*args)
+    assert p2.health > 0
+    p2.health = peasant.max_health - 1
+    Unit.progress(p1.id)
+    check_unit(*args)
+    assert p2.health is None
+
+
+def test_guard_repair(on_repair, peasant, map, player, farm):
+    player.location = map
+    p = map.add_unit(peasant, 0, 0)
+    f = map.add_building(farm, 0, 0)
+    f.health = 0
+    for thing in (p, f):
+        thing.set_owner(player)
+    for thing in (p, f, player):
+        thing.save()
+    args = (
+        p, None, None, None, p.coordinates, p.coordinates, UnitActions.guard
+    )
+    p.guard()
+    check_unit(*args)
+    Unit.progress(p.id)
+    check_unit(*args)
+    assert f.health > 0
+    f.health = farm.max_health - 1
+    Unit.progress(p.id)
+    check_unit(*args)
+    assert f.health is None
