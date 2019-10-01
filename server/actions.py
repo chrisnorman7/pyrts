@@ -96,16 +96,14 @@ class ExploitAction(BaseAction):
 
     def enact(self):
         """Take the resources."""
-        fire(on_exploit, self)
         unit = self.unit
         t = unit.type
+        self.resource_name = unit.exploiting_material
+        self.amount = getattr(t, self.resource_name)
+        fire(on_exploit, self)
         target = unit.exploiting
         name = self.resource_name
-        if name is None:
-            name = unit.exploiting_material
         amount = self.amount
-        if amount is None:
-            amount = getattr(t, name)
         value = getattr(target, name)
         if not value:
             # Empty resource.

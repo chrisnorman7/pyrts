@@ -46,6 +46,10 @@ def test_exploit(on_exploit, player, map, peasant, mine, farm):
     assert f.gold == 1
     Unit.progress(p.id)
     check_unit(*args, (1, 1), UnitActions.exploit)
+    p.coordinates = m.coordinates
+    m.gold = 0
+    Unit.progress(p.id)
+    check_unit(p, f, None, None, m.coordinates, m.coordinates, None)
 
 
 def test_exploit_multiple(
