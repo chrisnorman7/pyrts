@@ -1,4 +1,7 @@
+from pytest import raises
+
 from server.db import Unit, UnitActions
+from server.exc import NoActionRequired
 
 
 def check_unit(
@@ -195,3 +198,13 @@ def test_guard_repair(on_repair, peasant, map, player, farm):
     Unit.progress(p.id)
     check_unit(*args)
     assert f.health is None
+
+
+def test_no_action(map, peasant):
+    p = map.add_unit(peasant, 0, 0)
+    with raises(NoActionRequired):
+        p.guard_attack()
+    with raises(NoActionRequired):
+        p.guard_heal()
+    with raises(NoActionRequired):
+        p.guard_repair()
