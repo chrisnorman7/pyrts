@@ -1,8 +1,8 @@
 from pytest import fixture
 
 from server.db import (
-    AttackType, Building, BuildingType, Feature, FeatureType, Map, Unit,
-    UnitType, Player, setup, Transport
+    AttackType, Building, BuildingType, FeatureType, Map, Unit, UnitType,
+    Player, setup
 )
 from server.events import (
     register, unregister, events, on_drop, on_exploit, on_heal, on_repair,
@@ -50,6 +50,7 @@ def get_password():
 
 @fixture(name='player')
 def new_player(password):
+    Player.query().delete()
     p = Player.create('test', password, 'Test Player')
     p.save()
     return p
@@ -58,13 +59,17 @@ def new_player(password):
 @fixture(name='farm')
 def get_farm():
     """Get the farm building type."""
-    return BuildingType.one(name=farm)
+    bt = BuildingType.one(name=farm)
+    Building.query(type=bt).delete()
+    return bt
 
 
 @fixture(name='peasant')
 def get_peasant():
     """Get the peasant unit type."""
-    return UnitType.one(name=peasant)
+    ut = UnitType.one(name=peasant)
+    Unit.query(type=ut).delete()
+    return ut
 
 
 @fixture(name='farmer')
@@ -85,7 +90,9 @@ def get_quarry():
 @fixture(name='transport')
 def get_transport(map, peasant, farm):
     u = map.add_unit(peasant, 0, 0)
+    u.save()
     b = map.add_building(farm, 10, 10)
+    b.save()
     t = u.set_transport(b)
     t.save()
     return t
@@ -98,13 +105,6 @@ def set_on_exploit():
     yield
     for name in (on_drop, on_exploit):
         unregister(name)
-
-
-@fixture(autouse=True)
-def delete_all():
-    """Delete all database objects before a new test runs."""
-    for cls in (Building, Feature, Player, Unit, Map, Transport):
-        cls.query().delete()
 
 
 @fixture(name='on_heal')

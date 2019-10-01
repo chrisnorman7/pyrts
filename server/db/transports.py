@@ -13,15 +13,12 @@ class Transport(Base, LocationMixin):
     """A destination for a unit."""
 
     __tablename__ = 'transports'
-    unit_id = Column(Integer, ForeignKey('units.id'), nullable=False)
-    unit = relationship(
-        'Unit', backref=backref('transport', uselist=False),
-        foreign_keys=[unit_id], remote_side='Unit.id'
-    )
     destination_id = Column(
-        Integer, ForeignKey('buildings.id'), nullable=False
+        Integer, ForeignKey('buildings.id'), nullable=True
     )
-    destination = relationship('Building', backref='incoming')
+    destination = relationship(
+        'Building', backref=backref('incoming', cascade='all, delete-orphan')
+    )
     land_time = Column(Integer, nullable=True)
 
     def add_passenger(self, unit):

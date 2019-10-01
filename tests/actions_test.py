@@ -211,7 +211,9 @@ def test_no_action(map, peasant):
 
 
 def test_attack(peasant, player, map, on_attack):
-    opponent = Player.create('other_username', 'other_password', 'Other Player')
+    opponent = Player.create(
+        'other_username', 'other_password', 'Other Player'
+    )
     p1 = map.add_unit(peasant, 0, 0)
     p2 = map.add_unit(peasant, 0, 0)
     player.location = map

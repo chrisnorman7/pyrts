@@ -4,7 +4,7 @@ from enum import Enum as _Enum
 from random import uniform, choice
 
 from sqlalchemy import Column, Boolean, Integer, ForeignKey, String, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from twisted.internet import reactor
 from twisted.internet.error import AlreadyCancelled, AlreadyCalled
 
@@ -109,8 +109,14 @@ class Unit(
     target_y = Column(Integer, nullable=False, default=0)
     onboard_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
     onboard = relationship(
-        'Transport', backref='passengers', foreign_keys=[onboard_id],
-        remote_side='Transport.id'
+        'Transport', backref=backref('passengers'), foreign_keys=[onboard_id],
+        remote_side='Transport.id', single_parent=True
+    )
+    transport_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
+    transport = relationship(
+        'Transport', backref=backref('unit', uselist=False),
+        foreign_keys=[transport_id], cascade='all, delete-orphan',
+        single_parent=True
     )
 
     @property

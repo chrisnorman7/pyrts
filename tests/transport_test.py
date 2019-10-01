@@ -17,6 +17,8 @@ def test_set_transport(map, transport):
 
 
 def test_launch(transport):
+    u = transport.unit
+    assert u.transport is transport
     started = time()
     transport.launch()
     u = transport.unit
@@ -55,15 +57,35 @@ def test_remove_passenger(peasant, map, transport):
     assert u.coordinates == c
 
 
-def test_delete(peasant, map, transport):
+def test_delete_unit(peasant, map, transport):
     u = transport.unit
+    assert u.transport is transport
     p1 = map.add_unit(peasant, 0, 0)
     p2 = map.add_unit(peasant, 0, 0)
     for obj in (p1, p2):
         transport.add_passenger(obj)
         obj.save()
+    assert u.transport.passengers == [p1, p2]
     u.delete()
     assert Unit.get(u.id) is None
     assert Unit.get(p1.id) is None
     assert Unit.get(p2.id) is None
+    assert Transport.get(transport.id) is None
+
+
+def test_delete_building(peasant, map, transport):
+    u = transport.unit
+    b = transport.destination
+    assert u.transport is transport
+    p1 = map.add_unit(peasant, 0, 0)
+    p2 = map.add_unit(peasant, 0, 0)
+    for obj in (p1, p2):
+        transport.add_passenger(obj)
+        obj.save()
+    assert transport.passengers == [p1, p2]
+    b.delete()
+    assert u.transport is None
+    assert Building.get(b.id) is None
+    assert Unit.get(p1.id) is p1
+    assert Unit.get(p2.id) is p2
     assert Transport.get(transport.id) is None
