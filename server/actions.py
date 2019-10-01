@@ -27,11 +27,13 @@ class BaseAction:
 class CombatAction(BaseAction):
     """An action in combat."""
 
-    amount = attrib(default=Factory(int), init=False)
+    target = attrib(default=Factory(NoneType))
+    damage = attrib(default=Factory(NoneType), init=False)
 
     def enact(self):
         """Carry out this action."""
         unit = self.unit
+        self.target = unit.exploiting
         t = unit.type
         damage = max(1, t.strength + t.attack_type.strength - t.resistance)
         self.damage = randint(1, damage)
@@ -46,7 +48,7 @@ class CombatAction(BaseAction):
             target.sound('ouch.wav')
             if target.action is None:
                 target.attack(unit)
-        target.hp -= self.amount
+        target.hp -= self.damage
         if target.hp < 0:
             if isinstance(target, Building):
                 target.sound('collapse.wav')
@@ -61,6 +63,7 @@ class CombatAction(BaseAction):
                 value = getattr(target, name)
                 setattr(unit, name, getattr(unit, name) + value)
             target.delete()
+            unit.reset_action()
             if adversary is not None:
                 if adversary.has_lost():
                     for p in unit.location.players:

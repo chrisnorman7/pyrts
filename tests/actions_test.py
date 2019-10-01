@@ -1,6 +1,6 @@
 from pytest import raises
 
-from server.db import Unit, UnitActions
+from server.db import Player, Unit, UnitActions
 from server.exc import NoActionRequired
 
 
@@ -208,3 +208,33 @@ def test_no_action(map, peasant):
         p.guard_heal()
     with raises(NoActionRequired):
         p.guard_repair()
+
+
+def test_attack(peasant, player, map, on_attack):
+    opponent = Player.create('other_username', 'other_password', 'Other Player')
+    p1 = map.add_unit(peasant, 0, 0)
+    p2 = map.add_unit(peasant, 0, 0)
+    player.location = map
+    p1.set_owner(player)
+    p2.set_owner(opponent)
+    for obj in (p1, p2):
+        obj.save()
+    p1_args = (p1, None, p2, None, (0, 0), (0, 0), UnitActions.attack)
+    p2_args = (p2, None, p1, None, (0, 0), (0, 0), UnitActions.attack)
+    p1.attack(p2)
+    check_unit(*p1_args)
+    assert p2.action is None
+    Unit.progress(p1.id)
+    check_unit(*p1_args)
+    check_unit(*p2_args)
+    Unit.progress(p1.id)
+    check_unit(*p1_args)
+    assert p2.health < peasant.max_health
+    Unit.progress(p2.id)
+    check_unit(*p1_args)
+    check_unit(*p2_args)
+    assert p1.health < peasant.max_health
+    p2.health = 0
+    Unit.progress(p1.id)
+    assert Unit.get(p2.id) is None
+    check_unit(p1, None, None, None, p1.coordinates, p1.coordinates, None)

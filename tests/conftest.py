@@ -1,11 +1,12 @@
 from pytest import fixture
 
 from server.db import (
-    Building, BuildingType, Feature, FeatureType, Map, Unit, UnitType, Player,
-    setup, Transport
+    AttackType, Building, BuildingType, Feature, FeatureType, Map, Unit,
+    UnitType, Player, setup, Transport
 )
 from server.events import (
-    register, unregister, events, on_drop, on_exploit, on_heal, on_repair
+    register, unregister, events, on_drop, on_exploit, on_heal, on_repair,
+    on_attack
 )
 from server.options import options
 
@@ -23,6 +24,8 @@ def create_stuff():
     events.clear()
     setup()
     ut = UnitType.first(name=peasant)
+    ut.attack_type = AttackType.query().order_by(AttackType.strength).first()
+    assert ut.attack_type is not None
     ut.stone = 1
     ut.heal_amount = 1
     ut.repair_amount = 1
@@ -116,3 +119,10 @@ def set_on_repair():
     register(on_repair)
     yield
     unregister(on_repair)
+
+
+@fixture(name='on_attack')
+def set_on_attack():
+    register(on_attack)
+    yield
+    unregister(on_attack)

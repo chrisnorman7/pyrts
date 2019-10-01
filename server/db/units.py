@@ -433,7 +433,7 @@ class Unit(
             x = self.exploiting
             if x is None or x.coordinates != self.coordinates:
                 return self.reset_action()
-            CombatAction(self, x).enact()
+            CombatAction(self).enact()
         else:
             return self.reset_action()  # No action.
         self.save()  # Better save since we might be inside a deferred.
