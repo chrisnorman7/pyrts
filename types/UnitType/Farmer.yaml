@@ -1,5 +1,4 @@
 attack: Shotgun
-attack_type_id: 10
 buildings:
 - Farm
 - University
@@ -8,10 +7,10 @@ food: 1
 name: Farmer
 recruits:
 - building: Farm
-  food: 2
-  gold: 3
-  pop_time: 6
-  water: 4
+  food: 1
+  gold: 5
+  pop_time: 7
+  water: 5
 resistance: 2
 speed: 10
 strength: 3

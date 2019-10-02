@@ -1,5 +1,4 @@
 attack: Chain Gun
-attack_type_id: 4
 buildings: []
 max_health: 150
 name: Chain Gun Emplacement

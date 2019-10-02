@@ -1,18 +1,15 @@
 attack: Kick
-attack_type_id: 5
 auto_repair: true
 buildings:
 - Garrison
 - Hospital
 name: Engineer
 recruits:
-- building: Castle
-  food: 4
-  gold: 4
-  pop_time: 7
-  stone: 2
-  water: 4
-  wood: 2
+- building: University
+  food: 10
+  gold: 10
+  stone: 5
+  water: 10
 repair_amount: 3
 resistance: 3
 speed: 7

@@ -1,5 +1,4 @@
 attack: Cannon
-attack_type_id: 3
 buildings: []
 max_health: 50
 name: Mobile Cannon

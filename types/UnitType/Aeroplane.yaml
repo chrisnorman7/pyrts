@@ -1,5 +1,4 @@
 attack: Blaster
-attack_type_id: 1
 buildings: []
 max_health: 80
 name: Aeroplane
