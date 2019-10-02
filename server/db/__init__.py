@@ -7,6 +7,7 @@ from .engine import engine
 from .entry_points import EntryPoint
 from .features import Feature, FeatureType
 from .maps import Map
+from .skills import Skill, SkillType, SkillTypes
 from .transports import Transport
 from .units import BuildingBuilder, Unit, UnitActions, UnitType
 from .options import Option
@@ -22,6 +23,6 @@ __all__ = [
     'AttackType', 'Base', 'bootstrap', 'Building', 'BuildingBuilder',
     'BuildingRecruit', 'BuildingType', 'connections', 'dump', 'dump_object',
     'engine', 'EntryPoint', 'Feature', 'FeatureType', 'load', 'Map', 'Option',
-    'options', 'Transport', 'Unit', 'UnitActions', 'UnitType', 'Player',
-    'session', 'setup'
+    'options', 'Skill', 'SkillType', 'SkillTypes', 'Transport', 'Unit',
+    'UnitActions', 'UnitType', 'Player', 'session', 'setup'
 ]
