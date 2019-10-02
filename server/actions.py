@@ -106,7 +106,7 @@ class ExploitAction(BaseAction):
         unit = self.unit
         t = unit.type
         self.resource_name = unit.exploiting_material
-        self.amount = getattr(t, self.resource_name)
+        self.amount = getattr(t, self.resource_name) or 1
         fire(on_exploit, self)
         target = unit.exploiting
         name = self.resource_name
