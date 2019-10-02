@@ -8,7 +8,6 @@ from .base import (
     OwnerMixin, ResourcesMixin, TypeMixin, SoundMixin, MaxHealthMixin,
     HealthMixin, GetNameMixin
 )
-from .skills import Skill
 
 
 class BuildingRecruit(Base, ResourcesMixin):
@@ -85,11 +84,13 @@ class Building(
 
     @property
     def skill_types(self):
+        Skill = Base._decl_class_registry['Skill']
         return [s.skill_type for s in Skill.query(building=self)]
 
     def has_skill(self, member):
         """Given one of the members of the SkillTypes enumeration, return the
         number of skills of that type that are attached to this building."""
+        Skill = Base._decl_class_registry['Skill']
         return Skill.count(skill_type=member, building_id=self.id)
 
     def get_full_name(self):

@@ -60,7 +60,7 @@ class CombatAction(BaseAction):
                 target.sound('die.wav')
                 word = 'killed'
                 event = on_kill
-            fire(event, target)
+            fire(event, unit, target)
             if adversary is not None:
                 adversary.message(f'{target.get_name()} has been {word}.')
             for name in target.resources:

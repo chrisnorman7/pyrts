@@ -2,11 +2,15 @@
 enumeration."""
 
 from enum import Enum as _Enum
+from random import choice
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer
 from sqlalchemy.orm import relationship, backref
 
 from .base import Base, ResourcesMixin
+from .units import UnitType
+
+from ..events import listen, on_exploit, on_kill
 
 
 class SkillTypes(_Enum):
@@ -45,3 +49,37 @@ class Skill(Base):
         'Building', backref=backref('skills', cascade='all, delete-orphan'),
         single_parent=True
     )
+
+
+@listen(on_exploit)
+def check_exploit_skills(action):
+    """Check to see if action.unit.home has either of te exploit skills
+    assigned."""
+    h = action.unit.home
+    if h is None:
+        return  # Nothing to do.
+    if h.has_skill(SkillTypes.double_exploit):
+        multiplier = 2
+    elif h.has_skill(SkillTypes.tripple_exploit):
+        multiplier = 3
+    else:
+        multiplier = 1
+    action.amount *= multiplier
+
+
+@listen(on_kill)
+def check_resurrect_skills(unit, target):
+    """Check to see if we should be resurrecting target."""
+    h = target.home
+    if h is None:
+        return  # Nothing to do.
+    if h.has_skill(SkillTypes.random_resurrect):
+        ut = choice(UnitType.all())
+    else:
+        ut = target.type
+    u = target.location.add_unit(ut, *target.coordinates)
+    u.health = 0
+    u.owner = target.owner
+    u.save()
+    if u.owner is not None:
+        u.owner.message(f'{u.get_name()} is ready.')
