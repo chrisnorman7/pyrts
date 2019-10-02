@@ -58,10 +58,10 @@ def check_exploit_skills(action):
     h = action.unit.home
     if h is None:
         return  # Nothing to do.
-    if h.has_skill(SkillTypes.double_exploit):
-        multiplier = 2
     elif h.has_skill(SkillTypes.tripple_exploit):
         multiplier = 3
+    elif h.has_skill(SkillTypes.double_exploit):
+        multiplier = 2
     else:
         multiplier = 1
     action.amount *= multiplier
@@ -73,10 +73,12 @@ def check_resurrect_skills(unit, target):
     h = target.home
     if h is None:
         return  # Nothing to do.
-    if h.has_skill(SkillTypes.random_resurrect):
+    elif h.has_skill(SkillTypes.specific_resurrect):
+        ut = target.type
+    elif h.has_skill(SkillTypes.random_resurrect):
         ut = choice(UnitType.all())
     else:
-        ut = target.type
+        return
     u = target.location.add_unit(ut, *target.coordinates)
     u.health = 0
     u.owner = target.owner
