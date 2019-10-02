@@ -93,7 +93,7 @@ def bootstrap():
     buildings = {}
     recruits = {}
     for cls in (FeatureType, BuildingType, UnitType, AttackType):
-        logger.info('Checking class %s.', cls)
+        logger.debug('Checking class %s.', cls)
         path = os.path.join('types', cls.__name__, '*.yaml')
         for filename in glob(path):
             with open(filename, 'r') as f:
@@ -114,7 +114,7 @@ def bootstrap():
                     options.start_building = obj
                 logger.info('Created %s (#%d).', obj, obj.id)
             else:
-                logger.info('Skipping %s.', d['name'])
+                logger.debug('Skipping %s.', d['name'])
                 continue
             if cls is UnitType:
                 attacks[obj.id] = _attack
@@ -129,12 +129,12 @@ def bootstrap():
         for name in buildings.get(mt.id, []):
             bt = get_object_by_name(BuildingType, name)
             mt.can_build.append(bt)
-            logger.info('%s can build %s.', mt, bt)
+            logger.debug('%s can build %s.', mt, bt)
         for r in recruits.get(mt.id, []):
             building_type_name = r.pop('building')
             bt = get_object_by_name(BuildingType, building_type_name)
             bt.add_recruit(mt, **r).save()
-            logger.info('%s can recruit %s.', bt, mt)
+            logger.debug('%s can recruit %s.', bt, mt)
         mt.save()
     for bt in BuildingType.all():
         name = depends.get(bt.id, None)
