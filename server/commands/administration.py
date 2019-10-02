@@ -2,7 +2,7 @@
 
 from code import InteractiveConsole
 from contextlib import redirect_stdout, redirect_stderr
-from inspect import getdoc, isclass, _empty
+from inspect import getdoc, _empty
 
 from sqlalchemy import Boolean, inspect
 
@@ -10,7 +10,7 @@ from .commands import command, LocationTypes
 
 from ..db import (
     Player, BuildingType, UnitType, AttackType, FeatureType, Base,
-    BuildingRecruit
+    BuildingRecruit, UnitActions, SkillTypes
 )
 from ..menus import Menu, YesNoMenu
 from ..options import options
@@ -24,10 +24,12 @@ class Console(InteractiveConsole):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name, cls in Base._decl_class_registry.items():
-            if isclass(cls):
-                self.locals[name] = cls
+        for cls in Base.classes():
+            self.locals[cls.__name__] = cls
         self.locals['options'] = options
+        self.locals['Base'] = Base
+        self.locals['UnitActions'] = UnitActions
+        self.locals['SkillTypes'] = SkillTypes
 
     def write(self, string):
         """Send the provided string to self.player.message."""
