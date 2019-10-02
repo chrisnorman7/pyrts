@@ -153,6 +153,8 @@ class HealRepairAction(BaseAction):
     sound = attrib(default=Factory(NoneType), init=False)
 
     def get_particulars(self):
+        """Should return repair amount, the sound to play when carrying out
+        this action, and the event to fire."""
         raise NotImplementedError
 
     def enact(self):
