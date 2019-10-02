@@ -82,6 +82,14 @@ class Building(
     __tablename__ = 'buildings'
     __type_class__ = BuildingType
 
+    def add_skill(self, skill_type):
+        """Add the given member of the SkillTypes enumeration to this
+        building."""
+        assert type(skill_type).__name__ == 'SkillTypes', \
+            'Invalid value %r.' % skill_type
+        Skill = Base._decl_class_registry['Skill']
+        return Skill(building=self, skill_type=skill_type)
+
     @property
     def skill_types(self):
         Skill = Base._decl_class_registry['Skill']

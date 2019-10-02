@@ -281,11 +281,11 @@ def test_sound(mine):
 def test_player_delete(player, map, farm):
     f = map.add_building(farm, 0, 0)
     f.set_owner(player)
-    map.location = map
-    f.location = map
+    player.location = map
     for thing in (map, player, f):
         thing.save()
     player.delete()
+    assert Building.get(f.id) is f
     assert f.owner_id is None
 
 
@@ -429,8 +429,6 @@ def test_class_from_table():
 
 def test_owned_units_order(player, map, peasant, farmer):
     player.location = map
-    for cls in (Unit, Building):
-        cls.query(cls.owner_id.isnot(None)).update({cls.owner_id: None})
     p1 = map.add_unit(peasant, 0, 0)
     f = map.add_unit(farmer, 0, 0)
     p2 = map.add_unit(peasant, 0, 0)
@@ -444,6 +442,7 @@ def test_owned_units_order(player, map, peasant, farmer):
     assert player.owned_units == [p1, f, p2]
     p1.set_owner(None)
     p1.save()
+    assert Unit.get(p1.id) is p1
     p1.set_owner(player)
     p1.save()  # Trigger p1.updated to be modified.
     q = Unit.query(owner=player).order_by(

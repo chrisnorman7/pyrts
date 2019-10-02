@@ -17,7 +17,9 @@ class Transport(Base, LocationMixin):
         Integer, ForeignKey('buildings.id'), nullable=True
     )
     destination = relationship(
-        'Building', backref=backref('incoming', cascade='all, delete-orphan')
+        'Building', backref=backref(
+            'incoming', cascade='delete, delete-orphan'
+        )
     )
     land_time = Column(Integer, nullable=True)
 
@@ -31,8 +33,8 @@ class Transport(Base, LocationMixin):
 
     def remove_passenger(self, unit):
         """Remove a unit from self.passengers and move it back to the map."""
-        unit.onboard = None
-        unit.location = self.location
+        unit.onboard_id = None
+        unit.location_id = self.location_id
         unit.move(*self.unit.coordinates)
         unit.sound('disembark.wav')
         unit.save()

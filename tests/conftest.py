@@ -50,7 +50,9 @@ def get_password():
 
 @fixture(name='player')
 def new_player(password):
-    Player.query().delete()
+    for cls in (Building, Unit):
+        cls.delete_all(cls.owner_id.isnot(None))
+    Player.delete_all()
     p = Player.create('test', password, 'Test Player')
     p.save()
     return p
@@ -60,7 +62,7 @@ def new_player(password):
 def get_farm():
     """Get the farm building type."""
     bt = BuildingType.one(name=farm)
-    Building.query(type=bt).delete()
+    Building.delete_all(type=bt)
     return bt
 
 
@@ -68,7 +70,7 @@ def get_farm():
 def get_peasant():
     """Get the peasant unit type."""
     ut = UnitType.one(name=peasant)
-    Unit.query(type=ut).delete()
+    Unit.delete_all(type=ut)
     return ut
 
 

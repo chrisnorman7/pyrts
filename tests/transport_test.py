@@ -52,6 +52,7 @@ def test_remove_passenger(peasant, map, transport):
     u = map.add_unit(peasant, *c)
     transport.add_passenger(u)
     transport.remove_passenger(u)
+    assert Unit.get(u.id) is u
     assert u.location is map
     assert u.onboard is None
     assert u.coordinates == c

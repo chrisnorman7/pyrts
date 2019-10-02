@@ -109,8 +109,8 @@ class Unit(
     target_y = Column(Integer, nullable=False, default=0)
     onboard_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
     onboard = relationship(
-        'Transport', backref=backref('passengers'), foreign_keys=[onboard_id],
-        remote_side='Transport.id', single_parent=True
+        'Transport', backref='passengers', foreign_keys=[onboard_id],
+        remote_side='Transport.id'
     )
     transport_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
     transport = relationship(

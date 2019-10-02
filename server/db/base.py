@@ -52,6 +52,13 @@ class _Base:
         return cls.query(*args, **kwargs).count()
 
     @classmethod
+    def delete_all(cls, *args, **kwargs):
+        """Delete all rows which are matched by cls.query(*args, **kwargs).
+        Each object's delete method is called."""
+        for obj in cls.query(*args, **kwargs):
+            obj.delete()
+
+    @classmethod
     def first(cls, *args, **kwargs):
         """Return the first instance of this class in the database."""
         return cls.query(*args, **kwargs).first()
@@ -216,8 +223,7 @@ class OwnerMixin:
         return relationship(
             'Player', backref=backref(
                 f'owned_{cls.__tablename__}', order_by=cls.owned_since
-            ),
-            foreign_keys=[cls.owner_id], remote_side='Player.id'
+            ), foreign_keys=[cls.owner_id], remote_side='Player.id'
         )
 
     def set_owner(self, value):

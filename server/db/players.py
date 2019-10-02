@@ -12,6 +12,7 @@ from .base import Base, NameMixin, LocationMixin, CoordinatesMixin
 from .buildings import Building, BuildingType
 from .entry_points import EntryPoint
 from .features import Feature
+from .skills import Skill
 from .units import Unit
 
 from ..exc import InvalidUsername, InvalidPassword, NoSuchSound
@@ -317,3 +318,10 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
            Unit.count(Unit.owner_id.isnot(self.id)):
             return True
         return False
+
+    def has_skill(self, skill_type):
+        """Returns the number of buildings with the given skill type attached
+        to them."""
+        return Building.query(location=self.location, owner=self).join(
+            Building.skills
+        ).filter(Skill.skill_type == skill_type).count()

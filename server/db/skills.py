@@ -34,8 +34,9 @@ class SkillType(Base, ResourcesMixin):
         Integer, ForeignKey('building_types.id'), nullable=False
     )
     building_type = relationship(
-        'BuildingType', backref='skill_types', single_parent=True,
-        cascade='all, delete-orphan'
+        'BuildingType', backref=backref(
+            'skill_types', cascade='all, delete-orphan'
+        ), single_parent=True
     )
 
 
@@ -46,8 +47,9 @@ class Skill(Base):
     skill_type = Column(Enum(SkillTypes), nullable=False)
     building_id = Column(Integer, ForeignKey('buildings.id'), nullable=False)
     building = relationship(
-        'Building', backref=backref('skills', cascade='all, delete-orphan'),
-        single_parent=True
+        'Building', backref=backref(
+            'skills', cascade='delete, delete-orphan'
+        ), single_parent=True
     )
 
 
@@ -55,12 +57,12 @@ class Skill(Base):
 def check_exploit_skills(action):
     """Check to see if action.unit.home has either of te exploit skills
     assigned."""
-    h = action.unit.home
-    if h is None:
+    o = action.unit.owner
+    if o is None:
         return  # Nothing to do.
-    elif h.has_skill(SkillTypes.tripple_exploit):
+    elif o.has_skill(SkillTypes.tripple_exploit):
         multiplier = 3
-    elif h.has_skill(SkillTypes.double_exploit):
+    elif o.has_skill(SkillTypes.double_exploit):
         multiplier = 2
     else:
         multiplier = 1
@@ -70,18 +72,18 @@ def check_exploit_skills(action):
 @listen(on_kill)
 def check_resurrect_skills(unit, target):
     """Check to see if we should be resurrecting target."""
-    h = target.home
-    if h is None:
+    o = target.owner
+    if o is None:
         return  # Nothing to do.
-    elif h.has_skill(SkillTypes.specific_resurrect):
+    elif o.has_skill(SkillTypes.specific_resurrect):
         ut = target.type
-    elif h.has_skill(SkillTypes.random_resurrect):
+    elif o.has_skill(SkillTypes.random_resurrect):
         ut = choice(UnitType.all())
     else:
         return
     u = target.location.add_unit(ut, *target.coordinates)
     u.health = 0
-    u.owner = target.owner
+    u.owner = o
+    u.home = target.home
     u.save()
-    if u.owner is not None:
-        u.owner.message(f'{u.get_name()} is ready.')
+    o.message(f'{u.get_name()} is ready.')
