@@ -223,6 +223,7 @@ class Unit(
         self.exploiting."""
         self.action = UnitActions.repair
         self.exploiting = building
+        self.target = building.coordinates
         self.start_task()
 
     def heal_unit(self, unit):

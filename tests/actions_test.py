@@ -134,14 +134,18 @@ def test_travel(player, peasant, map, farm):
 
 def test_heal(on_heal, player, peasant, map):
     p1 = map.add_unit(peasant, 0, 0)
-    p2 = map.add_unit(peasant, 0, 0)
+    p2 = map.add_unit(peasant, 0, 1)
     player.location = map
     p1.set_owner(player)
     p2.set_owner(player)
     p2.health = 0
     player.save()  # Saves all related objects.
-    args = (p1, p1.home, p2, None, p1.coordinates, p1.coordinates)
+    args = [p1, p1.home, p2, None, p2.coordinates]
     p1.heal_unit(p2)
+    check_unit(*args, (0, 0), UnitActions.heal)
+    assert p2.health == 0
+    Unit.progress(p1.id)
+    args.append(p2.coordinates)
     check_unit(*args, UnitActions.heal)
     assert p2.health == 0
     Unit.progress(p1.id)
