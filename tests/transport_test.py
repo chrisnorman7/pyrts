@@ -66,12 +66,12 @@ def test_delete_unit(peasant, map, transport):
     for obj in (p1, p2):
         transport.add_passenger(obj)
         obj.save()
-    assert u.transport.passengers == [p1, p2]
+    assert transport.passengers == [p1, p2]
     u.delete()
     assert Unit.get(u.id) is None
+    assert Transport.get(transport.id) is None
     assert Unit.get(p1.id) is None
     assert Unit.get(p2.id) is None
-    assert Transport.get(transport.id) is None
 
 
 def test_delete_building(peasant, map, transport):

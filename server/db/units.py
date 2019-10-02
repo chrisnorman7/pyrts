@@ -93,8 +93,9 @@ class Unit(
 ):
     """A unit on a map. Resources are used for storage (carrying)."""
 
-    UnitActions = UnitActions
     __tablename__ = 'units'
+    __mapper_args__ = dict(confirm_deleted_rows=False)
+    UnitActions = UnitActions
     __type_class__ = UnitType
     home_id = Column(Integer, ForeignKey('buildings.id'), nullable=True)
     home = relationship('Building', backref='units')
@@ -114,9 +115,8 @@ class Unit(
     )
     transport_id = Column(Integer, ForeignKey('transports.id'), nullable=True)
     transport = relationship(
-        'Transport', backref=backref('unit', uselist=False),
-        foreign_keys=[transport_id], cascade='all, delete-orphan',
-        single_parent=True
+        'Transport', backref=backref('unit', uselist=False,),
+        foreign_keys=[transport_id]
     )
 
     @property
