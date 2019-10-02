@@ -100,8 +100,10 @@ def fire(name, *args, **kwargs):
 
 
 on_attack = register('on_attack')
-on_exploit = register('on_exploit')
+on_destroy = register('on_destroy')
 on_drop = register('on_drop')
-on_heal = register('on_heal')
-on_repair = register('on_repair')
+on_exploit = register('on_exploit')
 on_exhaust = register('on_exhaust')
+on_heal = register('on_heal')
+on_kill = register('on_kill')
+on_repair = register('on_repair')

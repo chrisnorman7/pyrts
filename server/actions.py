@@ -6,7 +6,8 @@ from attr import attrs, attrib, Factory
 
 from .db import Building
 from .events import (
-    fire, on_attack, on_drop, on_exhaust, on_exploit, on_heal, on_repair
+    fire, on_attack, on_destroy, on_drop, on_exhaust, on_exploit, on_heal,
+    on_kill, on_repair
 )
 
 NoneType = type(None)
@@ -54,9 +55,12 @@ class CombatAction(BaseAction):
                 target.sound('collapse.wav')
                 unit.sound('destroyed.wav')
                 word = 'destroyed'
+                event = on_destroy
             else:
                 target.sound('die.wav')
                 word = 'killed'
+                event = on_kill
+            fire(event, target)
             if adversary is not None:
                 adversary.message(f'{target.get_name()} has been {word}.')
             for name in target.resources:

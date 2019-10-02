@@ -5,8 +5,8 @@ from server.db import (
     Player, setup
 )
 from server.events import (
-    register, unregister, events, on_drop, on_exploit, on_heal, on_repair,
-    on_attack
+    register, unregister, events, on_attack, on_destroy, on_drop, on_exploit,
+    on_heal, on_kill, on_repair
 )
 from server.options import options
 
@@ -123,6 +123,9 @@ def set_on_repair():
 
 @fixture(name='on_attack')
 def set_on_attack():
-    register(on_attack)
+    event_names = (on_attack, on_kill, on_destroy)
+    for event_name in event_names:
+        register(event_name)
     yield
-    unregister(on_attack)
+    for event_name in event_names:
+        unregister(event_name)
