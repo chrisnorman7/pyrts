@@ -281,11 +281,12 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                 'edit_recruits', args=kwargs
             )
             if any([obj.depends, obj.dependencies]):
-                m.add_label('Depedencies')
                 if obj.depends is not None:
+                    m.add_label('Depends')
                     m.add_item(
-                        f'Depends: {obj.depends.get_name()}', command_name,
-                        args=dict(class_name=class_name, id=obj.depends_id)
+                        obj.depends.get_name(), command_name, args=dict(
+                            class_name=class_name, id=obj.depends_id
+                        )
                     )
                 if obj.dependencies:
                     m.add_label('Dependencies')
