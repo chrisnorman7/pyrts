@@ -575,7 +575,7 @@ def activate(player, location, con):
                 ut = UnitType.get(br.unit_type_id)
                 m.add_item(
                     f'Recruit {ut} (requires {br.resources_string()}',
-                    'recruit', args=dict(building_recruit_id=ut.id)
+                    'recruit', args=dict(building_recruit_id=br.id)
                 )
             m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
@@ -658,7 +658,7 @@ def recruit(player, location, building_recruit_id):
     if not isinstance(fo, Building):
         player.message('You must select a building.')
     elif br.building_type_id != fo.type_id:
-        player.message(f'{fo} cannot recruit {ut}.')
+        player.message(f'{fo.get_name()} cannot recruit {ut}.')
     elif fo.health is not None:
         player.message(f'{fo.get_name()} is in no shape for recruitment.')
     elif d:
