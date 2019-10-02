@@ -32,6 +32,7 @@ for cls in (UnitType, BuildingType, FeatureType, AttackType):
         if isinstance(obj, UnitType):
             if obj.attack_type is not None:
                 d['attack'] = obj.attack_type.name
+                del d['attack_type_id']
             d['buildings'] = [b.name for b in obj.can_build]
             d['recruits'] = []
             for bt in obj.recruiters:
