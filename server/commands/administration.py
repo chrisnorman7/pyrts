@@ -4,13 +4,13 @@ from code import InteractiveConsole
 from contextlib import redirect_stdout, redirect_stderr
 from inspect import getdoc, _empty
 
-from sqlalchemy import Boolean, inspect
+from sqlalchemy import Boolean, Enum, inspect
 
 from .commands import command, LocationTypes
 
 from ..db import (
     Player, BuildingType, UnitType, AttackType, FeatureType, Base,
-    BuildingRecruit, UnitActions, SkillTypes
+    BuildingRecruit, UnitActions, SkillTypes, SkillType
 )
 from ..menus import Menu, YesNoMenu
 from ..options import options
@@ -215,6 +215,17 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                             thing.get_name(), command_name, args=remote_kwargs
                         )
                     return m.send(con)
+                if isinstance(c.type, Enum):
+                    m = Menu('Enumeration')
+                    if c.nullable:
+                        null_kwargs = kwargs.copy()
+                        null_kwargs['text'] = ''
+                        m.add_item('NULL', command_name, args=null_kwargs)
+                    for value in c.type.python_type.__members__.values():
+                        item_kwargs = kwargs.copy()
+                        item_kwargs['text'] = value.name
+                        m.add_item(str(value), command_name, args=item_kwargs)
+                    return m.send(con)
                 value = getattr(obj, column)
                 if value is None:
                     value = ''
@@ -232,8 +243,11 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                         value = _empty
                 else:
                     try:
-                        value = c.type.python_type(text)
-                    except ValueError:
+                        if isinstance(c.type, Enum):
+                            value = getattr(c.type.python_type, text)
+                        else:
+                            value = c.type.python_type(text)
+                    except (ValueError, AttributeError):
                         con.message('Invalid value.')
                         value = _empty
                 if value is not _empty:
@@ -295,6 +309,20 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                             d.get_name(), command_name,
                             args=dict(class_name=class_name, id=d.id)
                         )
+            m.add_label('Skill Types')
+            m.add_item('Add', 'add_skill_type', args=kwargs)
+            for st in obj.skill_types:
+                name = f'{st.skill_type.name} ({st.resources_string()}'
+                m.add_item(
+                    name, 'edit_type', args=dict(
+                        class_name='SkillType', id=st.id
+                    )
+                )
+                m.add_item(
+                    'Delete', 'delete_object', args=dict(
+                        class_name='SkillType', id=st.id
+                    )
+                )
         elif cls is UnitType:
             m.add_label('Buildings which can be built by units of this type')
             for bt in obj.can_build:
@@ -311,6 +339,8 @@ def edit_type(con, command_name, class_name, id=None, column=None, text=None):
                         building_type_id=bt.id, building_unit_id=bm.id
                     )
                 )
+        if cls is SkillType:
+            class_name = 'BuildingType'
         m.add_item('Done', command_name, args=dict(class_name=class_name))
         m.send(con)
 
@@ -468,3 +498,23 @@ def edit_recruits(
             'Done', 'edit_type', args=dict(class_name='BuildingType', id=bt.id)
         )
         m.send(con)
+
+
+@command(location_type=LocationTypes.any, admin=True)
+def add_skill_type(con, command_name, building_type_id, skill_type_name=None):
+    """Add a SkillType instance to a BuildingType instance."""
+    bt = BuildingType.get(building_type_id)
+    if skill_type_name is None:
+        m = Menu('Skill Types')
+        for name, member in SkillTypes.__members__.items():
+            m.add_item(
+                f'{name}: {member.value}', command_name, args=dict(
+                    building_type_id=bt.id, skill_type_name=name
+                )
+            )
+        m.send(con)
+    else:
+        member = getattr(SkillTypes, skill_type_name)
+        st = SkillType(building_type_id=bt.id, skill_type=member)
+        st.save()
+        con.call_command('edit_type', class_name='SkillType', id=st.id)

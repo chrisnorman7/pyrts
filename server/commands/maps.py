@@ -544,10 +544,12 @@ def activate(player, location, con):
     fo = player.focussed_object
     if fo is not None:
         m.add_label(fo.get_name())
+        if not isinstance(fo, Player):
+            m.add_label(f'Contains {fo.resources_string()}')
         if isinstance(fo, (Building, Unit)):
             m.add_label(f'{fo.hp} / {fo.max_hp} health')
             if fo.owner is None:
-                m.add_item('Acquire', 'acquire', args={'id': fo.id})
+                m.add_item('Recruit', 'acquire', args={'id': fo.id})
             elif isinstance(fo, Unit) and fo.owner is player:
                 q = BuildingBuilder.all(unit_type_id=fo.type_id)
                 if len(q):
@@ -568,9 +570,6 @@ def activate(player, location, con):
             elif fo.hp < fo.max_hp:  # A sure sign that repairs are needed.
                 m.add_item('Repair', 'repair', args=dict(id=fo.id))
         if isinstance(fo, Building) and fo.owner is player:
-            for name in BuildingType.resource_names():
-                value = getattr(fo, name)
-                m.add_label(f'{name.title()}: {value}')
             for br in BuildingRecruit.all(building_type_id=fo.type_id):
                 ut = UnitType.get(br.unit_type_id)
                 m.add_item(

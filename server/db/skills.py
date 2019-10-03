@@ -39,6 +39,9 @@ class SkillType(Base, ResourcesMixin):
         ), single_parent=True
     )
 
+    def get_name(self):
+        return self.skill_type.name
+
 
 class Skill(Base):
     """Used to attach SkillTypes members to Building instances."""
