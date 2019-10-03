@@ -1,5 +1,6 @@
 """Provides map-related commands."""
 
+from datetime import datetime, timedelta
 from random import random, choice
 
 from sqlalchemy import func
@@ -7,7 +8,8 @@ from .commands import command, LocationTypes
 
 from ..db import (
     Building, BuildingRecruit, BuildingType, EntryPoint, Feature, FeatureType,
-    Map, Unit, UnitType, Player, Base, BuildingBuilder, session
+    Map, Unit, UnitType, Player, Base, BuildingBuilder, session, SkillTypes,
+    SkillType
 )
 from ..menus import Menu, YesNoMenu
 from ..options import options
@@ -576,6 +578,13 @@ def activate(player, location, con):
                     f'Recruit {ut} (requires {br.resources_string()}',
                     'recruit', args=dict(building_recruit_id=br.id)
                 )
+            for st in fo.type.skill_types:
+                member = st.skill_type
+                name = member.name
+                value = member.value
+                m.add_item(
+                    f'Practise {value}', 'practise', args=dict(name=name)
+                )
             m.add_item('Set Home', 'set_home', args={'id': fo.id})
         if isinstance(fo, (Building, Feature)):
             m.add_item(
@@ -1107,3 +1116,38 @@ def view_objects(player):
         empty='nothing'
     )
     player.message(f'You can see: {el}.')
+
+
+def learn(building_id, skill):
+    """Actually learn the skill."""
+    building = Building.get(building_id)
+    if building.owner is not None:
+        building.owner.message(
+            f'{building.get_name()} now knows {skill.value}.'
+        )
+
+
+@command(location_type=LocationTypes.finalised)
+def practise(player, name):
+    """Practise the named skill."""
+    skill = getattr(SkillTypes, name, None)
+    fo = player.focussed_object
+    if skill is None:
+        player.message('Invalid skill.')
+    elif not isinstance(fo, Building):
+        player.message('First select a building.')
+    elif not SkillType.count(building_type_id=fo.type_id, skill_type=skill):
+        player.message(f'{fo.get_name()} knows nothing about that skill.')
+    elif fo.has_skill(skill):
+        player.message(f'{fo.get_name()} already has that skill.')
+    else:
+        st = SkillType.first(building_type_id=fo.type_id, skill_type=skill)
+        d = st.get_difference(fo)
+        if d:
+            player.message(f'You require {difference_string(d)}.')
+        else:
+            fo.take_requirements(st)
+            fo.add_skill(
+                skill, datetime.utcnow() + timedelta(seconds=st.pop_time)
+            ).save()
+            player.call_later(st.pop_time, learn, fo.id, skill)

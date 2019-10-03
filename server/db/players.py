@@ -2,6 +2,7 @@
 
 import os.path
 
+from datetime import datetime
 from random import choice
 
 from passlib.hash import sha512_crypt
@@ -324,4 +325,7 @@ class Player(Base, NameMixin, CoordinatesMixin, LocationMixin):
         to them."""
         return Building.query(location=self.location, owner=self).join(
             Building.skills
-        ).filter(Skill.skill_type == skill_type).count()
+        ).filter(
+            Skill.skill_type == skill_type,
+            Skill.activated_at <= datetime.utcnow()
+        ).count()

@@ -4,7 +4,7 @@ enumeration."""
 from enum import Enum as _Enum
 from random import choice
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer
 from sqlalchemy.orm import relationship, backref
 
 from .base import Base, ResourcesMixin
@@ -54,6 +54,7 @@ class Skill(Base):
             'skills', cascade='delete, delete-orphan'
         ), single_parent=True
     )
+    activated_at = Column(DateTime(timezone=True), nullable=False)
 
 
 @listen(on_exploit)

@@ -1,5 +1,7 @@
 """Provides the BuildingType and Building classes."""
 
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
@@ -82,13 +84,18 @@ class Building(
     __tablename__ = 'buildings'
     __type_class__ = BuildingType
 
-    def add_skill(self, skill_type):
+    def add_skill(self, skill_type, activate=None):
         """Add the given member of the SkillTypes enumeration to this
-        building."""
+        building. If activate is None, it will be set to datetime.utcnow. The
+        skill will not become active until that time."""
+        if activate is None:
+            activate = datetime.utcnow()
         assert type(skill_type).__name__ == 'SkillTypes', \
             'Invalid value %r.' % skill_type
         Skill = Base._decl_class_registry['Skill']
-        return Skill(building=self, skill_type=skill_type)
+        return Skill(
+            building=self, skill_type=skill_type, activated_at=activate
+        )
 
     @property
     def skill_types(self):

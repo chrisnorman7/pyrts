@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from pytest import raises
 
 from server.db import Building, SkillTypes, Skill, SkillType
@@ -18,6 +20,7 @@ def test_add_skill(farm, map):
     assert not b.skills
     s = b.add_skill(SkillTypes.double_exploit)
     assert isinstance(s, Skill)
+    assert isinstance(s.activated_at, datetime)
     assert s.id is None  # Not automatically saved.
     s.save()
     assert s.building is b
@@ -61,7 +64,12 @@ def test_player_has_skill(farm, player, map):
     player.save()
     v = SkillTypes.double_exploit
     assert not player.has_skill(v)
-    b.add_skill(v).save()
+    when = datetime.utcnow() + timedelta(seconds=10)
+    s = b.add_skill(v, activate=when)
+    s.save()
+    assert not player.has_skill(v)
+    s.activated_at = datetime.utcnow()
+    s.save()
     assert player.has_skill(v) == 1
     b2 = map.add_building(farm, 1, 1)
     b2.owner = player
