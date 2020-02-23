@@ -227,8 +227,7 @@ class WebSocketProtocol(WebSocketServerProtocol):
         self.send("authenticated")
         self.set_logger(player=player)
         self.logger.info('Authenticated.')
-        for p in Player.all(admin=True):
-            p.message(f'{player.get_name()} has connected.')
+        Player.message_admins(f'{player.get_name()} has connected.')
 
     @property
     def player(self):
